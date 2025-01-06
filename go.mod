@@ -1,4 +1,4 @@
-module github.com/solana-transaction-parser
+module github.com/boockchain-develop/solana-transaction-parser
 
 go 1.22.1
 
