@@ -2,13 +2,12 @@ package transaction
 
 import (
 	"encoding/json"
-	"fmt"
 	ag_binary "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/raydiumamm"
+	amm_v4 "github.com/gagliardetto/solana-go/programs/raydiumclmm"
 	whirlpool "github.com/gagliardetto/solana-go/programs/whirlpool"
 	"github.com/shopspring/decimal"
-	amm_v4 "github.com/gagliardetto/solana-go/programs/raydiumclmm"
 )
 
 var (
@@ -20,6 +19,10 @@ var (
 
 func init() {
 	RegisterParser(RaydiumAMM, RaydiumAmmParser)
+	RegisterParser(RaydiumClmm, RaydiumClmmParser)
+	RegisterParser(WhirlPool, WhirlPoolParser)
+	RegisterParser(solana.SystemProgramID, SystemParser)
+	RegisterParser(solana.TokenProgramID, TokenParser)
 }
 
 func RegisterParser(program solana.PublicKey, p Parser) {
