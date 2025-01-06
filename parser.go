@@ -1,6 +1,7 @@
 package transaction
 
 import (
+	"encoding/json"
 	ag_binary "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/raydiumamm"
@@ -125,6 +126,90 @@ func RaydiumAmmParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
 			User:         inst1.GetUserOwnerAccount().PublicKey.String(),
 		}
 		return trade, nil
+	default:
+		return nil, nil
+	}
+}
+
+func SystemParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
+	type instruction struct {
+		Info struct {
+			Destination solana.PublicKey `json:"destination"`
+			Lamports    uint64           `json:"lamports"`
+			Source      solana.PublicKey `json:"source"`
+		} `json:"info"`
+		T string `json:"type"`
+	}
+	inJson, _ := in.Instruction.Parsed.MarshalJSON()
+	var myInstruction instruction
+	json.Unmarshal(inJson, &myInstruction)
+	switch myInstruction.T {
+	case "transfer":
+		transfer := &Transfer{
+			Mint:   "11111111111111111111111111111111",
+			Amount: myInstruction.Info.Lamports,
+			From:   myInstruction.Info.Source.String(),
+			To:     myInstruction.Info.Destination.String(),
+		}
+		return transfer, nil
+	default:
+		return nil, nil
+	}
+}
+
+func TokenParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
+	type instruction struct {
+		Info struct {
+			Destination solana.PublicKey `json:"destination"`
+			Lamports    uint64           `json:"amount,string"`
+			Source      solana.PublicKey `json:"source"`
+			Authority   solana.PublicKey `json:"authority"`
+			Mint        solana.PublicKey `json:"mint"`
+			TokenAmount struct {
+				Amount   uint64 `json:"amount,string"`
+				Decimals uint64 `json:"decimals"`
+			} `json:"tokenAmount"`
+		} `json:"info"`
+		T string `json:"type"`
+	}
+	inJson, _ := in.Instruction.Parsed.MarshalJSON()
+	var myInstruction instruction
+	json.Unmarshal(inJson, &in)
+	switch myInstruction.T {
+	case "transfer":
+		mint := meta.TokenMint[myInstruction.Info.Source]
+		from := myInstruction.Info.Source
+		if k, ok := meta.TokenOwner[myInstruction.Info.Source]; ok {
+			from = k
+		}
+		to := myInstruction.Info.Destination
+		if k, ok := meta.TokenOwner[myInstruction.Info.Destination]; ok {
+			to = k
+		}
+		transfer := &Transfer{
+			Mint:   mint.String(),
+			Amount: myInstruction.Info.Lamports,
+			From:   from.String(),
+			To:     to.String(),
+		}
+		return transfer, nil
+	case "transferChecked":
+		mint := meta.TokenMint[myInstruction.Info.Source]
+		from := myInstruction.Info.Source
+		if k, ok := meta.TokenOwner[myInstruction.Info.Source]; ok {
+			from = k
+		}
+		to := myInstruction.Info.Destination
+		if k, ok := meta.TokenOwner[myInstruction.Info.Destination]; ok {
+			to = k
+		}
+		transfer := &Transfer{
+			Mint:   mint.String(),
+			Amount: myInstruction.Info.TokenAmount.Amount,
+			From:   from.String(),
+			To:     to.String(),
+		}
+		return transfer, nil
 	default:
 		return nil, nil
 	}
