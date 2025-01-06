@@ -2,10 +2,13 @@ package transaction
 
 import (
 	"encoding/json"
+	"fmt"
 	ag_binary "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/raydiumamm"
+	whirlpool "github.com/gagliardetto/solana-go/programs/whirlpool"
 	"github.com/shopspring/decimal"
+	amm_v4 "github.com/gagliardetto/solana-go/programs/raydiumclmm"
 )
 
 var (
@@ -210,6 +213,178 @@ func TokenParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
 			To:     to.String(),
 		}
 		return transfer, nil
+	default:
+		return nil, nil
+	}
+}
+
+func RaydiumClmmParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
+	inst := new(amm_v4.Instruction)
+	err := ag_binary.NewBorshDecoder(in.Instruction.Data).Decode(inst)
+	if err != nil {
+		return nil, nil
+	}
+	accounts := make([]*solana.AccountMeta, 0)
+	for _, item := range in.Instruction.Accounts {
+		accounts = append(accounts, &solana.AccountMeta{
+			PublicKey:  item,
+			IsWritable: false,
+			IsSigner:   false,
+		})
+	}
+	switch inst.TypeID {
+	case amm_v4.Instruction_CreatePool:
+		inst1 := inst.Impl.(*amm_v4.CreatePool)
+		inst1.SetAccounts(accounts)
+		pool := &Pool{
+			Hash:     inst1.GetPoolStateAccount().PublicKey.String(),
+			MintA:    inst1.GetTokenMint0Account().PublicKey.String(),
+			MintB:    inst1.GetTokenMint1Account().PublicKey.String(),
+			MintLp:   inst1.GetTokenVault1Account().PublicKey.String(),
+			VaultA:   inst1.GetTokenVault1Account().PublicKey.String(),
+			VaultB:   inst1.GetTokenVault1Account().PublicKey.String(),
+			VaultLp:  "",
+			ReserveA: 0,
+			ReserveB: 0,
+		}
+		return nil, pool
+	case amm_v4.Instruction_IncreaseLiquidityV2:
+		inst1 := inst.Impl.(*amm_v4.IncreaseLiquidityV2)
+		inst1.SetAccounts(accounts)
+		//
+		t1 := in.Children[0].Event.(*Transfer)
+		t2 := in.Children[1].Event.(*Transfer)
+		//
+		trade := &Trade{
+			Pool:         inst1.GetPoolStateAccount().PublicKey.String(),
+			Type:         AddLiquidity,
+			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
+			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
+			User:         inst1.Get(0).PublicKey.String(),
+		}
+		return trade, nil
+	case amm_v4.Instruction_DecreaseLiquidityV2:
+		inst1 := inst.Impl.(*amm_v4.DecreaseLiquidityV2)
+		inst1.SetAccounts(accounts)
+		//
+		t1 := in.Children[0].Event.(*Transfer)
+		t2 := in.Children[1].Event.(*Transfer)
+		//
+		trade := &Trade{
+			Pool:         inst1.GetPoolStateAccount().PublicKey.String(),
+			Type:         RemoveLiquidity,
+			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
+			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
+			User:         inst1.Get(0).PublicKey.String(),
+		}
+		return trade, nil
+	case amm_v4.Instruction_Swap:
+		inst1 := inst.Impl.(*amm_v4.Swap)
+		inst1.SetAccounts(accounts)
+		//
+		t1 := in.Children[0].Event.(*Transfer)
+		t2 := in.Children[1].Event.(*Transfer)
+		//
+		trade := &Trade{
+			Pool:         inst1.GetPoolStateAccount().PublicKey.String(),
+			Type:         Swap,
+			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
+			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
+			User:         inst1.GetPayerAccount().PublicKey.String(),
+		}
+		return trade, nil
+	case amm_v4.Instruction_SwapV2:
+		inst1 := inst.Impl.(*amm_v4.SwapV2)
+		inst1.SetAccounts(accounts)
+		//
+		t1 := in.Children[0].Event.(*Transfer)
+		t2 := in.Children[1].Event.(*Transfer)
+		//
+		trade := &Trade{
+			Pool:         inst1.GetPoolStateAccount().PublicKey.String(),
+			Type:         Swap,
+			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
+			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
+			User:         inst1.Get(0).PublicKey.String(),
+		}
+		return trade, nil
+	default:
+		return nil, nil
+	}
+}
+
+func WhirlPoolParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
+	inst := new(whirlpool.Instruction)
+	err := ag_binary.NewBorshDecoder(in.Instruction.Data).Decode(inst)
+	if err != nil {
+		return nil, nil
+	}
+	accounts := make([]*solana.AccountMeta, 0)
+	for _, item := range in.Instruction.Accounts {
+		accounts = append(accounts, &solana.AccountMeta{
+			PublicKey:  item,
+			IsWritable: false,
+			IsSigner:   false,
+		})
+	}
+	switch inst.TypeID {
+	case whirlpool.Instruction_InitializePool:
+		inst1 := inst.Impl.(*whirlpool.InitializePool)
+		inst1.SetAccounts(accounts)
+		//
+		trade := &Trade{
+			Pool:         inst1.GetWhirlpoolAccount().PublicKey.String(),
+			Type:         Swap,
+			TokenAAmount: decimal.NewFromInt(0),
+			TokenBAmount: decimal.NewFromInt(0),
+			User:         inst1.GetFunderAccount().PublicKey.String(),
+		}
+		return trade, nil
+	case whirlpool.Instruction_Swap:
+		inst1 := inst.Impl.(*whirlpool.Swap)
+		inst1.SetAccounts(accounts)
+		//
+		t1 := in.Children[0].Event.(*Transfer)
+		t2 := in.Children[1].Event.(*Transfer)
+		//
+		trade := &Trade{
+			Pool:         inst1.GetWhirlpoolAccount().PublicKey.String(),
+			Type:         Swap,
+			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
+			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
+			User:         inst1.GetTokenAuthorityAccount().PublicKey.String(),
+		}
+		return trade, nil
+	case whirlpool.Instruction_IncreaseLiquidity:
+		inst1 := inst.Impl.(*whirlpool.IncreaseLiquidity)
+		inst1.SetAccounts(accounts)
+		//
+		t1 := in.Children[0].Event.(*Transfer)
+		t2 := in.Children[1].Event.(*Transfer)
+		//
+		trade := &Trade{
+			Pool:         inst1.GetWhirlpoolAccount().PublicKey.String(),
+			Type:         AddLiquidity,
+			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
+			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
+			User:         inst1.GetPositionAuthorityAccount().PublicKey.String(),
+		}
+		return trade, nil
+	case whirlpool.Instruction_DecreaseLiquidity:
+		inst1 := inst.Impl.(*whirlpool.DecreaseLiquidity)
+		inst1.SetAccounts(accounts)
+		//
+		t1 := in.Children[0].Event.(*Transfer)
+		t2 := in.Children[1].Event.(*Transfer)
+		//
+		trade := &Trade{
+			Pool:         inst1.GetWhirlpoolAccount().PublicKey.String(),
+			Type:         RemoveLiquidity,
+			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
+			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
+			User:         inst1.GetPositionAuthorityAccount().PublicKey.String(),
+		}
+		return trade, nil
 	default:
 		return nil, nil
 	}
