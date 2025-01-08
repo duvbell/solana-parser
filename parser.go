@@ -180,7 +180,7 @@ func TokenParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
 	}
 	inJson, _ := in.Instruction.Parsed.MarshalJSON()
 	var myInstruction instruction
-	json.Unmarshal(inJson, &in)
+	json.Unmarshal(inJson, &myInstruction)
 	switch myInstruction.T {
 	case "transfer":
 		mint := meta.TokenMint[myInstruction.Info.Source]

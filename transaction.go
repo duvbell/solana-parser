@@ -6,7 +6,6 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/shopspring/decimal"
-	"time"
 )
 
 type Meta struct {
@@ -22,8 +21,7 @@ type Transaction struct {
 	Hash         solana.Signature
 	Instructions []*Instruction
 	Meta         Meta
-	Slot         uint64
-	BlockTime    time.Time
+	BlockHash    solana.Hash
 	Seq          int
 }
 
@@ -45,8 +43,6 @@ func (t *Transaction) Parse(tx *rpc.ParsedTransactionWithMeta) error {
 	meta := tx.Meta
 	transaction := tx.Transaction
 	t.Hash = transaction.Signatures[0]
-	t.Slot = tx.Slot
-	t.BlockTime = tx.BlockTime.Time()
 	if meta.Err != nil {
 		// if failed, ignore this transaction
 		errJson, _ := json.Marshal(meta.Err)
