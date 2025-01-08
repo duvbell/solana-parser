@@ -50,7 +50,7 @@ func TestBlock_Parse(t *testing.T) {
 	version := uint64(0)
 	r, err := client.GetParsedBlockWithOpts(
 		context.Background(),
-		263991594,
+		312637054,
 		&rpc.GetBlockOpts{
 			Encoding:                       solana.EncodingJSONParsed,
 			TransactionDetails:             rpc.TransactionDetailsFull,
@@ -64,7 +64,7 @@ func TestBlock_Parse(t *testing.T) {
 	}
 	rJson, _ := json.MarshalIndent(r, "", "    ")
 	os.WriteFile(fmt.Sprintf("block.json"), rJson, 0644)
-	
+
 	for i, tx := range r.Transactions {
 		myTx := New()
 		err = myTx.Parse(&tx)
@@ -76,6 +76,7 @@ func TestBlock_Parse(t *testing.T) {
 			// no instruction
 			continue
 		}
+		fmt.Printf("hash: %s\n", tx.Transaction.Signatures[0].String())
 		err = myTx.ParseActions(DefaultParse)
 		if err != nil {
 			panic(err)

@@ -49,7 +49,7 @@ func (in *Instruction) instructionActions(parsers map[solana.PublicKey]Parser, m
 		child.instructionActions(parsers, meta)
 	}
 	parser, ok := parsers[in.Instruction.ProgramId]
-	if !ok {
+	if !ok || parser == nil {
 		return
 	}
 	in.Event, in.Receipt = parser(in, meta)
