@@ -39,12 +39,20 @@ func RaydiumAmmParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
 		return nil, nil
 	}
 	accounts := make([]*solana.AccountMeta, 0)
-	for _, item := range meta.Accounts {
-		accounts = append(accounts, &solana.AccountMeta{
-			PublicKey:  item.PublicKey,
-			IsWritable: item.Writable,
-			IsSigner:   item.Signer,
+	for _, item := range instruction.Accounts {
+		account := meta.Accounts[item]
+		accounts = append(accounts, account)
+	}
+	insertAccount := func(accounts []*solana.AccountMeta, index int) []*solana.AccountMeta {
+		s := make([]*solana.AccountMeta, 0)
+		s = append(s, accounts[0:index]...)
+		s = append(s, &solana.AccountMeta{
+			PublicKey:  solana.MustPublicKeyFromBase58("11111111111111111111111111111111"),
+			IsWritable: true,
+			IsSigner:   false,
 		})
+		s = append(s, accounts[index:]...)
+		return s
 	}
 	switch inst.TypeID.Uint8() {
 	case raydium_amm.Instruction_Initialize2:
@@ -90,6 +98,9 @@ func RaydiumAmmParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
 		return trade, nil
 	case raydium_amm.Instruction_SwapBaseIn:
 		inst1 := inst.Impl.(*raydium_amm.SwapBaseIn)
+		if len(accounts) == 17 {
+			accounts = insertAccount(accounts, 4)
+		}
 		inst1.SetAccounts(accounts)
 		t1 := in.Children[0].Event.(*Transfer)
 		t2 := in.Children[1].Event.(*Transfer)
@@ -104,6 +115,9 @@ func RaydiumAmmParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
 		return trade, nil
 	case raydium_amm.Instruction_SwapBaseOut:
 		inst1 := inst.Impl.(*raydium_amm.SwapBaseOut)
+		if len(accounts) == 17 {
+			accounts = insertAccount(accounts, 4)
+		}
 		inst1.SetAccounts(accounts)
 		//
 		t1 := in.Children[0].Event.(*Transfer)

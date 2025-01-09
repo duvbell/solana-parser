@@ -9,7 +9,7 @@ import (
 )
 
 type Meta struct {
-	Accounts     []rpc.ParsedMessageAccount
+	Accounts     map[solana.PublicKey]*solana.AccountMeta
 	TokenOwner   map[solana.PublicKey]solana.PublicKey
 	TokenMint    map[solana.PublicKey]solana.PublicKey
 	PreBalance   map[solana.PublicKey]decimal.Decimal
@@ -28,6 +28,7 @@ type Transaction struct {
 func New() *Transaction {
 	return &Transaction{
 		Meta: Meta{
+			Accounts:    make(map[solana.PublicKey]*solana.AccountMeta),
 			TokenOwner:  make(map[solana.PublicKey]solana.PublicKey),
 			TokenMint:   make(map[solana.PublicKey]solana.PublicKey),
 			PreBalance:  make(map[solana.PublicKey]decimal.Decimal),
@@ -58,15 +59,21 @@ func (t *Transaction) Parse(tx *rpc.ParsedTransactionWithMeta) error {
 		return nil
 	}
 	// account infos
-	t.Meta.Accounts = message.AccountKeys
+	for _, item := range message.AccountKeys {
+		t.Meta.Accounts[item.PublicKey] = &solana.AccountMeta{
+			PublicKey:  item.PublicKey,
+			IsWritable: item.Writable,
+			IsSigner:   item.Signer,
+		}
+	}
 	for _, item := range meta.PostTokenBalances {
-		account := t.Meta.Accounts[item.AccountIndex]
+		account := message.AccountKeys[item.AccountIndex]
 		t.Meta.TokenOwner[account.PublicKey] = *item.Owner
 		t.Meta.TokenMint[account.PublicKey] = item.Mint
 		t.Meta.PostBalance[account.PublicKey], _ = decimal.NewFromString(item.UiTokenAmount.Amount)
 	}
 	for _, item := range meta.PreTokenBalances {
-		account := t.Meta.Accounts[item.AccountIndex]
+		account := message.AccountKeys[item.AccountIndex]
 		t.Meta.PreBalance[account.PublicKey], _ = decimal.NewFromString(item.UiTokenAmount.Amount)
 	}
 	for index, instruction := range instructions {
