@@ -23,6 +23,7 @@ func init() {
 	RegisterParser(WhirlPool, WhirlPoolParser)
 	RegisterParser(solana.SystemProgramID, SystemParser)
 	RegisterParser(solana.TokenProgramID, TokenParser)
+	RegisterParser(solana.Token2022ProgramID, Token2022Parser)
 }
 
 func RegisterParser(program solana.PublicKey, p Parser) {
@@ -178,6 +179,64 @@ func SystemParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
 }
 
 func TokenParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
+	type instruction struct {
+		Info struct {
+			Destination solana.PublicKey `json:"destination"`
+			Lamports    uint64           `json:"amount,string"`
+			Source      solana.PublicKey `json:"source"`
+			Authority   solana.PublicKey `json:"authority"`
+			Mint        solana.PublicKey `json:"mint"`
+			TokenAmount struct {
+				Amount   uint64 `json:"amount,string"`
+				Decimals uint64 `json:"decimals"`
+			} `json:"tokenAmount"`
+		} `json:"info"`
+		T string `json:"type"`
+	}
+	inJson, _ := in.Instruction.Parsed.MarshalJSON()
+	var myInstruction instruction
+	json.Unmarshal(inJson, &myInstruction)
+	switch myInstruction.T {
+	case "transfer":
+		mint := meta.TokenMint[myInstruction.Info.Source]
+		from := myInstruction.Info.Source
+		if k, ok := meta.TokenOwner[myInstruction.Info.Source]; ok {
+			from = k
+		}
+		to := myInstruction.Info.Destination
+		if k, ok := meta.TokenOwner[myInstruction.Info.Destination]; ok {
+			to = k
+		}
+		transfer := &Transfer{
+			Mint:   mint.String(),
+			Amount: myInstruction.Info.Lamports,
+			From:   from.String(),
+			To:     to.String(),
+		}
+		return transfer, nil
+	case "transferChecked":
+		mint := meta.TokenMint[myInstruction.Info.Source]
+		from := myInstruction.Info.Source
+		if k, ok := meta.TokenOwner[myInstruction.Info.Source]; ok {
+			from = k
+		}
+		to := myInstruction.Info.Destination
+		if k, ok := meta.TokenOwner[myInstruction.Info.Destination]; ok {
+			to = k
+		}
+		transfer := &Transfer{
+			Mint:   mint.String(),
+			Amount: myInstruction.Info.TokenAmount.Amount,
+			From:   from.String(),
+			To:     to.String(),
+		}
+		return transfer, nil
+	default:
+		return nil, nil
+	}
+}
+
+func Token2022Parser(in *Instruction, meta *Meta) (interface{}, interface{}) {
 	type instruction struct {
 		Info struct {
 			Destination solana.PublicKey `json:"destination"`

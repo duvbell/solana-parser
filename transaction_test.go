@@ -17,7 +17,7 @@ func TestTransaction_Parse(t *testing.T) {
 	solClient := rpc.New(rpc.MainNetBeta_RPC)
 	result, err := solClient.GetParsedTransaction(
 		context.Background(),
-		solana.MustSignatureFromBase58("ofFBWuFZYmT1egbjaRMG3NMwJ3TE4YE4ssDjVUsTGM9iNPECkjVfSeyvnSySmKjvsYV6gXPSrwEvvmboicQVho7"),
+		solana.MustSignatureFromBase58("kPJDvuHhph8nMZ5Uwfiq1tFEoANR4QY3CkxFFzVUCULw2k5HEVHwFvw6Q8yJGt3PQowaRDcGKy6WptToZnKkBtL"),
 		&rpc.GetParsedTransactionOpts{
 			Commitment:                     rpc.CommitmentConfirmed,
 			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,
@@ -50,7 +50,7 @@ func TestBlock_Parse(t *testing.T) {
 	version := uint64(0)
 	r, err := client.GetParsedBlockWithOpts(
 		context.Background(),
-		312637054,
+		313040629,
 		&rpc.GetBlockOpts{
 			Encoding:                       solana.EncodingJSONParsed,
 			TransactionDetails:             rpc.TransactionDetailsFull,
