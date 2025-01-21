@@ -1,4 +1,4 @@
-package transaction
+package solanaparser
 
 import "github.com/shopspring/decimal"
 

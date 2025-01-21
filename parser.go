@@ -1,4 +1,4 @@
-package transaction
+package solanaparser
 
 import (
 	"encoding/json"

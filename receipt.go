@@ -1,4 +1,4 @@
-package transaction
+package solanaparser
 
 type Mint struct {
 	Hash        string

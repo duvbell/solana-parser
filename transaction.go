@@ -1,4 +1,4 @@
-package transaction
+package solanaparser
 
 import (
 	"encoding/json"
@@ -25,7 +25,7 @@ type Transaction struct {
 	Seq          int
 }
 
-func New() *Transaction {
+func NewTransaction() *Transaction {
 	return &Transaction{
 		Meta: Meta{
 			Accounts:    make(map[solana.PublicKey]*solana.AccountMeta),
