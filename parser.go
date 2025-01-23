@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	ag_binary "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
+	lb_clmm "github.com/gagliardetto/solana-go/programs/meteoradlmm"
+	amm "github.com/gagliardetto/solana-go/programs/meteorapools"
 	"github.com/gagliardetto/solana-go/programs/raydiumamm"
 	amm_v4 "github.com/gagliardetto/solana-go/programs/raydiumclmm"
 	stable_swap "github.com/gagliardetto/solana-go/programs/stabblestableswap"
@@ -16,16 +18,20 @@ var (
 	RaydiumClmm       = solana.MustPublicKeyFromBase58("CAMMCzo5YL8w4VFF8KVHrK22GGUsp5VTaW7grrKgrWqK")
 	RaydiumAMM        = solana.MustPublicKeyFromBase58("675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8")
 	StabbleStableSwap = solana.MustPublicKeyFromBase58("swapNyd8XiQwJ6ianp9snpu4brUqFxadzvHebnAXjJZ")
+	MeteoraDLMM       = solana.MustPublicKeyFromBase58("LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo")
+	MeteoraPools      = solana.MustPublicKeyFromBase58("Eo7WjKq67rjJQSZxS6z3YkapzY3eMj6Xy8X5EQVn5UaB")
 )
 
 func init() {
-	RegisterParser(RaydiumAMM, RaydiumAmmParser)
-	RegisterParser(RaydiumClmm, RaydiumClmmParser)
-	RegisterParser(WhirlPool, WhirlPoolParser)
 	RegisterParser(solana.SystemProgramID, SystemParser)
 	RegisterParser(solana.TokenProgramID, TokenParser)
 	RegisterParser(solana.Token2022ProgramID, Token2022Parser)
+	RegisterParser(RaydiumAMM, RaydiumAmmParser)
+	RegisterParser(RaydiumClmm, RaydiumClmmParser)
+	RegisterParser(WhirlPool, WhirlPoolParser)
 	RegisterParser(StabbleStableSwap, StabbleStableSwapParser)
+	RegisterParser(MeteoraDLMM, MeteoraDLMMParser)
+	RegisterParser(MeteoraPools, MeteoraPoolsParser)
 }
 
 func RegisterParser(program solana.PublicKey, p Parser) {
@@ -409,6 +415,7 @@ func RaydiumAmmParser(in *Instruction, meta *Meta) ([]interface{}, []interface{}
 		panic("not supported")
 		return []interface{}{removeLiquidity}, []interface{}{}
 	default:
+		panic("not supported")
 		return nil, nil
 	}
 }
@@ -502,6 +509,7 @@ func RaydiumClmmParser(in *Instruction, meta *Meta) ([]interface{}, []interface{
 		}
 		return []interface{}{swap}, nil
 	default:
+		panic("not supported")
 		return nil, nil
 	}
 }
@@ -591,6 +599,7 @@ func WhirlPoolParser(in *Instruction, meta *Meta) ([]interface{}, []interface{})
 		panic("not supported")
 		return []interface{}{removeLiquidity}, nil
 	default:
+		panic("not supported")
 		return nil, nil
 	}
 }
@@ -673,6 +682,158 @@ func StabbleStableSwapParser(in *Instruction, meta *Meta) ([]interface{}, []inte
 		panic("not supported")
 		return nil, nil
 	default:
+		panic("not supported")
+		return nil, nil
+	}
+}
+
+func MeteoraDLMMParser(in *Instruction, meta *Meta) ([]interface{}, []interface{}) {
+	inst := new(lb_clmm.Instruction)
+	err := ag_binary.NewBorshDecoder(in.Instruction.Data).Decode(inst)
+	if err != nil {
+		return nil, nil
+	}
+	accounts := make([]*solana.AccountMeta, 0)
+	for _, item := range in.Instruction.Accounts {
+		accounts = append(accounts, &solana.AccountMeta{
+			PublicKey:  item,
+			IsWritable: false,
+			IsSigner:   false,
+		})
+	}
+	switch inst.TypeID {
+	case lb_clmm.Instruction_AddLiquidity:
+		inst1 := inst.Impl.(*lb_clmm.AddLiquidity)
+		inst1.SetAccounts(accounts)
+		t1 := in.Children[0].Event[0].(*Transfer)
+		t2 := in.Children[1].Event[0].(*Transfer)
+		addLiquidity := &AddLiquidity{
+			Pool:           inst1.GetLbPairAccount().PublicKey,
+			User:           inst1.GetSenderAccount().PublicKey,
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
+		}
+		panic("not supported")
+		return []interface{}{addLiquidity}, nil
+	case lb_clmm.Instruction_AddLiquidityByStrategy:
+		inst1 := inst.Impl.(*lb_clmm.AddLiquidityByStrategy)
+		inst1.SetAccounts(accounts)
+		transfers := in.findTransfers()
+		if len(transfers) != 2 {
+			panic("not supported")
+		}
+		addLiquidity := &AddLiquidity{
+			Pool:           inst1.GetLbPairAccount().PublicKey,
+			User:           inst1.GetSenderAccount().PublicKey,
+			TokenATransfer: transfers[0],
+			TokenBTransfer: transfers[1],
+		}
+		return []interface{}{addLiquidity}, nil
+	case lb_clmm.Instruction_RemoveLiquidity:
+		inst1 := inst.Impl.(*lb_clmm.RemoveLiquidity)
+		inst1.SetAccounts(accounts)
+		t1 := in.Children[0].Event[0].(*Transfer)
+		t2 := in.Children[1].Event[0].(*Transfer)
+		removeLiquidity := &RemoveLiquidity{
+			Pool:           inst1.GetLbPairAccount().PublicKey,
+			User:           inst1.GetSenderAccount().PublicKey,
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
+		}
+		panic("not supported")
+		return []interface{}{removeLiquidity}, nil
+	case lb_clmm.Instruction_Swap:
+		inst1 := inst.Impl.(*lb_clmm.Swap)
+		inst1.SetAccounts(accounts)
+		// the first one is user deposit
+		// the second is vault withdraw
+		t1 := in.Children[0].Event[0].(*Transfer)
+		t2 := in.Children[1].Event[0].(*Transfer)
+		swap := &Swap{
+			Pool:           inst1.GetLbPairAccount().PublicKey,
+			User:           inst1.GetUserAccount().PublicKey,
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
+		}
+		return []interface{}{swap}, nil
+	case lb_clmm.Instruction_InitializeLbPair:
+		inst1 := inst.Impl.(*lb_clmm.InitializeLbPair)
+		inst1.SetAccounts(accounts)
+		//
+		panic("not supported")
+		return nil, nil
+	case lb_clmm.Instruction_ClaimFee,
+		lb_clmm.Instruction_ClaimReward:
+		return nil, nil
+	default:
+		panic("not supported")
+		return nil, nil
+	}
+}
+
+func MeteoraPoolsParser(in *Instruction, meta *Meta) ([]interface{}, []interface{}) {
+	inst := new(amm.Instruction)
+	err := ag_binary.NewBorshDecoder(in.Instruction.Data).Decode(inst)
+	if err != nil {
+		return nil, nil
+	}
+	accounts := make([]*solana.AccountMeta, 0)
+	for _, item := range in.Instruction.Accounts {
+		accounts = append(accounts, &solana.AccountMeta{
+			PublicKey:  item,
+			IsWritable: false,
+			IsSigner:   false,
+		})
+	}
+	switch inst.TypeID {
+	case amm.Instruction_AddBalanceLiquidity:
+		inst1 := inst.Impl.(*amm.AddBalanceLiquidity)
+		inst1.SetAccounts(accounts)
+		t1 := in.Children[0].Event[0].(*Transfer)
+		t2 := in.Children[1].Event[0].(*Transfer)
+		addLiquidity := &AddLiquidity{
+			Pool:           inst1.GetPoolAccount().PublicKey,
+			User:           inst1.GetUserAccount().PublicKey,
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
+		}
+		panic("not supported")
+		return []interface{}{addLiquidity}, nil
+	case amm.Instruction_RemoveBalanceLiquidity:
+		inst1 := inst.Impl.(*amm.RemoveBalanceLiquidity)
+		inst1.SetAccounts(accounts)
+		t1 := in.Children[0].Event[0].(*Transfer)
+		t2 := in.Children[1].Event[0].(*Transfer)
+		removeLiquidity := &RemoveLiquidity{
+			Pool:           inst1.GetPoolAccount().PublicKey,
+			User:           inst1.GetUserAccount().PublicKey,
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
+		}
+		panic("not supported")
+		return []interface{}{removeLiquidity}, nil
+	case amm.Instruction_Swap:
+		inst1 := inst.Impl.(*amm.Swap)
+		inst1.SetAccounts(accounts)
+		// the first one is user deposit & mintto
+		// the second one is user withdraw & burn
+		t1 := in.Children[0].Children[0].Event[0].(*Transfer)
+		t2 := in.Children[1].Children[0].Event[0].(*Transfer)
+		swap := &Swap{
+			Pool:           inst1.GetPoolAccount().PublicKey,
+			User:           inst1.GetUserAccount().PublicKey,
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
+		}
+		return []interface{}{swap}, nil
+	case amm.Instruction_InitializePermissionlessPool:
+		inst1 := inst.Impl.(*amm.InitializePermissionlessPool)
+		inst1.SetAccounts(accounts)
+		//
+		panic("not supported")
+		return nil, nil
+	default:
+		panic("not supported")
 		return nil, nil
 	}
 }

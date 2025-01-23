@@ -54,3 +54,19 @@ func (in *Instruction) instructionActions(parsers map[solana.PublicKey]Parser, m
 	}
 	in.Event, in.Receipt = parser(in, meta)
 }
+
+func (in *Instruction) findTransfers() []*Transfer {
+	transfers := make([]*Transfer, 0)
+	for _, child := range in.Children {
+		if len(child.Event) != 1 {
+			continue
+		}
+		t := child.Event[0]
+		switch t.(type) {
+		case *Transfer:
+			transfers = append(transfers, t.(*Transfer))
+		default:
+		}
+	}
+	return transfers
+}

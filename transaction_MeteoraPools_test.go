@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestTransaction_Parse_TokenBurn(t *testing.T) {
+func TestTransaction_MeteoraPools_Swap(t *testing.T) {
 	solClient := rpc.New(rpc.MainNetBeta_RPC)
 	result, err := solClient.GetParsedTransaction(
 		context.Background(),
@@ -28,6 +28,8 @@ func TestTransaction_Parse_TokenBurn(t *testing.T) {
 		Transaction: result.Transaction,
 		Meta:        result.Meta,
 	}
+	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
+	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
 	tx := NewTransaction()
 	err = tx.Parse(transaction)
 	if err != nil {
