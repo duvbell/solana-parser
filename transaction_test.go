@@ -14,7 +14,7 @@ func TestTransaction_Parse(t *testing.T) {
 	solClient := rpc.New(rpc.MainNetBeta_RPC)
 	result, err := solClient.GetParsedTransaction(
 		context.Background(),
-		solana.MustSignatureFromBase58("5iFJv7pnsk5WW7oDUszaH4BtAbGaUirjK5rtveaFj4B6xNGpZ2nBM8AV4wZJgSGeB92g3bAvWwGHsD527raB5Nc5"),
+		solana.MustSignatureFromBase58("5JkHtCDnJRVYrHYg883BdkKnvZe2iPwW7LooTFSu2yjMPinbcRFTXuKZ3A8tEpz8N82Tn9nudxoTSemzLa19nKho"),
 		&rpc.GetParsedTransactionOpts{
 			Commitment:                     rpc.CommitmentConfirmed,
 			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,

@@ -58,4 +58,7 @@ type MintTo struct {
 }
 
 type Burn struct {
+	Mint    string
+	Account string
+	Amount  uint64
 }

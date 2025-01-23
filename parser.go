@@ -31,6 +31,222 @@ func RegisterParser(program solana.PublicKey, p Parser) {
 
 type Parser func(in *Instruction, meta *Meta) ([]interface{}, []interface{})
 
+type SystemTransfer struct {
+	Destination solana.PublicKey `json:"destination"`
+	Lamports    uint64           `json:"lamports"`
+	Source      solana.PublicKey `json:"source"`
+}
+
+type SystemInstruction struct {
+	T    string `json:"type"`
+	Info interface{}
+	Raw  json.RawMessage `json:"info"`
+}
+
+func (j *SystemInstruction) UnmarshalJSON(data []byte) error {
+	type Aux SystemInstruction
+	aux := (*Aux)(j)
+	if err := json.Unmarshal(data, aux); err != nil {
+		return err
+	}
+	var object interface{}
+	switch j.T {
+	case "transfer":
+		object = &SystemTransfer{}
+	default:
+		return nil
+	}
+	if err := json.Unmarshal(j.Raw, object); err != nil {
+		return err
+	}
+	j.Info = object
+	return nil
+}
+
+func SystemParser(in *Instruction, meta *Meta) ([]interface{}, []interface{}) {
+	inJson, _ := in.Instruction.Parsed.MarshalJSON()
+	var systemInstruction SystemInstruction
+	err := json.Unmarshal(inJson, &systemInstruction)
+	if err != nil {
+		return nil, nil
+	}
+	switch systemInstruction.Info.(type) {
+	case *SystemInstruction:
+		systemTransfer := systemInstruction.Info.(*SystemTransfer)
+		transfer := &Transfer{
+			Mint:   "11111111111111111111111111111111",
+			Amount: systemTransfer.Lamports,
+			From:   systemTransfer.Source.String(),
+			To:     systemTransfer.Destination.String(),
+		}
+		return []interface{}{transfer}, nil
+	default:
+		return nil, nil
+	}
+}
+
+type TokenTransfer struct {
+	Destination solana.PublicKey `json:"destination"`
+	Lamports    uint64           `json:"amount,string"`
+	Source      solana.PublicKey `json:"source"`
+	Authority   solana.PublicKey `json:"authority"`
+	Mint        solana.PublicKey `json:"mint"`
+	TokenAmount struct {
+		Amount   uint64 `json:"amount,string"`
+		Decimals uint64 `json:"decimals"`
+	} `json:"tokenAmount"`
+}
+
+type TokenMint struct {
+	Account   solana.PublicKey `json:"account"`
+	Amount    uint64           `json:"amount,string"`
+	Authority solana.PublicKey `json:"mintAuthority"`
+	Mint      solana.PublicKey `json:"mint"`
+}
+
+type TokenBurn struct {
+	Account   solana.PublicKey `json:"account"`
+	Amount    uint64           `json:"amount,string"`
+	Authority solana.PublicKey `json:"authority"`
+	Mint      solana.PublicKey `json:"mint"`
+}
+
+type TokenInstruction struct {
+	T    string `json:"type"`
+	Info interface{}
+	Raw  json.RawMessage `json:"info"`
+}
+
+func (j *TokenInstruction) UnmarshalJSON(data []byte) error {
+	type Aux TokenInstruction
+	aux := (*Aux)(j)
+	if err := json.Unmarshal(data, aux); err != nil {
+		return err
+	}
+	var object interface{}
+	switch j.T {
+	case "transfer":
+		object = &TokenTransfer{}
+	case "transferChecked":
+		object = &TokenTransfer{}
+	case "mintTo":
+		object = &TokenMint{}
+	case "burn":
+		object = &TokenBurn{}
+	default:
+		return nil
+	}
+	if err := json.Unmarshal(j.Raw, object); err != nil {
+		return err
+	}
+	j.Info = object
+	return nil
+}
+
+func TokenParser(in *Instruction, meta *Meta) ([]interface{}, []interface{}) {
+	inJson, _ := in.Instruction.Parsed.MarshalJSON()
+	var tokenInstruction TokenInstruction
+	json.Unmarshal(inJson, &tokenInstruction)
+	switch tokenInstruction.Info.(type) {
+	case *TokenTransfer:
+		tokenTransfer := tokenInstruction.Info.(*TokenTransfer)
+		mint := meta.TokenMint[tokenTransfer.Source]
+		from := tokenTransfer.Source
+		if k, ok := meta.TokenOwner[tokenTransfer.Source]; ok {
+			from = k
+		}
+		to := tokenTransfer.Destination
+		if k, ok := meta.TokenOwner[tokenTransfer.Destination]; ok {
+			to = k
+		}
+		transfer := &Transfer{
+			Mint:   mint.String(),
+			Amount: tokenTransfer.Lamports,
+			From:   from.String(),
+			To:     to.String(),
+		}
+		return []interface{}{transfer}, nil
+	case *TokenMint:
+		tokenMint := tokenInstruction.Info.(*TokenMint)
+		account := tokenMint.Account
+		if k, ok := meta.TokenOwner[tokenMint.Account]; ok {
+			account = k
+		}
+		mintTo := &MintTo{
+			Mint:    tokenMint.Mint.String(),
+			Amount:  tokenMint.Amount,
+			Account: account.String(),
+		}
+		return []interface{}{mintTo}, nil
+	case *TokenBurn:
+		tokenBurn := tokenInstruction.Info.(*TokenBurn)
+		account := tokenBurn.Account
+		if k, ok := meta.TokenOwner[tokenBurn.Account]; ok {
+			account = k
+		}
+		burn := &Burn{
+			Mint:    tokenBurn.Mint.String(),
+			Amount:  tokenBurn.Amount,
+			Account: account.String(),
+		}
+		return []interface{}{burn}, nil
+	default:
+		return nil, nil
+	}
+}
+
+func Token2022Parser(in *Instruction, meta *Meta) ([]interface{}, []interface{}) {
+	inJson, _ := in.Instruction.Parsed.MarshalJSON()
+	var tokenInstruction TokenInstruction
+	json.Unmarshal(inJson, &tokenInstruction)
+	switch tokenInstruction.Info.(type) {
+	case *TokenTransfer:
+		tokenTransfer := tokenInstruction.Info.(*TokenTransfer)
+		mint := meta.TokenMint[tokenTransfer.Source]
+		from := tokenTransfer.Source
+		if k, ok := meta.TokenOwner[tokenTransfer.Source]; ok {
+			from = k
+		}
+		to := tokenTransfer.Destination
+		if k, ok := meta.TokenOwner[tokenTransfer.Destination]; ok {
+			to = k
+		}
+		transfer := &Transfer{
+			Mint:   mint.String(),
+			Amount: tokenTransfer.Lamports,
+			From:   from.String(),
+			To:     to.String(),
+		}
+		return []interface{}{transfer}, nil
+	case *TokenMint:
+		tokenMint := tokenInstruction.Info.(*TokenMint)
+		account := tokenMint.Account
+		if k, ok := meta.TokenOwner[tokenMint.Account]; ok {
+			account = k
+		}
+		mintTo := &MintTo{
+			Mint:    tokenMint.Mint.String(),
+			Amount:  tokenMint.Amount,
+			Account: account.String(),
+		}
+		return []interface{}{mintTo}, nil
+	case *TokenBurn:
+		tokenBurn := tokenInstruction.Info.(*TokenBurn)
+		account := tokenBurn.Account
+		if k, ok := meta.TokenOwner[tokenBurn.Account]; ok {
+			account = k
+		}
+		burn := &Burn{
+			Mint:    tokenBurn.Mint.String(),
+			Amount:  tokenBurn.Amount,
+			Account: account.String(),
+		}
+		return []interface{}{burn}, nil
+	default:
+		return nil, nil
+	}
+}
+
 func RaydiumAmmParser(in *Instruction, meta *Meta) ([]interface{}, []interface{}) {
 	inst := new(raydium_amm.Instruction)
 	instruction := in.Instruction
@@ -148,200 +364,6 @@ func RaydiumAmmParser(in *Instruction, meta *Meta) ([]interface{}, []interface{}
 			User:           inst1.GetUserOwnerAccount().PublicKey.String(),
 		}
 		return []interface{}{removeLiquidity}, []interface{}{}
-	default:
-		return nil, nil
-	}
-}
-
-type SystemTransfer struct {
-	Destination solana.PublicKey `json:"destination"`
-	Lamports    uint64           `json:"lamports"`
-	Source      solana.PublicKey `json:"source"`
-}
-
-type SystemInstruction struct {
-	T    string `json:"type"`
-	Info interface{}
-	Raw  json.RawMessage `json:"info"`
-}
-
-func (j *SystemInstruction) UnmarshalJSON(data []byte) error {
-	type Aux SystemInstruction
-	aux := (*Aux)(j)
-	if err := json.Unmarshal(data, aux); err != nil {
-		return err
-	}
-	var object interface{}
-	switch j.T {
-	case "transfer":
-		object = &SystemTransfer{}
-	default:
-		return nil
-	}
-	if err := json.Unmarshal(j.Raw, object); err != nil {
-		return err
-	}
-	j.Info = object
-	return nil
-}
-
-func SystemParser(in *Instruction, meta *Meta) ([]interface{}, []interface{}) {
-	inJson, _ := in.Instruction.Parsed.MarshalJSON()
-	var systemInstruction SystemInstruction
-	err := json.Unmarshal(inJson, &systemInstruction)
-	if err != nil {
-		return nil, nil
-	}
-	switch systemInstruction.Info.(type) {
-	case *SystemInstruction:
-		systemTransfer := systemInstruction.Info.(*SystemTransfer)
-		transfer := &Transfer{
-			Mint:   "11111111111111111111111111111111",
-			Amount: systemTransfer.Lamports,
-			From:   systemTransfer.Source.String(),
-			To:     systemTransfer.Destination.String(),
-		}
-		return []interface{}{transfer}, nil
-	default:
-		return nil, nil
-	}
-}
-
-type TokenTransfer struct {
-	Destination solana.PublicKey `json:"destination"`
-	Lamports    uint64           `json:"amount,string"`
-	Source      solana.PublicKey `json:"source"`
-	Authority   solana.PublicKey `json:"authority"`
-	Mint        solana.PublicKey `json:"mint"`
-	TokenAmount struct {
-		Amount   uint64 `json:"amount,string"`
-		Decimals uint64 `json:"decimals"`
-	} `json:"tokenAmount"`
-}
-
-type TokenMint struct {
-	Account   solana.PublicKey `json:"account"`
-	Amount    uint64           `json:"amount,string"`
-	Authority solana.PublicKey `json:"mintAuthority"`
-	Mint      solana.PublicKey `json:"mint"`
-}
-
-type TokenBurn struct {
-}
-
-type TokenInstruction struct {
-	T    string `json:"type"`
-	Info interface{}
-	Raw  json.RawMessage `json:"info"`
-}
-
-func (j *TokenInstruction) UnmarshalJSON(data []byte) error {
-	type Aux TokenInstruction
-	aux := (*Aux)(j)
-	if err := json.Unmarshal(data, aux); err != nil {
-		return err
-	}
-	var object interface{}
-	switch j.T {
-	case "transfer":
-		object = &TokenTransfer{}
-	case "transferChecked":
-		object = &TokenTransfer{}
-	case "mintTo":
-		object = &TokenMint{}
-	case "burn":
-		object = &TokenBurn{}
-	default:
-		return nil
-	}
-	if err := json.Unmarshal(j.Raw, object); err != nil {
-		return err
-	}
-	j.Info = object
-	return nil
-}
-
-func TokenParser(in *Instruction, meta *Meta) ([]interface{}, []interface{}) {
-	inJson, _ := in.Instruction.Parsed.MarshalJSON()
-	var tokenInstruction TokenInstruction
-	json.Unmarshal(inJson, &tokenInstruction)
-	switch tokenInstruction.Info.(type) {
-	case *TokenTransfer:
-		tokenTransfer := tokenInstruction.Info.(*TokenTransfer)
-		mint := meta.TokenMint[tokenTransfer.Source]
-		from := tokenTransfer.Source
-		if k, ok := meta.TokenOwner[tokenTransfer.Source]; ok {
-			from = k
-		}
-		to := tokenTransfer.Destination
-		if k, ok := meta.TokenOwner[tokenTransfer.Destination]; ok {
-			to = k
-		}
-		transfer := &Transfer{
-			Mint:   mint.String(),
-			Amount: tokenTransfer.Lamports,
-			From:   from.String(),
-			To:     to.String(),
-		}
-		return []interface{}{transfer}, nil
-	case *TokenMint:
-		tokenMint := tokenInstruction.Info.(*TokenMint)
-		account := tokenMint.Account
-		if k, ok := meta.TokenOwner[tokenMint.Account]; ok {
-			account = k
-		}
-		mintTo := &MintTo{
-			Mint:    tokenMint.Mint.String(),
-			Amount:  tokenMint.Amount,
-			Account: account.String(),
-		}
-		return []interface{}{mintTo}, nil
-	case *TokenBurn:
-		panic("unsupported")
-		return nil, nil
-	default:
-		return nil, nil
-	}
-}
-
-func Token2022Parser(in *Instruction, meta *Meta) ([]interface{}, []interface{}) {
-	inJson, _ := in.Instruction.Parsed.MarshalJSON()
-	var tokenInstruction TokenInstruction
-	json.Unmarshal(inJson, &tokenInstruction)
-	switch tokenInstruction.Info.(type) {
-	case *TokenTransfer:
-		tokenTransfer := tokenInstruction.Info.(*TokenTransfer)
-		mint := meta.TokenMint[tokenTransfer.Source]
-		from := tokenTransfer.Source
-		if k, ok := meta.TokenOwner[tokenTransfer.Source]; ok {
-			from = k
-		}
-		to := tokenTransfer.Destination
-		if k, ok := meta.TokenOwner[tokenTransfer.Destination]; ok {
-			to = k
-		}
-		transfer := &Transfer{
-			Mint:   mint.String(),
-			Amount: tokenTransfer.Lamports,
-			From:   from.String(),
-			To:     to.String(),
-		}
-		return []interface{}{transfer}, nil
-	case *TokenMint:
-		tokenMint := tokenInstruction.Info.(*TokenMint)
-		account := tokenMint.Account
-		if k, ok := meta.TokenOwner[tokenMint.Account]; ok {
-			account = k
-		}
-		mintTo := &MintTo{
-			Mint:    tokenMint.Mint.String(),
-			Amount:  tokenMint.Amount,
-			Account: account.String(),
-		}
-		return []interface{}{mintTo}, nil
-	case *TokenBurn:
-		panic("unsupported")
-		return nil, nil
 	default:
 		return nil, nil
 	}

@@ -1,6 +1,7 @@
 package solanaparser
 
 import (
+	"fmt"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 )
@@ -47,6 +48,7 @@ func (block *Block) Parse(slot uint64, b *rpc.GetParsedBlockResult) {
 	block.Hash = b.Blockhash
 	myTxs := make([]*Transaction, 0)
 	for i, tx := range b.Transactions {
+		fmt.Printf("%s\n", tx.Transaction.Signatures[0])
 		myTx := NewTransaction()
 		err := myTx.Parse(&tx)
 		if err != nil {
