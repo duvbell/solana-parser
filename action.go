@@ -1,64 +1,62 @@
 package solanaparser
 
-import "github.com/shopspring/decimal"
-
-type Trade struct {
-	Pool         string
-	User         string
-	Type         string
-	TokenAAmount decimal.Decimal
-	TokenBAmount decimal.Decimal
-}
+import "github.com/gagliardetto/solana-go"
 
 type CreatePool struct {
-	Pool      string
-	TokenA    string
-	TokenB    string
-	TokenLP   string
-	AccountA  string
-	AccountB  string
-	AccountLP string
-	User      string
+	Pool      solana.PublicKey
+	TokenA    solana.PublicKey
+	TokenB    solana.PublicKey
+	TokenLP   solana.PublicKey
+	AccountA  solana.PublicKey
+	AccountB  solana.PublicKey
+	AccountLP solana.PublicKey
+	User      solana.PublicKey
 }
 
 type AddLiquidity struct {
-	Pool           string
+	Pool           solana.PublicKey
 	TokenATransfer *Transfer
 	TokenBTransfer *Transfer
 	TokenLpMint    *MintTo
-	User           string
+	User           solana.PublicKey
 }
 
 type RemoveLiquidity struct {
-	Pool           string
+	Pool           solana.PublicKey
 	TokenATransfer *Transfer
 	TokenBTransfer *Transfer
 	TokenLpBurn    *Burn
-	User           string
+	User           solana.PublicKey
 }
 
 type Swap struct {
-	Pool           string
+	Pool           solana.PublicKey
 	TokenATransfer *Transfer
 	TokenBTransfer *Transfer
-	User           string
+	User           solana.PublicKey
 }
 
 type Transfer struct {
-	Mint   string
-	From   string
-	To     string
+	Mint   solana.PublicKey
+	From   solana.PublicKey
+	To     solana.PublicKey
 	Amount uint64
 }
 
 type MintTo struct {
-	Mint    string
-	Account string
+	Mint    solana.PublicKey
+	Account solana.PublicKey
 	Amount  uint64
 }
 
 type Burn struct {
-	Mint    string
-	Account string
+	Mint    solana.PublicKey
+	Account solana.PublicKey
 	Amount  uint64
+}
+
+type Initialize struct {
+	Account solana.PublicKey
+	Owner   solana.PublicKey
+	Mint    solana.PublicKey
 }

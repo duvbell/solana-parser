@@ -1,5 +1,7 @@
 package solanaparser
 
+import "github.com/gagliardetto/solana-go"
+
 type Mint struct {
 	Hash        string
 	Owner       string
@@ -10,24 +12,23 @@ type Mint struct {
 }
 
 type Token struct {
-	User  string
-	Mint  string
-	Owner string
+	User  solana.PublicKey
+	Mint  solana.PublicKey
+	Owner solana.PublicKey
 }
 
 type Dex struct {
-	Id   string
+	Id   solana.PublicKey
 	Name string
 }
 
 type Pool struct {
-	Hash     string
-	MintA    string
-	MintB    string
-	MintLp   string
-	VaultA   string
-	VaultB   string
-	VaultLp  string
+	Hash     solana.PublicKey
+	MintA    solana.PublicKey
+	MintB    solana.PublicKey
+	MintLp   solana.PublicKey
+	VaultA   solana.PublicKey
+	VaultB   solana.PublicKey
 	ReserveA uint64
 	ReserveB uint64
 }
