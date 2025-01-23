@@ -8,8 +8,8 @@ import (
 type Instruction struct {
 	Seq         int
 	Instruction *rpc.ParsedInstruction
-	Event       interface{}
-	Receipt     interface{}
+	Event       []interface{}
+	Receipt     []interface{}
 	Children    []*Instruction
 }
 

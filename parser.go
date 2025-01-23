@@ -7,7 +7,6 @@ import (
 	"github.com/gagliardetto/solana-go/programs/raydiumamm"
 	amm_v4 "github.com/gagliardetto/solana-go/programs/raydiumclmm"
 	whirlpool "github.com/gagliardetto/solana-go/programs/whirlpool"
-	"github.com/shopspring/decimal"
 )
 
 var (
@@ -30,9 +29,9 @@ func RegisterParser(program solana.PublicKey, p Parser) {
 	DefaultParse[program] = p
 }
 
-type Parser func(in *Instruction, meta *Meta) (interface{}, interface{})
+type Parser func(in *Instruction, meta *Meta) ([]interface{}, []interface{})
 
-func RaydiumAmmParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
+func RaydiumAmmParser(in *Instruction, meta *Meta) ([]interface{}, []interface{}) {
 	inst := new(raydium_amm.Instruction)
 	instruction := in.Instruction
 	err := ag_binary.NewBorshDecoder(instruction.Data).Decode(inst)
@@ -59,16 +58,27 @@ func RaydiumAmmParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
 	case raydium_amm.Instruction_Initialize2:
 		inst1 := inst.Impl.(*raydium_amm.Initialize2)
 		inst1.SetAccounts(accounts)
-		//
-		t1 := in.Children[0].Event.(*Transfer)
-		t2 := in.Children[1].Event.(*Transfer)
-		//
-		trade := &Trade{
-			Pool:         inst1.GetAmmAccount().PublicKey.String(),
-			Type:         CreatePool,
-			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
-			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
-			User:         inst1.GetUserWalletAccount().PublicKey.String(),
+		// the latest three transfer
+		index := len(in.Children)
+		t1 := in.Children[index-3].Event[0].(*Transfer)
+		t2 := in.Children[index-2].Event[0].(*Transfer)
+		t3 := in.Children[index-1].Event[0].(*MintTo)
+		createPool := &CreatePool{
+			Pool:      inst1.GetAmmAccount().PublicKey.String(),
+			TokenA:    inst1.GetPcMintAccount().PublicKey.String(),
+			TokenB:    inst1.GetCoinMintAccount().PublicKey.String(),
+			TokenLP:   inst1.GetLpMintAccount().PublicKey.String(),
+			AccountA:  inst1.GetPoolPcTokenAccountAccount().PublicKey.String(),
+			AccountB:  inst1.GetPoolCoinTokenAccountAccount().PublicKey.String(),
+			AccountLP: inst1.GetPoolTempLpAccount().PublicKey.String(),
+			User:      inst1.GetAmmAuthorityAccount().PublicKey.String(),
+		}
+		addLiquidity := &AddLiquidity{
+			Pool:           inst1.GetAmmAccount().PublicKey.String(),
+			User:           inst1.GetAmmAuthorityAccount().PublicKey.String(),
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
+			TokenLpMint:    t3,
 		}
 		pool := &Pool{
 			Hash:     inst1.GetAmmAccount().PublicKey.String(),
@@ -81,220 +91,263 @@ func RaydiumAmmParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
 			ReserveA: 0,
 			ReserveB: 0,
 		}
-		return trade, pool
+		return []interface{}{createPool, addLiquidity}, []interface{}{pool}
 	case raydium_amm.Instruction_Deposit:
 		inst1 := inst.Impl.(*raydium_amm.Deposit)
 		inst1.SetAccounts(accounts)
-		//
-		t1 := in.Children[0].Event.(*Transfer)
-		t2 := in.Children[1].Event.(*Transfer)
-		//
-		trade := &Trade{
-			Pool:         inst1.GetAmmAccount().PublicKey.String(),
-			Type:         AddLiquidity,
-			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
-			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
-			User:         inst1.GetUserOwnerAccount().PublicKey.String(),
+		t1 := in.Children[0].Event[0].(*Transfer)
+		t2 := in.Children[1].Event[0].(*Transfer)
+		addLiquidity := &AddLiquidity{
+			Pool:           inst1.GetAmmAccount().PublicKey.String(),
+			User:           inst1.GetUserOwnerAccount().PublicKey.String(),
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
 		}
-		return trade, nil
+		return []interface{}{addLiquidity}, []interface{}{}
 	case raydium_amm.Instruction_SwapBaseIn:
 		inst1 := inst.Impl.(*raydium_amm.SwapBaseIn)
 		if len(accounts) == 17 {
 			accounts = insertAccount(accounts, 4)
 		}
 		inst1.SetAccounts(accounts)
-		t1 := in.Children[0].Event.(*Transfer)
-		t2 := in.Children[1].Event.(*Transfer)
-		//
-		trade := &Trade{
-			Pool:         inst1.GetAmmAccount().PublicKey.String(),
-			Type:         Swap,
-			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
-			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
-			User:         inst1.GetUserSourceOwnerAccount().PublicKey.String(),
+		t1 := in.Children[0].Event[0].(*Transfer)
+		t2 := in.Children[1].Event[0].(*Transfer)
+		swap := &Swap{
+			Pool:           inst1.GetAmmAccount().PublicKey.String(),
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
+			User:           inst1.GetUserSourceOwnerAccount().PublicKey.String(),
 		}
-		return trade, nil
+		return []interface{}{swap}, []interface{}{}
 	case raydium_amm.Instruction_SwapBaseOut:
 		inst1 := inst.Impl.(*raydium_amm.SwapBaseOut)
 		if len(accounts) == 17 {
 			accounts = insertAccount(accounts, 4)
 		}
 		inst1.SetAccounts(accounts)
-		//
-		t1 := in.Children[0].Event.(*Transfer)
-		t2 := in.Children[1].Event.(*Transfer)
-		//
-		trade := &Trade{
-			Pool:         inst1.GetAmmAccount().PublicKey.String(),
-			Type:         Swap,
-			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
-			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
-			User:         inst1.GetUserSourceOwnerAccount().PublicKey.String(),
+		t1 := in.Children[0].Event[0].(*Transfer)
+		t2 := in.Children[1].Event[0].(*Transfer)
+		swap := &Swap{
+			Pool:           inst1.GetAmmAccount().PublicKey.String(),
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
+			User:           inst1.GetUserSourceOwnerAccount().PublicKey.String(),
 		}
-		return trade, nil
+		return []interface{}{swap}, []interface{}{}
 	case raydium_amm.Instruction_Withdraw:
 		inst1 := inst.Impl.(*raydium_amm.Withdraw)
 		inst1.SetAccounts(accounts)
-		//
-		t1 := in.Children[0].Event.(*Transfer)
-		t2 := in.Children[1].Event.(*Transfer)
-		//
-		trade := &Trade{
-			Pool:         inst1.GetAmmAccount().PublicKey.String(),
-			Type:         RemoveLiquidity,
-			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
-			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
-			User:         inst1.GetUserOwnerAccount().PublicKey.String(),
+		t1 := in.Children[0].Event[0].(*Transfer)
+		t2 := in.Children[1].Event[0].(*Transfer)
+		t3 := in.Children[1].Event[0].(*Burn)
+		removeLiquidity := &RemoveLiquidity{
+			Pool:           inst1.GetAmmAccount().PublicKey.String(),
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
+			TokenLpBurn:    t3,
+			User:           inst1.GetUserOwnerAccount().PublicKey.String(),
 		}
-		return trade, nil
+		return []interface{}{removeLiquidity}, []interface{}{}
 	default:
 		return nil, nil
 	}
 }
 
-func SystemParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
-	type instruction struct {
-		Info struct {
-			Destination solana.PublicKey `json:"destination"`
-			Lamports    uint64           `json:"lamports"`
-			Source      solana.PublicKey `json:"source"`
-		} `json:"info"`
-		T string `json:"type"`
+type SystemTransfer struct {
+	Destination solana.PublicKey `json:"destination"`
+	Lamports    uint64           `json:"lamports"`
+	Source      solana.PublicKey `json:"source"`
+}
+
+type SystemInstruction struct {
+	T    string `json:"type"`
+	Info interface{}
+	Raw  json.RawMessage `json:"info"`
+}
+
+func (j *SystemInstruction) UnmarshalJSON(data []byte) error {
+	type Aux SystemInstruction
+	aux := (*Aux)(j)
+	if err := json.Unmarshal(data, aux); err != nil {
+		return err
 	}
-	inJson, _ := in.Instruction.Parsed.MarshalJSON()
-	var myInstruction instruction
-	json.Unmarshal(inJson, &myInstruction)
-	switch myInstruction.T {
+	var object interface{}
+	switch j.T {
 	case "transfer":
+		object = &SystemTransfer{}
+	default:
+		return nil
+	}
+	if err := json.Unmarshal(j.Raw, object); err != nil {
+		return err
+	}
+	j.Info = object
+	return nil
+}
+
+func SystemParser(in *Instruction, meta *Meta) ([]interface{}, []interface{}) {
+	inJson, _ := in.Instruction.Parsed.MarshalJSON()
+	var systemInstruction SystemInstruction
+	err := json.Unmarshal(inJson, &systemInstruction)
+	if err != nil {
+		return nil, nil
+	}
+	switch systemInstruction.Info.(type) {
+	case *SystemInstruction:
+		systemTransfer := systemInstruction.Info.(*SystemTransfer)
 		transfer := &Transfer{
 			Mint:   "11111111111111111111111111111111",
-			Amount: myInstruction.Info.Lamports,
-			From:   myInstruction.Info.Source.String(),
-			To:     myInstruction.Info.Destination.String(),
+			Amount: systemTransfer.Lamports,
+			From:   systemTransfer.Source.String(),
+			To:     systemTransfer.Destination.String(),
 		}
-		return transfer, nil
+		return []interface{}{transfer}, nil
 	default:
 		return nil, nil
 	}
 }
 
-func TokenParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
-	type instruction struct {
-		Info struct {
-			Destination solana.PublicKey `json:"destination"`
-			Lamports    uint64           `json:"amount,string"`
-			Source      solana.PublicKey `json:"source"`
-			Authority   solana.PublicKey `json:"authority"`
-			Mint        solana.PublicKey `json:"mint"`
-			TokenAmount struct {
-				Amount   uint64 `json:"amount,string"`
-				Decimals uint64 `json:"decimals"`
-			} `json:"tokenAmount"`
-		} `json:"info"`
-		T string `json:"type"`
+type TokenTransfer struct {
+	Destination solana.PublicKey `json:"destination"`
+	Lamports    uint64           `json:"amount,string"`
+	Source      solana.PublicKey `json:"source"`
+	Authority   solana.PublicKey `json:"authority"`
+	Mint        solana.PublicKey `json:"mint"`
+	TokenAmount struct {
+		Amount   uint64 `json:"amount,string"`
+		Decimals uint64 `json:"decimals"`
+	} `json:"tokenAmount"`
+}
+
+type TokenMint struct {
+	Account   solana.PublicKey `json:"account"`
+	Amount    uint64           `json:"amount,string"`
+	Authority solana.PublicKey `json:"mintAuthority"`
+	Mint      solana.PublicKey `json:"mint"`
+}
+
+type TokenBurn struct {
+}
+
+type TokenInstruction struct {
+	T    string `json:"type"`
+	Info interface{}
+	Raw  json.RawMessage `json:"info"`
+}
+
+func (j *TokenInstruction) UnmarshalJSON(data []byte) error {
+	type Aux TokenInstruction
+	aux := (*Aux)(j)
+	if err := json.Unmarshal(data, aux); err != nil {
+		return err
 	}
-	inJson, _ := in.Instruction.Parsed.MarshalJSON()
-	var myInstruction instruction
-	json.Unmarshal(inJson, &myInstruction)
-	switch myInstruction.T {
+	var object interface{}
+	switch j.T {
 	case "transfer":
-		mint := meta.TokenMint[myInstruction.Info.Source]
-		from := myInstruction.Info.Source
-		if k, ok := meta.TokenOwner[myInstruction.Info.Source]; ok {
-			from = k
-		}
-		to := myInstruction.Info.Destination
-		if k, ok := meta.TokenOwner[myInstruction.Info.Destination]; ok {
-			to = k
-		}
-		transfer := &Transfer{
-			Mint:   mint.String(),
-			Amount: myInstruction.Info.Lamports,
-			From:   from.String(),
-			To:     to.String(),
-		}
-		return transfer, nil
+		object = &TokenTransfer{}
 	case "transferChecked":
-		mint := meta.TokenMint[myInstruction.Info.Source]
-		from := myInstruction.Info.Source
-		if k, ok := meta.TokenOwner[myInstruction.Info.Source]; ok {
-			from = k
-		}
-		to := myInstruction.Info.Destination
-		if k, ok := meta.TokenOwner[myInstruction.Info.Destination]; ok {
-			to = k
-		}
-		transfer := &Transfer{
-			Mint:   mint.String(),
-			Amount: myInstruction.Info.TokenAmount.Amount,
-			From:   from.String(),
-			To:     to.String(),
-		}
-		return transfer, nil
+		object = &TokenTransfer{}
+	case "mintTo":
+		object = &TokenMint{}
+	case "burn":
+		object = &TokenBurn{}
 	default:
-		return nil, nil
+		return nil
 	}
+	if err := json.Unmarshal(j.Raw, object); err != nil {
+		return err
+	}
+	j.Info = object
+	return nil
 }
 
-func Token2022Parser(in *Instruction, meta *Meta) (interface{}, interface{}) {
-	type instruction struct {
-		Info struct {
-			Destination solana.PublicKey `json:"destination"`
-			Lamports    uint64           `json:"amount,string"`
-			Source      solana.PublicKey `json:"source"`
-			Authority   solana.PublicKey `json:"authority"`
-			Mint        solana.PublicKey `json:"mint"`
-			TokenAmount struct {
-				Amount   uint64 `json:"amount,string"`
-				Decimals uint64 `json:"decimals"`
-			} `json:"tokenAmount"`
-		} `json:"info"`
-		T string `json:"type"`
-	}
+func TokenParser(in *Instruction, meta *Meta) ([]interface{}, []interface{}) {
 	inJson, _ := in.Instruction.Parsed.MarshalJSON()
-	var myInstruction instruction
-	json.Unmarshal(inJson, &myInstruction)
-	switch myInstruction.T {
-	case "transfer":
-		mint := meta.TokenMint[myInstruction.Info.Source]
-		from := myInstruction.Info.Source
-		if k, ok := meta.TokenOwner[myInstruction.Info.Source]; ok {
+	var tokenInstruction TokenInstruction
+	json.Unmarshal(inJson, &tokenInstruction)
+	switch tokenInstruction.Info.(type) {
+	case *TokenTransfer:
+		tokenTransfer := tokenInstruction.Info.(*TokenTransfer)
+		mint := meta.TokenMint[tokenTransfer.Source]
+		from := tokenTransfer.Source
+		if k, ok := meta.TokenOwner[tokenTransfer.Source]; ok {
 			from = k
 		}
-		to := myInstruction.Info.Destination
-		if k, ok := meta.TokenOwner[myInstruction.Info.Destination]; ok {
+		to := tokenTransfer.Destination
+		if k, ok := meta.TokenOwner[tokenTransfer.Destination]; ok {
 			to = k
 		}
 		transfer := &Transfer{
 			Mint:   mint.String(),
-			Amount: myInstruction.Info.Lamports,
+			Amount: tokenTransfer.Lamports,
 			From:   from.String(),
 			To:     to.String(),
 		}
-		return transfer, nil
-	case "transferChecked":
-		mint := meta.TokenMint[myInstruction.Info.Source]
-		from := myInstruction.Info.Source
-		if k, ok := meta.TokenOwner[myInstruction.Info.Source]; ok {
-			from = k
+		return []interface{}{transfer}, nil
+	case *TokenMint:
+		tokenMint := tokenInstruction.Info.(*TokenMint)
+		account := tokenMint.Account
+		if k, ok := meta.TokenOwner[tokenMint.Account]; ok {
+			account = k
 		}
-		to := myInstruction.Info.Destination
-		if k, ok := meta.TokenOwner[myInstruction.Info.Destination]; ok {
-			to = k
+		mintTo := &MintTo{
+			Mint:    tokenMint.Mint.String(),
+			Amount:  tokenMint.Amount,
+			Account: account.String(),
 		}
-		transfer := &Transfer{
-			Mint:   mint.String(),
-			Amount: myInstruction.Info.TokenAmount.Amount,
-			From:   from.String(),
-			To:     to.String(),
-		}
-		return transfer, nil
+		return []interface{}{mintTo}, nil
+	case *TokenBurn:
+		panic("unsupported")
+		return nil, nil
 	default:
 		return nil, nil
 	}
 }
 
-func RaydiumClmmParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
+func Token2022Parser(in *Instruction, meta *Meta) ([]interface{}, []interface{}) {
+	inJson, _ := in.Instruction.Parsed.MarshalJSON()
+	var tokenInstruction TokenInstruction
+	json.Unmarshal(inJson, &tokenInstruction)
+	switch tokenInstruction.Info.(type) {
+	case *TokenTransfer:
+		tokenTransfer := tokenInstruction.Info.(*TokenTransfer)
+		mint := meta.TokenMint[tokenTransfer.Source]
+		from := tokenTransfer.Source
+		if k, ok := meta.TokenOwner[tokenTransfer.Source]; ok {
+			from = k
+		}
+		to := tokenTransfer.Destination
+		if k, ok := meta.TokenOwner[tokenTransfer.Destination]; ok {
+			to = k
+		}
+		transfer := &Transfer{
+			Mint:   mint.String(),
+			Amount: tokenTransfer.Lamports,
+			From:   from.String(),
+			To:     to.String(),
+		}
+		return []interface{}{transfer}, nil
+	case *TokenMint:
+		tokenMint := tokenInstruction.Info.(*TokenMint)
+		account := tokenMint.Account
+		if k, ok := meta.TokenOwner[tokenMint.Account]; ok {
+			account = k
+		}
+		mintTo := &MintTo{
+			Mint:    tokenMint.Mint.String(),
+			Amount:  tokenMint.Amount,
+			Account: account.String(),
+		}
+		return []interface{}{mintTo}, nil
+	case *TokenBurn:
+		panic("unsupported")
+		return nil, nil
+	default:
+		return nil, nil
+	}
+}
+
+func RaydiumClmmParser(in *Instruction, meta *Meta) ([]interface{}, []interface{}) {
 	inst := new(amm_v4.Instruction)
 	err := ag_binary.NewBorshDecoder(in.Instruction.Data).Decode(inst)
 	if err != nil {
@@ -323,73 +376,69 @@ func RaydiumClmmParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
 			ReserveA: 0,
 			ReserveB: 0,
 		}
-		return nil, pool
+		return nil, []interface{}{pool}
 	case amm_v4.Instruction_IncreaseLiquidityV2:
 		inst1 := inst.Impl.(*amm_v4.IncreaseLiquidityV2)
 		inst1.SetAccounts(accounts)
 		//
-		t1 := in.Children[0].Event.(*Transfer)
-		t2 := in.Children[1].Event.(*Transfer)
+		t1 := in.Children[0].Event[0].(*Transfer)
+		t2 := in.Children[1].Event[0].(*Transfer)
 		//
-		trade := &Trade{
-			Pool:         inst1.GetPoolStateAccount().PublicKey.String(),
-			Type:         AddLiquidity,
-			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
-			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
-			User:         inst1.Get(0).PublicKey.String(),
+		addLiquidity := &AddLiquidity{
+			Pool:           inst1.GetPoolStateAccount().PublicKey.String(),
+			User:           inst1.Get(0).PublicKey.String(),
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
 		}
-		return trade, nil
+		return []interface{}{addLiquidity}, nil
 	case amm_v4.Instruction_DecreaseLiquidityV2:
 		inst1 := inst.Impl.(*amm_v4.DecreaseLiquidityV2)
 		inst1.SetAccounts(accounts)
 		//
-		t1 := in.Children[0].Event.(*Transfer)
-		t2 := in.Children[1].Event.(*Transfer)
+		t1 := in.Children[0].Event[0].(*Transfer)
+		t2 := in.Children[1].Event[0].(*Transfer)
 		//
-		trade := &Trade{
-			Pool:         inst1.GetPoolStateAccount().PublicKey.String(),
-			Type:         RemoveLiquidity,
-			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
-			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
-			User:         inst1.Get(0).PublicKey.String(),
+		removeLiquidity := &RemoveLiquidity{
+			Pool:           inst1.GetPoolStateAccount().PublicKey.String(),
+			User:           inst1.Get(0).PublicKey.String(),
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
 		}
-		return trade, nil
+		return []interface{}{removeLiquidity}, nil
 	case amm_v4.Instruction_Swap:
 		inst1 := inst.Impl.(*amm_v4.Swap)
 		inst1.SetAccounts(accounts)
 		//
-		t1 := in.Children[0].Event.(*Transfer)
-		t2 := in.Children[1].Event.(*Transfer)
+		t1 := in.Children[0].Event[0].(*Transfer)
+		t2 := in.Children[1].Event[0].(*Transfer)
 		//
-		trade := &Trade{
-			Pool:         inst1.GetPoolStateAccount().PublicKey.String(),
-			Type:         Swap,
-			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
-			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
-			User:         inst1.GetPayerAccount().PublicKey.String(),
+		swap := &Swap{
+			Pool:           inst1.GetPoolStateAccount().PublicKey.String(),
+			User:           inst1.GetPayerAccount().PublicKey.String(),
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
 		}
-		return trade, nil
+		return []interface{}{swap}, nil
 	case amm_v4.Instruction_SwapV2:
 		inst1 := inst.Impl.(*amm_v4.SwapV2)
 		inst1.SetAccounts(accounts)
 		//
-		t1 := in.Children[0].Event.(*Transfer)
-		t2 := in.Children[1].Event.(*Transfer)
+		t1 := in.Children[0].Event[0].(*Transfer)
+		t2 := in.Children[1].Event[0].(*Transfer)
 		//
-		trade := &Trade{
-			Pool:         inst1.GetPoolStateAccount().PublicKey.String(),
-			Type:         Swap,
-			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
-			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
-			User:         inst1.Get(0).PublicKey.String(),
+		swap := &Swap{
+			Pool:           inst1.GetPoolStateAccount().PublicKey.String(),
+			User:           inst1.Get(0).PublicKey.String(),
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
 		}
-		return trade, nil
+		return []interface{}{swap}, nil
 	default:
 		return nil, nil
 	}
 }
 
-func WhirlPoolParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
+func WhirlPoolParser(in *Instruction, meta *Meta) ([]interface{}, []interface{}) {
 	inst := new(whirlpool.Instruction)
 	err := ag_binary.NewBorshDecoder(in.Instruction.Data).Decode(inst)
 	if err != nil {
@@ -408,59 +457,53 @@ func WhirlPoolParser(in *Instruction, meta *Meta) (interface{}, interface{}) {
 		inst1 := inst.Impl.(*whirlpool.InitializePool)
 		inst1.SetAccounts(accounts)
 		//
-		trade := &Trade{
-			Pool:         inst1.GetWhirlpoolAccount().PublicKey.String(),
-			Type:         Swap,
-			TokenAAmount: decimal.NewFromInt(0),
-			TokenBAmount: decimal.NewFromInt(0),
-			User:         inst1.GetFunderAccount().PublicKey.String(),
+		swap := &Swap{
+			Pool: inst1.GetWhirlpoolAccount().PublicKey.String(),
+			User: inst1.GetFunderAccount().PublicKey.String(),
 		}
-		return trade, nil
+		return []interface{}{swap}, nil
 	case whirlpool.Instruction_Swap:
 		inst1 := inst.Impl.(*whirlpool.Swap)
 		inst1.SetAccounts(accounts)
 		//
-		t1 := in.Children[0].Event.(*Transfer)
-		t2 := in.Children[1].Event.(*Transfer)
+		t1 := in.Children[0].Event[0].(*Transfer)
+		t2 := in.Children[1].Event[0].(*Transfer)
 		//
-		trade := &Trade{
-			Pool:         inst1.GetWhirlpoolAccount().PublicKey.String(),
-			Type:         Swap,
-			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
-			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
-			User:         inst1.GetTokenAuthorityAccount().PublicKey.String(),
+		swap := &Swap{
+			Pool:           inst1.GetWhirlpoolAccount().PublicKey.String(),
+			User:           inst1.GetTokenAuthorityAccount().PublicKey.String(),
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
 		}
-		return trade, nil
+		return []interface{}{swap}, nil
 	case whirlpool.Instruction_IncreaseLiquidity:
 		inst1 := inst.Impl.(*whirlpool.IncreaseLiquidity)
 		inst1.SetAccounts(accounts)
 		//
-		t1 := in.Children[0].Event.(*Transfer)
-		t2 := in.Children[1].Event.(*Transfer)
+		t1 := in.Children[0].Event[0].(*Transfer)
+		t2 := in.Children[1].Event[0].(*Transfer)
 		//
-		trade := &Trade{
-			Pool:         inst1.GetWhirlpoolAccount().PublicKey.String(),
-			Type:         AddLiquidity,
-			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
-			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
-			User:         inst1.GetPositionAuthorityAccount().PublicKey.String(),
+		addLiquidity := &AddLiquidity{
+			Pool:           inst1.GetWhirlpoolAccount().PublicKey.String(),
+			User:           inst1.GetPositionAuthorityAccount().PublicKey.String(),
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
 		}
-		return trade, nil
+		return []interface{}{addLiquidity}, nil
 	case whirlpool.Instruction_DecreaseLiquidity:
 		inst1 := inst.Impl.(*whirlpool.DecreaseLiquidity)
 		inst1.SetAccounts(accounts)
 		//
-		t1 := in.Children[0].Event.(*Transfer)
-		t2 := in.Children[1].Event.(*Transfer)
+		t1 := in.Children[0].Event[0].(*Transfer)
+		t2 := in.Children[1].Event[0].(*Transfer)
 		//
-		trade := &Trade{
-			Pool:         inst1.GetWhirlpoolAccount().PublicKey.String(),
-			Type:         RemoveLiquidity,
-			TokenAAmount: decimal.NewFromInt(int64(t1.Amount)),
-			TokenBAmount: decimal.NewFromInt(int64(t2.Amount)),
-			User:         inst1.GetPositionAuthorityAccount().PublicKey.String(),
+		removeLiquidity := &RemoveLiquidity{
+			Pool:           inst1.GetWhirlpoolAccount().PublicKey.String(),
+			User:           inst1.GetPositionAuthorityAccount().PublicKey.String(),
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
 		}
-		return trade, nil
+		return []interface{}{removeLiquidity}, nil
 	default:
 		return nil, nil
 	}
