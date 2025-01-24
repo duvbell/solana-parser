@@ -453,17 +453,13 @@ func RaydiumClmmParser(in *Instruction, meta *Meta) ([]interface{}, []interface{
 	case amm_v4.Instruction_IncreaseLiquidityV2:
 		inst1 := inst.Impl.(*amm_v4.IncreaseLiquidityV2)
 		inst1.SetAccounts(accounts)
-		//
-		t1 := in.Children[0].Event[0].(*Transfer)
-		t2 := in.Children[1].Event[0].(*Transfer)
-		//
+		transfers := in.findTransfers()
 		addLiquidity := &AddLiquidity{
 			Pool:           inst1.GetPoolStateAccount().PublicKey,
 			User:           inst1.Get(0).PublicKey,
-			TokenATransfer: t1,
-			TokenBTransfer: t2,
+			TokenATransfer: transfers[0],
+			TokenBTransfer: transfers[1],
 		}
-		panic("not supported")
 		return []interface{}{addLiquidity}, nil
 	case amm_v4.Instruction_DecreaseLiquidityV2:
 		inst1 := inst.Impl.(*amm_v4.DecreaseLiquidityV2)
@@ -542,30 +538,27 @@ func WhirlPoolParser(in *Instruction, meta *Meta) ([]interface{}, []interface{})
 	case whirlpool.Instruction_Swap:
 		inst1 := inst.Impl.(*whirlpool.Swap)
 		inst1.SetAccounts(accounts)
-		//
-		t1 := in.Children[0].Event[0].(*Transfer)
-		t2 := in.Children[1].Event[0].(*Transfer)
-		//
+		transfers := in.findTransfers()
+		if len(transfers) != 2 {
+			panic("not supported")
+		}
 		swap := &Swap{
 			Pool:           inst1.GetWhirlpoolAccount().PublicKey,
 			User:           inst1.GetTokenAuthorityAccount().PublicKey,
-			TokenATransfer: t1,
-			TokenBTransfer: t2,
+			TokenATransfer: transfers[0],
+			TokenBTransfer: transfers[1],
 		}
-		panic("not supported")
 		return []interface{}{swap}, nil
 	case whirlpool.Instruction_SwapV2:
 		inst1 := inst.Impl.(*whirlpool.SwapV2)
 		inst1.SetAccounts(accounts)
-		//
-		t1 := in.Children[0].Event[0].(*Transfer)
-		t2 := in.Children[1].Event[0].(*Transfer)
-		//
+		// there are some cpi logs & memo instruction
+		transfers := in.findTransfers()
 		swap := &Swap{
 			Pool:           inst1.GetWhirlpoolAccount().PublicKey,
 			User:           inst1.GetTokenAuthorityAccount().PublicKey,
-			TokenATransfer: t1,
-			TokenBTransfer: t2,
+			TokenATransfer: transfers[0],
+			TokenBTransfer: transfers[1],
 		}
 		return []interface{}{swap}, nil
 	case whirlpool.Instruction_IncreaseLiquidity:
@@ -662,18 +655,16 @@ func StabbleStableSwapParser(in *Instruction, meta *Meta) ([]interface{}, []inte
 	case stable_swap.Instruction_SwapV2:
 		inst1 := inst.Impl.(*stable_swap.SwapV2)
 		inst1.SetAccounts(accounts)
-		// the first one is user deposit
-		// the latest one is credit
-		t1 := in.Children[0].Event[0].(*Transfer)
-		t2 := in.Children[len(in.Children)-1].Event[0].(*Transfer)
+		// the first one is user transfer
+		// the second one is withdraw with (fee transfer & user credit)
+		transfers := in.findTransfers()
 		//
 		swap := &Swap{
 			Pool:           inst1.GetPoolAccount().PublicKey,
 			User:           inst1.GetUserAccount().PublicKey,
-			TokenATransfer: t1,
-			TokenBTransfer: t2,
+			TokenATransfer: transfers[0],
+			TokenBTransfer: transfers[2],
 		}
-		panic("not supported")
 		return []interface{}{swap}, nil
 	case stable_swap.Instruction_Initialize:
 		inst1 := inst.Impl.(*stable_swap.Initialize)
@@ -742,8 +733,38 @@ func MeteoraDLMMParser(in *Instruction, meta *Meta) ([]interface{}, []interface{
 		}
 		panic("not supported")
 		return []interface{}{removeLiquidity}, nil
+	case lb_clmm.Instruction_RemoveLiquidityByRange:
+		inst1 := inst.Impl.(*lb_clmm.RemoveLiquidityByRange)
+		inst1.SetAccounts(accounts)
+		transfers := in.findTransfers()
+		t1 := transfers[0]
+		var t2 *Transfer
+		if len(transfers) > 1 {
+			t2 = transfers[1]
+		}
+		removeLiquidity := &RemoveLiquidity{
+			Pool:           inst1.GetLbPairAccount().PublicKey,
+			User:           inst1.GetSenderAccount().PublicKey,
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
+		}
+		return []interface{}{removeLiquidity}, nil
 	case lb_clmm.Instruction_Swap:
 		inst1 := inst.Impl.(*lb_clmm.Swap)
+		inst1.SetAccounts(accounts)
+		// the first one is user deposit
+		// the second is vault withdraw
+		t1 := in.Children[0].Event[0].(*Transfer)
+		t2 := in.Children[1].Event[0].(*Transfer)
+		swap := &Swap{
+			Pool:           inst1.GetLbPairAccount().PublicKey,
+			User:           inst1.GetUserAccount().PublicKey,
+			TokenATransfer: t1,
+			TokenBTransfer: t2,
+		}
+		return []interface{}{swap}, nil
+	case lb_clmm.Instruction_SwapExactOut:
+		inst1 := inst.Impl.(*lb_clmm.SwapExactOut)
 		inst1.SetAccounts(accounts)
 		// the first one is user deposit
 		// the second is vault withdraw
@@ -763,7 +784,33 @@ func MeteoraDLMMParser(in *Instruction, meta *Meta) ([]interface{}, []interface{
 		panic("not supported")
 		return nil, nil
 	case lb_clmm.Instruction_ClaimFee,
-		lb_clmm.Instruction_ClaimReward:
+		lb_clmm.Instruction_ClaimReward,
+		lb_clmm.Instruction_ClosePosition,
+		lb_clmm.Instruction_ClosePresetParameter,
+		lb_clmm.Instruction_FundReward,
+		lb_clmm.Instruction_GoToABin,
+		lb_clmm.Instruction_IncreaseOracleLength,
+		lb_clmm.Instruction_InitializeBinArray,
+		lb_clmm.Instruction_InitializeBinArrayBitmapExtension,
+		lb_clmm.Instruction_InitializePosition,
+		lb_clmm.Instruction_InitializePositionByOperator,
+		lb_clmm.Instruction_InitializePositionPda,
+		lb_clmm.Instruction_InitializeReward,
+		lb_clmm.Instruction_MigrateBinArray,
+		lb_clmm.Instruction_MigratePosition,
+		lb_clmm.BinArrayBitmapExtensionDiscriminator,
+		lb_clmm.Instruction_InitializePresetParameter,
+		lb_clmm.Instruction_SetActivationPoint,
+		lb_clmm.Instruction_SetPreActivationDuration,
+		lb_clmm.Instruction_SetPreActivationSwapAddress,
+		lb_clmm.Instruction_TogglePairStatus,
+		lb_clmm.Instruction_UpdatePositionOperator,
+		lb_clmm.Instruction_UpdateFeesAndRewards,
+		lb_clmm.Instruction_UpdateFeeParameters,
+		lb_clmm.Instruction_UpdateRewardDuration,
+		lb_clmm.Instruction_UpdateRewardFunder,
+		lb_clmm.Instruction_WithdrawProtocolFee,
+		lb_clmm.Instruction_WithdrawIneligibleReward:
 		return nil, nil
 	default:
 		panic("not supported")
@@ -815,15 +862,13 @@ func MeteoraPoolsParser(in *Instruction, meta *Meta) ([]interface{}, []interface
 	case amm.Instruction_Swap:
 		inst1 := inst.Impl.(*amm.Swap)
 		inst1.SetAccounts(accounts)
-		// the first one is user deposit & mintto
-		// the second one is user withdraw & burn
-		t1 := in.Children[0].Children[0].Event[0].(*Transfer)
-		t2 := in.Children[1].Children[0].Event[0].(*Transfer)
+		// the transfer is execute by vault deposit & withdraw & this first transfer is fee
+		transfers := in.findTransfers()
 		swap := &Swap{
 			Pool:           inst1.GetPoolAccount().PublicKey,
 			User:           inst1.GetUserAccount().PublicKey,
-			TokenATransfer: t1,
-			TokenBTransfer: t2,
+			TokenATransfer: transfers[1],
+			TokenBTransfer: transfers[2],
 		}
 		return []interface{}{swap}, nil
 	case amm.Instruction_InitializePermissionlessPool:

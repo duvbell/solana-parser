@@ -17,7 +17,7 @@ func TestBlock_Parse(t *testing.T) {
 	client := rpc.New(rpc.MainNetBeta_RPC)
 	rewards := false
 	version := uint64(0)
-	slot := uint64(315806583)
+	slot := uint64(315806585)
 	r, err := client.GetParsedBlockWithOpts(
 		context.Background(),
 		slot,
