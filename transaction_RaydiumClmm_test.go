@@ -30,12 +30,7 @@ func TestTransaction_RaydiumClmm_SwapV2(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx := NewTransaction()
-	err = tx.Parse(transaction)
-	if err != nil {
-		panic(err)
-	}
-	err = tx.ParseActions(DefaultParse)
+	tx, err := ParseTransaction(0, transaction)
 	if err != nil {
 		panic(err)
 	}
@@ -63,12 +58,7 @@ func TestTransaction_RaydiumClmm_Swap(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx := NewTransaction()
-	err = tx.Parse(transaction)
-	if err != nil {
-		panic(err)
-	}
-	err = tx.ParseActions(DefaultParse)
+	tx, err := ParseTransaction(0, transaction)
 	if err != nil {
 		panic(err)
 	}
@@ -96,12 +86,7 @@ func TestTransaction_RaydiumClmm_IncreaseLiquidityV2(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx := NewTransaction()
-	err = tx.Parse(transaction)
-	if err != nil {
-		panic(err)
-	}
-	err = tx.ParseActions(DefaultParse)
+	tx, err := ParseTransaction(0, transaction)
 	if err != nil {
 		panic(err)
 	}

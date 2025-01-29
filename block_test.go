@@ -11,13 +11,43 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"time"
 )
+
+func TestBlock_Scan(t *testing.T) {
+	client := rpc.New(rpc.MainNetBeta_RPC)
+	rewards := false
+	version := uint64(0)
+	slot := uint64(315806588)
+	for i := 0; i < 100; i++ {
+		time.Sleep(time.Second * 2)
+		r, err := client.GetParsedBlockWithOpts(
+			context.Background(),
+			slot+uint64(i),
+			&rpc.GetBlockOpts{
+				Encoding:                       solana.EncodingJSONParsed,
+				TransactionDetails:             rpc.TransactionDetailsFull,
+				Rewards:                        &rewards,
+				Commitment:                     rpc.CommitmentConfirmed,
+				MaxSupportedTransactionVersion: &version,
+			},
+		)
+		if err != nil {
+			fmt.Printf("error getting block %d: %s\n", i, err)
+			continue
+		}
+		rJson, _ := json.MarshalIndent(r, "", "    ")
+		os.WriteFile(fmt.Sprintf("block.json"), rJson, 0644)
+
+		ParseBlock(slot, r)
+	}
+}
 
 func TestBlock_Parse(t *testing.T) {
 	client := rpc.New(rpc.MainNetBeta_RPC)
 	rewards := false
 	version := uint64(0)
-	slot := uint64(315806585)
+	slot := uint64(315806587)
 	r, err := client.GetParsedBlockWithOpts(
 		context.Background(),
 		slot,
@@ -35,8 +65,7 @@ func TestBlock_Parse(t *testing.T) {
 	rJson, _ := json.MarshalIndent(r, "", "    ")
 	os.WriteFile(fmt.Sprintf("block.json"), rJson, 0644)
 
-	myBlock := New()
-	myBlock.Parse(slot, r)
+	ParseBlock(slot, r)
 }
 
 type Request struct {

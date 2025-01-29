@@ -1,4 +1,4 @@
-package solanaparser
+package types
 
 import "github.com/gagliardetto/solana-go"
 

@@ -28,12 +28,7 @@ func TestTransaction_Parse_TokenBurn(t *testing.T) {
 		Transaction: result.Transaction,
 		Meta:        result.Meta,
 	}
-	tx := NewTransaction()
-	err = tx.Parse(transaction)
-	if err != nil {
-		panic(err)
-	}
-	err = tx.ParseActions(DefaultParse)
+	tx, err := ParseTransaction(0, transaction)
 	if err != nil {
 		panic(err)
 	}

@@ -28,12 +28,7 @@ func TestTransaction_RaydiumAmm_Initialize2(t *testing.T) {
 		Transaction: result.Transaction,
 		Meta:        result.Meta,
 	}
-	tx := NewTransaction()
-	err = tx.Parse(transaction)
-	if err != nil {
-		panic(err)
-	}
-	err = tx.ParseActions(DefaultParse)
+	tx, err := ParseTransaction(0, transaction)
 	if err != nil {
 		panic(err)
 	}
@@ -59,12 +54,7 @@ func TestTransaction_RaydiumAmm_SwapBaseIn(t *testing.T) {
 		Transaction: result.Transaction,
 		Meta:        result.Meta,
 	}
-	tx := NewTransaction()
-	err = tx.Parse(transaction)
-	if err != nil {
-		panic(err)
-	}
-	err = tx.ParseActions(DefaultParse)
+	tx, err := ParseTransaction(0, transaction)
 	if err != nil {
 		panic(err)
 	}
@@ -90,12 +80,7 @@ func TestTransaction_RaydiumAmm_SwapBaseOut(t *testing.T) {
 		Transaction: result.Transaction,
 		Meta:        result.Meta,
 	}
-	tx := NewTransaction()
-	err = tx.Parse(transaction)
-	if err != nil {
-		panic(err)
-	}
-	err = tx.ParseActions(DefaultParse)
+	tx, err := ParseTransaction(0, transaction)
 	if err != nil {
 		panic(err)
 	}
