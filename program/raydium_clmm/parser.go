@@ -106,7 +106,7 @@ func ParseOpenPositionV2(inst *raydium_clmm.Instruction, in *types.Instruction, 
 	panic("not supported")
 }
 func ParseOpenPositionWithToken22Nft(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	// todo
 }
 func ParseClosePosition(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")

@@ -18,7 +18,7 @@ func TestBlock_Scan(t *testing.T) {
 	client := rpc.New(rpc.MainNetBeta_RPC)
 	rewards := false
 	version := uint64(0)
-	slot := uint64(315806599)
+	slot := uint64(315806607)
 	for i := 0; i < 100; i++ {
 		time.Sleep(time.Second * 2)
 		slot += 1

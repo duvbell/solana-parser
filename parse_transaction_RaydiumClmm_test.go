@@ -93,3 +93,31 @@ func TestTransaction_RaydiumClmm_IncreaseLiquidityV2(t *testing.T) {
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
 }
+
+func TestTransaction_RaydiumClmm_ParseOpenPositionWithToken22Nft(t *testing.T) {
+	solClient := rpc.New(rpc.MainNetBeta_RPC)
+	result, err := solClient.GetParsedTransaction(
+		context.Background(),
+		solana.MustSignatureFromBase58("5kYXuTw6C2CJGJQXAZ8ZmUbspuh5un6fALdHvfce2e4p2u6wxQKU7hBiyGm8oFrk5XfiCJ3KFv42trPRKRkcXNBK"),
+		&rpc.GetParsedTransactionOpts{
+			Commitment:                     rpc.CommitmentConfirmed,
+			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,
+		})
+	if err != nil {
+		panic(err)
+	}
+	transaction := &rpc.ParsedTransactionWithMeta{
+		Slot:        result.Slot,
+		BlockTime:   result.BlockTime,
+		Transaction: result.Transaction,
+		Meta:        result.Meta,
+	}
+	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
+	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
+	tx, err := ParseTransaction(0, transaction)
+	if err != nil {
+		panic(err)
+	}
+	txJson, _ := json.MarshalIndent(tx, "", "    ")
+	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
+}
