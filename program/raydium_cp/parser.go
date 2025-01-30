@@ -18,11 +18,16 @@ func RegisterParser(id uint64, p Parser) {
 
 func init() {
 	program.RegisterParser(raydium_cp.ProgramID, ProgramParser)
-	RegisterParser(uint64(raydium_cp.Instruction_Initialize.Uint32()), ParseInitializePool)
-	RegisterParser(uint64(raydium_cp.Instruction_Deposit.Uint32()), ParseSwap)
-	RegisterParser(uint64(raydium_cp.Instruction_Withdraw.Uint32()), ParseSwapV2)
-	RegisterParser(uint64(raydium_cp.Instruction_SwapBaseInput.Uint32()), ParseIncreaseLiquidity)
-	RegisterParser(uint64(raydium_cp.Instruction_SwapBaseOutput.Uint32()), ParseDecreaseLiquidity)
+	RegisterParser(uint64(raydium_cp.Instruction_CreateAmmConfig.Uint32()), ParseCreateAmmConfig)
+	RegisterParser(uint64(raydium_cp.Instruction_UpdateAmmConfig.Uint32()), ParseUpdateAmmConfig)
+	RegisterParser(uint64(raydium_cp.Instruction_UpdatePoolStatus.Uint32()), ParseUpdatePoolStatus)
+	RegisterParser(uint64(raydium_cp.Instruction_CollectProtocolFee.Uint32()), ParseCollectProtocolFee)
+	RegisterParser(uint64(raydium_cp.Instruction_CollectFundFee.Uint32()), ParseCollectFundFee)
+	RegisterParser(uint64(raydium_cp.Instruction_Initialize.Uint32()), ParseInitialize)
+	RegisterParser(uint64(raydium_cp.Instruction_Deposit.Uint32()), ParseDeposit)
+	RegisterParser(uint64(raydium_cp.Instruction_Withdraw.Uint32()), ParseWithdraw)
+	RegisterParser(uint64(raydium_cp.Instruction_SwapBaseInput.Uint32()), ParseSwapBaseInput)
+	RegisterParser(uint64(raydium_cp.Instruction_SwapBaseOutput.Uint32()), ParseSwapBaseOutput)
 }
 
 func ProgramParser(in *types.Instruction, meta *types.Meta) {
@@ -38,28 +43,34 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) {
 	parser(inst, in, meta)
 }
 
-// InitializePool
-func ParseInitializePool(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseCreateAmmConfig(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
 }
-
-// Swap
-func ParseSwap(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseUpdateAmmConfig(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
 }
-
-// SwapV2
-func ParseSwapV2(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseUpdatePoolStatus(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
 }
-
-// IncreaseLiquidity
-func ParseIncreaseLiquidity(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseCollectProtocolFee(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
 }
-
-// DecreaseLiquidity
-func ParseDecreaseLiquidity(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseCollectFundFee(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseInitialize(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseDeposit(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseWithdraw(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseSwapBaseInput(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseSwapBaseOutput(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
 }
 

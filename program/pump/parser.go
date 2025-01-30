@@ -18,10 +18,12 @@ func RegisterParser(id uint64, p Parser) {
 
 func init() {
 	program.RegisterParser(pumpfun.ProgramID, ProgramParser)
-	RegisterParser(uint64(pumpfun.Instruction_Create.Uint32()), ParseInitializePool)
-	RegisterParser(uint64(pumpfun.Instruction_Buy.Uint32()), ParseSwap)
-	RegisterParser(uint64(pumpfun.Instruction_Sell.Uint32()), ParseSwapV2)
-	RegisterParser(uint64(pumpfun.Instruction_Withdraw.Uint32()), ParseIncreaseLiquidity)
+	RegisterParser(uint64(pumpfun.Instruction_Initialize.Uint32()), ParseInitialize)
+	RegisterParser(uint64(pumpfun.Instruction_Create.Uint32()), ParseCreate)
+	RegisterParser(uint64(pumpfun.Instruction_Buy.Uint32()), ParseBuy)
+	RegisterParser(uint64(pumpfun.Instruction_Sell.Uint32()), ParseSell)
+	RegisterParser(uint64(pumpfun.Instruction_Withdraw.Uint32()), ParseWithdraw)
+	RegisterParser(uint64(pumpfun.Instruction_SetParams.Uint32()), ParseDefault)
 }
 
 func ProgramParser(in *types.Instruction, meta *types.Meta) {
@@ -37,23 +39,28 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) {
 	parser(inst, in, meta)
 }
 
-// InitializePool
-func ParseInitializePool(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
+// Initialize
+func ParseInitialize(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
 }
 
-// Swap
-func ParseSwap(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
+// Create
+func ParseCreate(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
 }
 
-// SwapV2
-func ParseSwapV2(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
+// Buy
+func ParseBuy(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
 }
 
-// IncreaseLiquidity
-func ParseIncreaseLiquidity(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
+// Sell
+func ParseSell(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+
+// Sell
+func ParseWithdraw(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
 }
 

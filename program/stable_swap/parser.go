@@ -18,11 +18,22 @@ func RegisterParser(id uint64, p Parser) {
 
 func init() {
 	program.RegisterParser(stable_swap.ProgramID, ProgramParser)
-	RegisterParser(uint64(stable_swap.Instruction_Initialize.Uint32()), ParseInitialize)
+	RegisterParser(uint64(stable_swap.Instruction_AcceptOwner.Uint32()), ParseAcceptOwner)
+	RegisterParser(uint64(stable_swap.Instruction_ApproveStrategy.Uint32()), ParseApproveStrategy)
+	RegisterParser(uint64(stable_swap.Instruction_ChangeAmpFactor.Uint32()), ParseChangeAmpFactor)
+	RegisterParser(uint64(stable_swap.Instruction_ChangeSwapFee.Uint32()), ParseChangeSwapFee)
+	RegisterParser(uint64(stable_swap.Instruction_CreateStrategy.Uint32()), ParseCreateStrategy)
 	RegisterParser(uint64(stable_swap.Instruction_Deposit.Uint32()), ParseDeposit)
-	RegisterParser(uint64(stable_swap.Instruction_Withdraw.Uint32()), ParseWithdraw)
+	RegisterParser(uint64(stable_swap.Instruction_ExecStrategy.Uint32()), ParseExecStrategy)
+	RegisterParser(uint64(stable_swap.Instruction_Initialize.Uint32()), ParseInitialize)
+	RegisterParser(uint64(stable_swap.Instruction_Pause.Uint32()), ParsePause)
+	RegisterParser(uint64(stable_swap.Instruction_RejectOwner.Uint32()), ParseRejectOwner)
+	RegisterParser(uint64(stable_swap.Instruction_Shutdown.Uint32()), ParseShutdown)
 	RegisterParser(uint64(stable_swap.Instruction_Swap.Uint32()), ParseSwap)
 	RegisterParser(uint64(stable_swap.Instruction_SwapV2.Uint32()), ParseSwapV2)
+	RegisterParser(uint64(stable_swap.Instruction_TransferOwner.Uint32()), ParseTransferOwner)
+	RegisterParser(uint64(stable_swap.Instruction_Unpause.Uint32()), ParseUnpause)
+	RegisterParser(uint64(stable_swap.Instruction_Withdraw.Uint32()), ParseWithdraw)
 }
 
 func ProgramParser(in *types.Instruction, meta *types.Meta) {
@@ -38,12 +49,21 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) {
 	parser(inst, in, meta)
 }
 
-// Initialize
-func ParseInitialize(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseAcceptOwner(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
 }
-
-// Deposit
+func ParseApproveStrategy(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseChangeAmpFactor(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseChangeSwapFee(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseCreateStrategy(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
 func ParseDeposit(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*stable_swap.Deposit)
 	t1 := in.Children[0].Event[0].(*types.Transfer)
@@ -61,27 +81,21 @@ func ParseDeposit(inst *stable_swap.Instruction, in *types.Instruction, meta *ty
 	panic("not supported")
 	in.Event = []interface{}{addLiquidity}
 }
-
-// Withdraw
-func ParseWithdraw(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
-	inst1 := inst.Impl.(*stable_swap.Withdraw)
-	t1 := in.Children[0].Event[0].(*types.Transfer)
-	t2 := in.Children[1].Event[0].(*types.Transfer)
-	user := inst1.GetUserPoolTokenAccount().PublicKey
-	if owner, ok := meta.TokenOwner[user]; ok {
-		user = owner
-	}
-	removeLiquidity := &types.RemoveLiquidity{
-		Pool:           inst1.GetPoolAccount().PublicKey,
-		User:           user,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
-	}
+func ParseExecStrategy(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
-	in.Event = []interface{}{removeLiquidity}
 }
-
-// Swap
+func ParseInitialize(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParsePause(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseRejectOwner(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseShutdown(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
 func ParseSwap(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*stable_swap.Swap)
 	t1 := in.Children[0].Event[0].(*types.Transfer)
@@ -98,8 +112,6 @@ func ParseSwap(inst *stable_swap.Instruction, in *types.Instruction, meta *types
 	}
 	in.Event = []interface{}{swap}
 }
-
-// SwapV2
 func ParseSwapV2(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*stable_swap.SwapV2)
 	t1 := in.Children[0].Event[0].(*types.Transfer)
@@ -115,6 +127,29 @@ func ParseSwapV2(inst *stable_swap.Instruction, in *types.Instruction, meta *typ
 		User:           user,
 	}
 	in.Event = []interface{}{swap}
+}
+func ParseTransferOwner(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseUnpause(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseWithdraw(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
+	inst1 := inst.Impl.(*stable_swap.Withdraw)
+	t1 := in.Children[0].Event[0].(*types.Transfer)
+	t2 := in.Children[1].Event[0].(*types.Transfer)
+	user := inst1.GetUserPoolTokenAccount().PublicKey
+	if owner, ok := meta.TokenOwner[user]; ok {
+		user = owner
+	}
+	removeLiquidity := &types.RemoveLiquidity{
+		Pool:           inst1.GetPoolAccount().PublicKey,
+		User:           user,
+		TokenATransfer: t1,
+		TokenBTransfer: t2,
+	}
+	panic("not supported")
+	in.Event = []interface{}{removeLiquidity}
 }
 
 // Default

@@ -18,6 +18,14 @@ func RegisterParser(id uint64, p Parser) {
 
 func init() {
 	program.RegisterParser(stable_vault.ProgramID, ProgramParser)
+	RegisterParser(uint64(stable_vault.Instruction_AcceptAdmin.Uint32()), ParseAcceptAdmin)
+	RegisterParser(uint64(stable_vault.Instruction_ChangeBeneficiary.Uint32()), ParseChangeBeneficiary)
+	RegisterParser(uint64(stable_vault.Instruction_ChangeBeneficiaryFee.Uint32()), ParseChangeBeneficiaryFee)
+	RegisterParser(uint64(stable_vault.Instruction_Initialize.Uint32()), ParseInitialize)
+	RegisterParser(uint64(stable_vault.Instruction_Pause.Uint32()), ParsePause)
+	RegisterParser(uint64(stable_vault.Instruction_RejectAdmin.Uint32()), ParseRejectAdmin)
+	RegisterParser(uint64(stable_vault.Instruction_TransferAdmin.Uint32()), ParseTransferAdmin)
+	RegisterParser(uint64(stable_vault.Instruction_Unpause.Uint32()), ParseUnpause)
 	RegisterParser(uint64(stable_vault.Instruction_Withdraw.Uint32()), ParseWithdraw)
 	RegisterParser(uint64(stable_vault.Instruction_WithdrawV2.Uint32()), ParseWithdrawV2)
 }
@@ -35,7 +43,30 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) {
 	parser(inst, in, meta)
 }
 
-// Withdraw
+func ParseAcceptAdmin(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseChangeBeneficiary(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseChangeBeneficiaryFee(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseInitialize(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParsePause(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseRejectAdmin(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseTransferAdmin(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseUnpause(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
 func ParseWithdraw(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*stable_vault.Withdraw)
 	if *inst1.BeneficiaryAmount == 0 {
@@ -45,8 +76,6 @@ func ParseWithdraw(inst *stable_vault.Instruction, in *types.Instruction, meta *
 		in.Event = in.Children[1].Event
 	}
 }
-
-// WithdrawV2
 func ParseWithdrawV2(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*stable_vault.WithdrawV2)
 	if *inst1.BeneficiaryAmount == 0 {

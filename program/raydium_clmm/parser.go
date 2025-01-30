@@ -18,11 +18,30 @@ func RegisterParser(id uint64, p Parser) {
 
 func init() {
 	program.RegisterParser(raydium_clmm.ProgramID, ProgramParser)
+	RegisterParser(uint64(raydium_clmm.Instruction_CreateAmmConfig.Uint32()), ParseCreateAmmConfig)
+	RegisterParser(uint64(raydium_clmm.Instruction_UpdateAmmConfig.Uint32()), ParseUpdateAmmConfig)
 	RegisterParser(uint64(raydium_clmm.Instruction_CreatePool.Uint32()), ParseCreatePool)
+	RegisterParser(uint64(raydium_clmm.Instruction_UpdatePoolStatus.Uint32()), ParseUpdatePoolStatus)
+	RegisterParser(uint64(raydium_clmm.Instruction_CreateOperationAccount.Uint32()), ParseCreateOperationAccount)
+	RegisterParser(uint64(raydium_clmm.Instruction_UpdateOperationAccount.Uint32()), ParseUpdateOperationAccount)
+	RegisterParser(uint64(raydium_clmm.Instruction_TransferRewardOwner.Uint32()), ParseTransferRewardOwner)
+	RegisterParser(uint64(raydium_clmm.Instruction_InitializeReward.Uint32()), ParseInitializeReward)
+	RegisterParser(uint64(raydium_clmm.Instruction_CollectRemainingRewards.Uint32()), ParseCollectRemainingRewards)
+	RegisterParser(uint64(raydium_clmm.Instruction_UpdateRewardInfos.Uint32()), ParseUpdateRewardInfos)
+	RegisterParser(uint64(raydium_clmm.Instruction_SetRewardParams.Uint32()), ParseSetRewardParams)
+	RegisterParser(uint64(raydium_clmm.Instruction_CollectProtocolFee.Uint32()), ParseCollectProtocolFee)
+	RegisterParser(uint64(raydium_clmm.Instruction_CollectFundFee.Uint32()), ParseCollectFundFee)
+	RegisterParser(uint64(raydium_clmm.Instruction_OpenPosition.Uint32()), ParseOpenPosition)
+	RegisterParser(uint64(raydium_clmm.Instruction_OpenPositionV2.Uint32()), ParseOpenPositionV2)
+	RegisterParser(uint64(raydium_clmm.Instruction_OpenPositionWithToken22Nft.Uint32()), ParseOpenPositionWithToken22Nft)
+	RegisterParser(uint64(raydium_clmm.Instruction_ClosePosition.Uint32()), ParseClosePosition)
+	RegisterParser(uint64(raydium_clmm.Instruction_IncreaseLiquidity.Uint32()), ParseIncreaseLiquidity)
 	RegisterParser(uint64(raydium_clmm.Instruction_IncreaseLiquidityV2.Uint32()), ParseIncreaseLiquidityV2)
+	RegisterParser(uint64(raydium_clmm.Instruction_DecreaseLiquidity.Uint32()), ParseDecreaseLiquidity)
 	RegisterParser(uint64(raydium_clmm.Instruction_DecreaseLiquidityV2.Uint32()), ParseDecreaseLiquidityV2)
 	RegisterParser(uint64(raydium_clmm.Instruction_Swap.Uint32()), ParseSwap)
 	RegisterParser(uint64(raydium_clmm.Instruction_SwapV2.Uint32()), ParseSwapV2)
+	RegisterParser(uint64(raydium_clmm.Instruction_SwapRouterBaseIn.Uint32()), ParseSwapRouterBaseIn)
 }
 
 func ProgramParser(in *types.Instruction, meta *types.Meta) {
@@ -38,7 +57,12 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) {
 	parser(inst, in, meta)
 }
 
-// CreatePool
+func ParseCreateAmmConfig(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseUpdateAmmConfig(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
 func ParseCreatePool(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_clmm.CreatePool)
 	pool := &types.Pool{
@@ -54,8 +78,51 @@ func ParseCreatePool(inst *raydium_clmm.Instruction, in *types.Instruction, meta
 	panic("not supported")
 	in.Receipt = []interface{}{pool}
 }
-
-// IncreaseLiquidityV2
+func ParseUpdatePoolStatus(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseCreateOperationAccount(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseUpdateOperationAccount(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseTransferRewardOwner(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseInitializeReward(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseCollectRemainingRewards(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseUpdateRewardInfos(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseSetRewardParams(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseCollectProtocolFee(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseCollectFundFee(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseOpenPosition(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseOpenPositionV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseOpenPositionWithToken22Nft(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseClosePosition(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
+func ParseIncreaseLiquidity(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
 func ParseIncreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_clmm.IncreaseLiquidityV2)
 	transfers := in.FindChildrenWithTransfer()
@@ -67,8 +134,9 @@ func ParseIncreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruct
 	}
 	in.Event = []interface{}{addLiquidity}
 }
-
-// DecreaseLiquidityV2
+func ParseDecreaseLiquidity(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
+}
 func ParseDecreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_clmm.DecreaseLiquidityV2)
 	t1 := in.Children[0].Event[0].(*types.Transfer)
@@ -83,8 +151,6 @@ func ParseDecreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruct
 	panic("not supported")
 	in.Event = []interface{}{removeLiquidity}
 }
-
-// Swap
 func ParseSwap(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_clmm.Swap)
 	t1 := in.Children[0].Event[0].(*types.Transfer)
@@ -98,8 +164,6 @@ func ParseSwap(inst *raydium_clmm.Instruction, in *types.Instruction, meta *type
 	}
 	in.Event = []interface{}{swap}
 }
-
-// SwapV2
 func ParseSwapV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_clmm.SwapV2)
 	t1 := in.Children[0].Event[0].(*types.Transfer)
@@ -111,6 +175,9 @@ func ParseSwapV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *ty
 		TokenBTransfer: t2,
 	}
 	in.Event = []interface{}{swap}
+}
+func ParseSwapRouterBaseIn(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	panic("not supported")
 }
 
 // Default

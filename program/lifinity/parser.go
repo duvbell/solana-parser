@@ -19,6 +19,8 @@ func RegisterParser(id uint64, p Parser) {
 func init() {
 	program.RegisterParser(lifinity_v2.ProgramID, ProgramParser)
 	RegisterParser(uint64(lifinity_v2.Instruction_Swap.Uint32()), ParseSwap)
+	RegisterParser(uint64(lifinity_v2.Instruction_DepositAllTokenTypes.Uint32()), ParseDepositAllTokenTypes)
+	RegisterParser(uint64(lifinity_v2.Instruction_WithdrawAllTokenTypes.Uint32()), ParseWithdrawAllTokenTypes)
 }
 
 func ProgramParser(in *types.Instruction, meta *types.Meta) {
@@ -47,6 +49,16 @@ func ParseSwap(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types
 		TokenBTransfer: transfers[1],
 	}
 	in.Event = []interface{}{swap}
+}
+
+func ParseDepositAllTokenTypes(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types.Meta) {
+	// add liquidity
+	panic("not supported")
+}
+
+func ParseWithdrawAllTokenTypes(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types.Meta) {
+	// remove liquidity
+	panic("not supported")
 }
 
 // Default
