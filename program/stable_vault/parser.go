@@ -44,28 +44,21 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) {
 }
 
 func ParseAcceptAdmin(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseChangeBeneficiary(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseChangeBeneficiaryFee(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseInitialize(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
 }
 func ParsePause(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseRejectAdmin(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseTransferAdmin(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseUnpause(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseWithdraw(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*stable_vault.Withdraw)

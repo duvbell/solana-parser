@@ -46,17 +46,17 @@ func ParseInitialize(inst *pumpfun.Instruction, in *types.Instruction, meta *typ
 
 // Create
 func ParseCreate(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	// todo
 }
 
 // Buy
 func ParseBuy(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	// todo
 }
 
 // Sell
 func ParseSell(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	// todo
 }
 
 // Sell

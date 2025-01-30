@@ -48,34 +48,24 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) {
 }
 
 func ParseInitialize(inst *meteora_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseEnableVault(inst *meteora_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseSetOperator(inst *meteora_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseInitializeStrategy(inst *meteora_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseRemoveStrategy(inst *meteora_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseRemoveStrategy2(inst *meteora_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseCollectDust(inst *meteora_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseAddStrategy(inst *meteora_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseDepositStrategy(inst *meteora_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseWithdrawStrategy(inst *meteora_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseWithdraw2(inst *meteora_vault.Instruction, in *types.Instruction, meta *types.Meta) {
 	in.Event = in.Children[0].Event

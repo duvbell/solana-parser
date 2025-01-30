@@ -18,12 +18,13 @@ func TestBlock_Scan(t *testing.T) {
 	client := rpc.New(rpc.MainNetBeta_RPC)
 	rewards := false
 	version := uint64(0)
-	slot := uint64(315806588)
+	slot := uint64(315806599)
 	for i := 0; i < 100; i++ {
 		time.Sleep(time.Second * 2)
+		slot += 1
 		r, err := client.GetParsedBlockWithOpts(
 			context.Background(),
-			slot+uint64(i),
+			slot,
 			&rpc.GetBlockOpts{
 				Encoding:                       solana.EncodingJSONParsed,
 				TransactionDetails:             rpc.TransactionDetailsFull,
@@ -36,9 +37,7 @@ func TestBlock_Scan(t *testing.T) {
 			fmt.Printf("error getting block %d: %s\n", i, err)
 			continue
 		}
-		rJson, _ := json.MarshalIndent(r, "", "    ")
-		os.WriteFile(fmt.Sprintf("block.json"), rJson, 0644)
-
+		fmt.Printf("============================================ block: %d\n", slot)
 		ParseBlock(slot, r)
 	}
 }

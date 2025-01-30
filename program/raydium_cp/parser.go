@@ -44,19 +44,15 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) {
 }
 
 func ParseCreateAmmConfig(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseUpdateAmmConfig(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseUpdatePoolStatus(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
 }
 func ParseCollectProtocolFee(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseCollectFundFee(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseInitialize(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
@@ -68,10 +64,36 @@ func ParseWithdraw(inst *raydium_cp.Instruction, in *types.Instruction, meta *ty
 	panic("not supported")
 }
 func ParseSwapBaseInput(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	inst1 := inst.Impl.(*raydium_cp.SwapBaseInput)
+	t1 := in.Children[0].Event[0].(*types.Transfer)
+	t2 := in.Children[1].Event[0].(*types.Transfer)
+	user := inst1.GetInputTokenAccountAccount().PublicKey
+	if owner, ok := meta.TokenOwner[user]; ok {
+		user = owner
+	}
+	swap := &types.Swap{
+		Pool:           inst1.GetPoolStateAccount().PublicKey,
+		TokenATransfer: t1,
+		TokenBTransfer: t2,
+		User:           user,
+	}
+	in.Event = []interface{}{swap}
 }
 func ParseSwapBaseOutput(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	inst1 := inst.Impl.(*raydium_cp.SwapBaseOutput)
+	t1 := in.Children[0].Event[0].(*types.Transfer)
+	t2 := in.Children[1].Event[0].(*types.Transfer)
+	user := inst1.GetInputTokenAccountAccount().PublicKey
+	if owner, ok := meta.TokenOwner[user]; ok {
+		user = owner
+	}
+	swap := &types.Swap{
+		Pool:           inst1.GetPoolStateAccount().PublicKey,
+		TokenATransfer: t1,
+		TokenBTransfer: t2,
+		User:           user,
+	}
+	in.Event = []interface{}{swap}
 }
 
 // Default

@@ -50,19 +50,14 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) {
 }
 
 func ParseAcceptOwner(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseApproveStrategy(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseChangeAmpFactor(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseChangeSwapFee(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseCreateStrategy(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseDeposit(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*stable_swap.Deposit)
@@ -82,19 +77,15 @@ func ParseDeposit(inst *stable_swap.Instruction, in *types.Instruction, meta *ty
 	in.Event = []interface{}{addLiquidity}
 }
 func ParseExecStrategy(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseInitialize(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
 }
 func ParsePause(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseRejectOwner(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseShutdown(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseSwap(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*stable_swap.Swap)
@@ -129,7 +120,6 @@ func ParseSwapV2(inst *stable_swap.Instruction, in *types.Instruction, meta *typ
 	in.Event = []interface{}{swap}
 }
 func ParseTransferOwner(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseUnpause(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")

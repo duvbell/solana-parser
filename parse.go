@@ -3,6 +3,7 @@ package solanaparser
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/blockchain-develop/solana-parser/program"
 	_ "github.com/blockchain-develop/solana-parser/program/lifinity"
 	_ "github.com/blockchain-develop/solana-parser/program/meteora_dlmm"
@@ -32,7 +33,7 @@ func ParseBlock(slot uint64, b *rpc.GetParsedBlockResult) *types.Block {
 	block.Hash = b.Blockhash
 	myTxs := make([]*types.Transaction, 0)
 	for i, tx := range b.Transactions {
-		//fmt.Printf("%s\n", tx.Transaction.Signatures[0])
+		fmt.Printf("%s\n", tx.Transaction.Signatures[0])
 		myTx, err := ParseTransaction(i+1, &tx)
 		if err != nil {
 			continue

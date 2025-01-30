@@ -80,22 +80,17 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) {
 }
 
 func ParseInitializeConfig(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseInitializePool(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
 }
 func ParseInitializeTickArray(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseInitializeFeeTier(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseInitializeReward(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseSetRewardEmissions(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseOpenPosition(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
@@ -118,16 +113,12 @@ func ParseDecreaseLiquidity(inst *whirlpool.Instruction, in *types.Instruction, 
 	in.Event = []interface{}{transfer1, transfer2}
 }
 func ParseUpdateFeesAndRewards(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseCollectFees(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseCollectReward(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseCollectProtocolFees(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseSwap(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*whirlpool.Swap)
@@ -146,31 +137,22 @@ func ParseClosePosition(inst *whirlpool.Instruction, in *types.Instruction, meta
 	panic("not supported")
 }
 func ParseSetDefaultFeeRate(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseSetDefaultProtocolFeeRate(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseSetFeeRate(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseSetProtocolFeeRate(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseSetFeeAuthority(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseSetCollectProtocolFeesAuthority(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseSetRewardAuthority(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseSetRewardAuthorityBySuperAuthority(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseSetRewardEmissionsSuperAuthority(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseTwoHopSwap(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
@@ -191,19 +173,26 @@ func ParseCloseBundledPosition(inst *whirlpool.Instruction, in *types.Instructio
 	panic("not supported")
 }
 func ParseCollectFeesV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseCollectProtocolFeesV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseCollectRewardV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseDecreaseLiquidityV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
 }
 func ParseIncreaseLiquidityV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	inst1 := inst.Impl.(*whirlpool.IncreaseLiquidityV2)
+	// child 1 : transfer
+	// child 2 : transfer
+	transfers := in.FindChildrenWithTransfer()
+	addLiquidity := &types.AddLiquidity{
+		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
+		TokenATransfer: transfers[0],
+		TokenBTransfer: transfers[1],
+		User:           inst1.GetTokenOwnerAccountAAccount().PublicKey,
+	}
+	in.Event = []interface{}{addLiquidity}
 }
 func ParseInitializePoolV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
@@ -231,19 +220,14 @@ func ParseTwoHopSwapV2(inst *whirlpool.Instruction, in *types.Instruction, meta 
 	panic("not supported")
 }
 func ParseInitializeConfigExtension(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseSetConfigExtensionAuthority(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseSetTokenBadgeAuthority(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseInitializeTokenBadge(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseDeleteTokenBadge(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 
 // Default

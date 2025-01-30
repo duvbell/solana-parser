@@ -10,11 +10,12 @@ import (
 	"testing"
 )
 
-func TestTransaction_MeteoraPools_Swap(t *testing.T) {
+// todo
+func TestTransaction_pumpfun_Swap(t *testing.T) {
 	solClient := rpc.New(rpc.MainNetBeta_RPC)
 	result, err := solClient.GetParsedTransaction(
 		context.Background(),
-		solana.MustSignatureFromBase58("5JkHtCDnJRVYrHYg883BdkKnvZe2iPwW7LooTFSu2yjMPinbcRFTXuKZ3A8tEpz8N82Tn9nudxoTSemzLa19nKho"),
+		solana.MustSignatureFromBase58("3VAKn3dVR14H5V1wUjq9DSd7nKNtBJ6Zx6gErvamNW7AdAZgmkpqcWuG3D6CuU8VhgUijm1d1AQLFpqRadHhdgNq"),
 		&rpc.GetParsedTransactionOpts{
 			Commitment:                     rpc.CommitmentConfirmed,
 			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,
@@ -38,39 +39,11 @@ func TestTransaction_MeteoraPools_Swap(t *testing.T) {
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
 }
 
-func TestTransaction_MeteoraPools_Swap2(t *testing.T) {
+func TestTransaction_pumpfun_ParseCreate(t *testing.T) {
 	solClient := rpc.New(rpc.MainNetBeta_RPC)
 	result, err := solClient.GetParsedTransaction(
 		context.Background(),
-		solana.MustSignatureFromBase58("4Gc5JhCrZUANkkiqTfcmyQQEPAiwZ5BqTTMKqjfpv9Bdfck7pefFFRPT8UHevWSUfZhDbXdKozamYwHSEcFuMNMe"),
-		&rpc.GetParsedTransactionOpts{
-			Commitment:                     rpc.CommitmentConfirmed,
-			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,
-		})
-	if err != nil {
-		panic(err)
-	}
-	transaction := &rpc.ParsedTransactionWithMeta{
-		Slot:        result.Slot,
-		BlockTime:   result.BlockTime,
-		Transaction: result.Transaction,
-		Meta:        result.Meta,
-	}
-	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
-	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
-	}
-	txJson, _ := json.MarshalIndent(tx, "", "    ")
-	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
-}
-
-func TestTransaction_MeteoraPools_ParseAddBalanceLiquidity(t *testing.T) {
-	solClient := rpc.New(rpc.MainNetBeta_RPC)
-	result, err := solClient.GetParsedTransaction(
-		context.Background(),
-		solana.MustSignatureFromBase58("5skNYaCZ836FfWzCL3Y4vfTFB763qWNsosV5odP8Xfxg6sQhfWdTZtNFZJZfFK5ZNrM1nDe2SrUKMPyVtnUzBLf3"),
+		solana.MustSignatureFromBase58("49XWrJBo215z2W6dQRTD7ro9jCN55NshPyM1ZrVtdSjiczHYVBoLGKTiKo5PhEdDesLPeLuGHZKmBwda6ownisze"),
 		&rpc.GetParsedTransactionOpts{
 			Commitment:                     rpc.CommitmentConfirmed,
 			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,

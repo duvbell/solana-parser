@@ -103,7 +103,6 @@ func ParseInitialize2(inst *raydium_amm.Instruction, in *types.Instruction, meta
 	in.Receipt = []interface{}{pool}
 }
 func ParseMonitorStep(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseDeposit(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_amm.Deposit)
@@ -133,16 +132,12 @@ func ParseWithdraw(inst *raydium_amm.Instruction, in *types.Instruction, meta *t
 	in.Event = []interface{}{removeLiquidity}
 }
 func ParseMigrateToOpenBook(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseSetParams(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseWithdrawPnl(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseWithdrawSrm(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseSwapBaseIn(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_amm.SwapBaseIn)
@@ -178,16 +173,12 @@ func ParseSwapBaseOut(inst *raydium_amm.Instruction, in *types.Instruction, meta
 	in.Event = []interface{}{swap}
 }
 func ParseSimulateInfo(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseAdminCancelOrders(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseCreateConfigAccount(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseUpdateConfigAccount(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 
 // Default

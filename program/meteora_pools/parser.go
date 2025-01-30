@@ -72,7 +72,6 @@ func ParseInitializePermissionlessPoolWithFeeTier(inst *meteora_pools.Instructio
 }
 
 func ParseEnableOrDisablePool(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 
 func ParseSwap(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
@@ -121,20 +120,16 @@ func ParseAddBalanceLiquidity(inst *meteora_pools.Instruction, in *types.Instruc
 		TokenATransfer: t1,
 		TokenBTransfer: t2,
 	}
-	panic("not supported")
 	in.Event = []interface{}{addLiquidity}
 }
 
 func ParseSetPoolFees(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 
 func ParseOverrideCurveParam(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 
 func ParseGetPoolInfo(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 
 func ParseBootstrapLiquidity(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
@@ -142,27 +137,21 @@ func ParseBootstrapLiquidity(inst *meteora_pools.Instruction, in *types.Instruct
 }
 
 func ParseCreateMintMetadata(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 
 func ParseCreateLockEscrow(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 
 func ParseLock(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 
 func ParseClaimFee(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 
 func ParseCreateConfig(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 
 func ParseCloseConfig(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 
 func ParseInitializePermissionlessConstantProductPoolWithConfig(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
@@ -178,19 +167,15 @@ func ParseInitializeCustomizablePermissionlessConstantProductPool(inst *meteora_
 }
 
 func ParseUpdateActivationPoint(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 
 func ParseWithdrawProtocolFees(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 
 func ParseSetWhitelistedVault(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 
 func ParsePartnerClaimFee(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 
 // Default
