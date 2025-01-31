@@ -135,7 +135,7 @@ func ParseDecreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruct
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.Get(0).PublicKey,
 	}
-	if len(in.Children) >= 0 {
+	if len(in.Children) >= 1 {
 		removeLiquidity.TokenATransfer = in.Children[0].Event[0].(*types.Transfer)
 	}
 	if len(in.Children) >= 2 {

@@ -178,6 +178,34 @@ func TestTransaction_RaydiumClmm_ParseDecreaseLiquidityV2_2(t *testing.T) {
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
 }
 
+func TestTransaction_RaydiumClmm_ParseDecreaseLiquidityV2_3(t *testing.T) {
+	solClient := rpc.New(rpc.MainNetBeta_RPC)
+	result, err := solClient.GetParsedTransaction(
+		context.Background(),
+		solana.MustSignatureFromBase58("5dKesUZBHR65hsj7pmRFqewpF4KD2zGKitFzQDA9Z7L3zT3sNB9h2QmJBhQxRQq7kLdC9gRzH8ciwzmDYsChNwD9"),
+		&rpc.GetParsedTransactionOpts{
+			Commitment:                     rpc.CommitmentConfirmed,
+			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,
+		})
+	if err != nil {
+		panic(err)
+	}
+	transaction := &rpc.ParsedTransactionWithMeta{
+		Slot:        result.Slot,
+		BlockTime:   result.BlockTime,
+		Transaction: result.Transaction,
+		Meta:        result.Meta,
+	}
+	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
+	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
+	}
+	txJson, _ := json.MarshalIndent(tx, "", "    ")
+	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
+}
+
 func TestTransaction_RaydiumClmm_ParseIncreaseLiquidityV2(t *testing.T) {
 	solClient := rpc.New(rpc.MainNetBeta_RPC)
 	result, err := solClient.GetParsedTransaction(
