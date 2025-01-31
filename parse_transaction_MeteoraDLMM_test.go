@@ -149,3 +149,31 @@ func TestTransaction_MeteoraDLMM_SwapExactOut(t *testing.T) {
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
 }
+
+func TestTransaction_MeteoraDLMM_ParseAddLiquidityByWeight(t *testing.T) {
+	solClient := rpc.New(rpc.MainNetBeta_RPC)
+	result, err := solClient.GetParsedTransaction(
+		context.Background(),
+		solana.MustSignatureFromBase58("4aY1Qshhftiwy4o8UisyWL8cZ7d5YMZwc2iUdntCEKyF4s76myprRvigL2FJir7sMHwuSFfh88SiUTkEGzkjgfiA"),
+		&rpc.GetParsedTransactionOpts{
+			Commitment:                     rpc.CommitmentConfirmed,
+			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,
+		})
+	if err != nil {
+		panic(err)
+	}
+	transaction := &rpc.ParsedTransactionWithMeta{
+		Slot:        result.Slot,
+		BlockTime:   result.BlockTime,
+		Transaction: result.Transaction,
+		Meta:        result.Meta,
+	}
+	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
+	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
+	tx, err := ParseTransaction(0, transaction)
+	if err != nil {
+		panic(err)
+	}
+	txJson, _ := json.MarshalIndent(tx, "", "    ")
+	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
+}

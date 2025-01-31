@@ -75,7 +75,6 @@ func ParseCreatePool(inst *raydium_clmm.Instruction, in *types.Instruction, meta
 		ReserveA: 0,
 		ReserveB: 0,
 	}
-	panic("not supported")
 	in.Receipt = []interface{}{pool}
 }
 func ParseUpdatePoolStatus(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
@@ -109,19 +108,23 @@ func ParseOpenPositionWithToken22Nft(inst *raydium_clmm.Instruction, in *types.I
 	// todo
 }
 func ParseClosePosition(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	// close all accounts
 }
 func ParseIncreaseLiquidity(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
 }
 func ParseIncreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_clmm.IncreaseLiquidityV2)
-	transfers := in.FindChildrenWithTransfer()
+	transfers := in.FindChildrenTransfers()
 	addLiquidity := &types.AddLiquidity{
-		Pool:           inst1.GetPoolStateAccount().PublicKey,
-		User:           inst1.Get(0).PublicKey,
-		TokenATransfer: transfers[0],
-		TokenBTransfer: transfers[1],
+		Pool: inst1.GetPoolStateAccount().PublicKey,
+		User: inst1.Get(0).PublicKey,
+	}
+	if len(transfers) >= 1 {
+		addLiquidity.TokenATransfer = transfers[0]
+	}
+	if len(transfers) >= 2 {
+		addLiquidity.TokenBTransfer = transfers[1]
 	}
 	in.Event = []interface{}{addLiquidity}
 }
@@ -139,7 +142,6 @@ func ParseDecreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruct
 		TokenATransfer: t1,
 		TokenBTransfer: t2,
 	}
-	panic("not supported")
 	in.Event = []interface{}{removeLiquidity}
 }
 func ParseSwap(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {

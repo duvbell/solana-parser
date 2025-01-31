@@ -4,6 +4,7 @@ import (
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go/programs/meteora_pools"
+	"github.com/gagliardetto/solana-go/programs/meteora_vault"
 )
 
 var (
@@ -106,7 +107,6 @@ func ParseRemoveBalanceLiquidity(inst *meteora_pools.Instruction, in *types.Inst
 		TokenATransfer: t1,
 		TokenBTransfer: t2,
 	}
-	panic("not supported")
 	in.Event = []interface{}{removeLiquidity}
 }
 
@@ -159,7 +159,19 @@ func ParseInitializePermissionlessConstantProductPoolWithConfig(inst *meteora_po
 }
 
 func ParseInitializePermissionlessConstantProductPoolWithConfig2(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	// todo, add liquidity
+	// find two deposit
+	instructions := in.FindChildrenPrograms(meteora_vault.ProgramID)
+	inst1 := inst.Impl.(*meteora_pools.InitializePermissionlessConstantProductPoolWithConfig2)
+	t1 := instructions[0].Event[0].(*types.Transfer)
+	t2 := instructions[1].Event[0].(*types.Transfer)
+	addLiquidity := &types.AddLiquidity{
+		Pool:           inst1.GetPoolAccount().PublicKey,
+		User:           inst1.GetPayerAccount().PublicKey,
+		TokenATransfer: t1,
+		TokenBTransfer: t2,
+	}
+	in.Event = []interface{}{addLiquidity}
 }
 
 func ParseInitializeCustomizablePermissionlessConstantProductPool(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {

@@ -85,10 +85,8 @@ func ParseInitializeCustomizablePermissionlessLbPair(inst *meteora_dlmm.Instruct
 	panic("not supported")
 }
 func ParseInitializeBinArrayBitmapExtension(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseInitializeBinArray(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseAddLiquidity(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*meteora_dlmm.AddLiquidity)
@@ -103,11 +101,22 @@ func ParseAddLiquidity(inst *meteora_dlmm.Instruction, in *types.Instruction, me
 	in.Event = []interface{}{addLiquidity}
 }
 func ParseAddLiquidityByWeight(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	inst1 := inst.Impl.(*meteora_dlmm.AddLiquidityByWeight)
+	transfers := in.FindChildrenTransfers()
+	if len(transfers) != 2 {
+		panic("not supported")
+	}
+	addLiquidity := &types.AddLiquidity{
+		Pool:           inst1.GetLbPairAccount().PublicKey,
+		User:           inst1.GetSenderAccount().PublicKey,
+		TokenATransfer: transfers[0],
+		TokenBTransfer: transfers[1],
+	}
+	in.Event = []interface{}{addLiquidity}
 }
 func ParseAddLiquidityByStrategy(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*meteora_dlmm.AddLiquidityByStrategy)
-	transfers := in.FindChildrenWithTransfer()
+	transfers := in.FindChildrenTransfers()
 	if len(transfers) != 2 {
 		panic("not supported")
 	}
@@ -218,7 +227,7 @@ func ParseSetActivationPoint(inst *meteora_dlmm.Instruction, in *types.Instructi
 }
 func ParseRemoveLiquidityByRange(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*meteora_dlmm.RemoveLiquidityByRange)
-	transfers := in.FindChildrenWithTransfer()
+	transfers := in.FindChildrenTransfers()
 	t1 := transfers[0]
 	var t2 *types.Transfer
 	if len(transfers) > 1 {

@@ -138,7 +138,6 @@ func ParseWithdraw(inst *stable_swap.Instruction, in *types.Instruction, meta *t
 		TokenATransfer: t1,
 		TokenBTransfer: t2,
 	}
-	panic("not supported")
 	in.Event = []interface{}{removeLiquidity}
 }
 

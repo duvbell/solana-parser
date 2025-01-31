@@ -121,7 +121,7 @@ func ParseWithdraw(inst *raydium_amm.Instruction, in *types.Instruction, meta *t
 	inst1 := inst.Impl.(*raydium_amm.Withdraw)
 	t1 := in.Children[0].Event[0].(*types.Transfer)
 	t2 := in.Children[1].Event[0].(*types.Transfer)
-	t3 := in.Children[1].Event[0].(*types.Burn)
+	t3 := in.Children[2].Event[0].(*types.Burn)
 	removeLiquidity := &types.RemoveLiquidity{
 		Pool:           inst1.GetAmmAccount().PublicKey,
 		TokenATransfer: t1,

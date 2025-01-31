@@ -50,7 +50,7 @@ func (in *Instruction) AccountMetas() []*solana.AccountMeta {
 	return accounts
 }
 
-func (in *Instruction) FindChildrenWithTransfer() []*Transfer {
+func (in *Instruction) FindChildrenTransfers() []*Transfer {
 	transfers := make([]*Transfer, 0)
 	for _, item := range in.Children {
 		if len(item.Event) != 1 {
@@ -62,4 +62,14 @@ func (in *Instruction) FindChildrenWithTransfer() []*Transfer {
 		}
 	}
 	return transfers
+}
+
+func (in *Instruction) FindChildrenPrograms(id solana.PublicKey) []*Instruction {
+	instructions := make([]*Instruction, 0)
+	for _, item := range in.Children {
+		if item.Instruction.ProgramId == id {
+			instructions = append(instructions, item)
+		}
+	}
+	return instructions
 }

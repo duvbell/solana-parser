@@ -41,7 +41,7 @@ func ParseSwap(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types
 	inst1 := inst.Impl.(*lifinity_v2.Swap)
 	// the first one is user deposit
 	// the second is vault withdraw
-	transfers := in.FindChildrenWithTransfer()
+	transfers := in.FindChildrenTransfers()
 	swap := &types.Swap{
 		Pool:           inst1.GetAmmAccount().PublicKey,
 		User:           inst1.GetAuthorityAccount().PublicKey,

@@ -124,7 +124,7 @@ func ParseSwap(inst *whirlpool.Instruction, in *types.Instruction, meta *types.M
 	inst1 := inst.Impl.(*whirlpool.Swap)
 	// child 1 : transfer
 	// child 2 : transfer
-	transfers := in.FindChildrenWithTransfer()
+	transfers := in.FindChildrenTransfers()
 	swap := &types.Swap{
 		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
 		TokenATransfer: transfers[0],
@@ -134,7 +134,7 @@ func ParseSwap(inst *whirlpool.Instruction, in *types.Instruction, meta *types.M
 	in.Event = []interface{}{swap}
 }
 func ParseClosePosition(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	// close all accounts
 }
 func ParseSetDefaultFeeRate(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 }
@@ -155,7 +155,18 @@ func ParseSetRewardAuthorityBySuperAuthority(inst *whirlpool.Instruction, in *ty
 func ParseSetRewardEmissionsSuperAuthority(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 }
 func ParseTwoHopSwap(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	inst1 := inst.Impl.(*whirlpool.TwoHopSwap)
+	// child 1 : transfer
+	// child 2 : transfer
+	// child 3 : transfer
+	transfers := in.FindChildrenTransfers()
+	swap := &types.Swap{
+		Pool:           inst1.GetWhirlpoolOneAccount().PublicKey,
+		TokenATransfer: transfers[0],
+		TokenBTransfer: transfers[2],
+		User:           inst1.GetTokenAuthorityAccount().PublicKey,
+	}
+	in.Event = []interface{}{swap}
 }
 func ParseInitializePositionBundle(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
@@ -179,13 +190,23 @@ func ParseCollectProtocolFeesV2(inst *whirlpool.Instruction, in *types.Instructi
 func ParseCollectRewardV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 }
 func ParseDecreaseLiquidityV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	inst1 := inst.Impl.(*whirlpool.DecreaseLiquidityV2)
+	// child 1 : transfer
+	// child 2 : transfer
+	transfers := in.FindChildrenTransfers()
+	removeLiquidity := &types.RemoveLiquidity{
+		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
+		TokenATransfer: transfers[0],
+		TokenBTransfer: transfers[1],
+		User:           inst1.GetTokenOwnerAccountAAccount().PublicKey,
+	}
+	in.Event = []interface{}{removeLiquidity}
 }
 func ParseIncreaseLiquidityV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*whirlpool.IncreaseLiquidityV2)
 	// child 1 : transfer
 	// child 2 : transfer
-	transfers := in.FindChildrenWithTransfer()
+	transfers := in.FindChildrenTransfers()
 	addLiquidity := &types.AddLiquidity{
 		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
 		TokenATransfer: transfers[0],
@@ -207,7 +228,7 @@ func ParseSwapV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types
 	inst1 := inst.Impl.(*whirlpool.SwapV2)
 	// child 1 : transfer
 	// child 2 : transfer
-	transfers := in.FindChildrenWithTransfer()
+	transfers := in.FindChildrenTransfers()
 	swap := &types.Swap{
 		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
 		TokenATransfer: transfers[0],
@@ -217,7 +238,18 @@ func ParseSwapV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types
 	in.Event = []interface{}{swap}
 }
 func ParseTwoHopSwapV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	inst1 := inst.Impl.(*whirlpool.TwoHopSwapV2)
+	// child 1 : transfer
+	// child 2 : transfer
+	// child 3 : transfer
+	transfers := in.FindChildrenTransfers()
+	swap := &types.Swap{
+		Pool:           inst1.GetWhirlpoolOneAccount().PublicKey,
+		TokenATransfer: transfers[0],
+		TokenBTransfer: transfers[2],
+		User:           inst1.GetTokenAuthorityAccount().PublicKey,
+	}
+	in.Event = []interface{}{swap}
 }
 func ParseInitializeConfigExtension(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 }
