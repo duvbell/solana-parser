@@ -1,6 +1,7 @@
 package raydium_amm
 
 import (
+	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go"
@@ -63,7 +64,7 @@ func insertAccount(accounts []*solana.AccountMeta, index int) []*solana.AccountM
 }
 
 func ParseInitialize(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse initialize", "program", raydium_amm.ProgramName)
 }
 func ParseInitialize2(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_amm.Initialize2)
@@ -114,7 +115,6 @@ func ParseDeposit(inst *raydium_amm.Instruction, in *types.Instruction, meta *ty
 		TokenATransfer: t1,
 		TokenBTransfer: t2,
 	}
-	panic("not supported")
 	in.Event = []interface{}{addLiquidity, addLiquidity}
 }
 func ParseWithdraw(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
@@ -155,7 +155,7 @@ func ParseSwapBaseIn(inst *raydium_amm.Instruction, in *types.Instruction, meta 
 	in.Event = []interface{}{swap}
 }
 func ParsePreInitialize(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse pre-initialize", "program", raydium_amm.ProgramName)
 }
 func ParseSwapBaseOut(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_amm.SwapBaseOut)

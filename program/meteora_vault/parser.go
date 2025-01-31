@@ -1,6 +1,7 @@
 package meteora_vault
 
 import (
+	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go/programs/meteora_vault"
@@ -77,7 +78,7 @@ func ParseWithdraw(inst *meteora_vault.Instruction, in *types.Instruction, meta 
 	in.Event = in.Children[0].Event
 }
 func ParseWithdrawDirectlyFromStrategy(inst *meteora_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse withdraw directly from strategy", "program", meteora_vault.ProgramName)
 }
 
 // Default

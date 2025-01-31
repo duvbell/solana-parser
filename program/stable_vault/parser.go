@@ -1,6 +1,7 @@
 package stable_vault
 
 import (
+	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go/programs/stable_vault"
@@ -50,7 +51,7 @@ func ParseChangeBeneficiary(inst *stable_vault.Instruction, in *types.Instructio
 func ParseChangeBeneficiaryFee(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
 }
 func ParseInitialize(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse initialize", "program", stable_vault.ProgramName)
 }
 func ParsePause(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {
 }

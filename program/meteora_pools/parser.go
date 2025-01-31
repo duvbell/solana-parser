@@ -1,6 +1,7 @@
 package meteora_pools
 
 import (
+	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go/programs/meteora_pools"
@@ -61,15 +62,15 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) {
 }
 
 func ParseInitializePermissionedPool(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse initialize permissioned pool", "program", meteora_pools.ProgramName)
 }
 
 func ParseInitializePermissionlessPool(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse initialize permissionless pool", "program", meteora_pools.ProgramName)
 }
 
 func ParseInitializePermissionlessPoolWithFeeTier(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse initialize permissionless pool with feeTier", "program", meteora_pools.ProgramName)
 }
 
 func ParseEnableOrDisablePool(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
@@ -90,11 +91,11 @@ func ParseSwap(inst *meteora_pools.Instruction, in *types.Instruction, meta *typ
 }
 
 func ParseRemoveLiquiditySingleSide(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse remove liquidity single side", "program", meteora_pools.ProgramName)
 }
 
 func ParseAddImbalanceLiquidity(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse add imbalance liquidity", "program", meteora_pools.ProgramName)
 }
 
 func ParseRemoveBalanceLiquidity(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
@@ -133,7 +134,7 @@ func ParseGetPoolInfo(inst *meteora_pools.Instruction, in *types.Instruction, me
 }
 
 func ParseBootstrapLiquidity(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse bootstrap liquidity", "program", meteora_pools.ProgramName)
 }
 
 func ParseCreateMintMetadata(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
@@ -155,7 +156,7 @@ func ParseCloseConfig(inst *meteora_pools.Instruction, in *types.Instruction, me
 }
 
 func ParseInitializePermissionlessConstantProductPoolWithConfig(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse initialize permissionless constant_product pool with config", "program", meteora_pools.ProgramName)
 }
 
 func ParseInitializePermissionlessConstantProductPoolWithConfig2(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
@@ -175,7 +176,7 @@ func ParseInitializePermissionlessConstantProductPoolWithConfig2(inst *meteora_p
 }
 
 func ParseInitializeCustomizablePermissionlessConstantProductPool(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse initialize customizable permissionless constant_product pool", "program", meteora_pools.ProgramName)
 }
 
 func ParseUpdateActivationPoint(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {

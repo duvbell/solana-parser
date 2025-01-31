@@ -1,6 +1,7 @@
 package raydium_cp
 
 import (
+	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go/programs/raydium_cp"
@@ -48,20 +49,37 @@ func ParseCreateAmmConfig(inst *raydium_cp.Instruction, in *types.Instruction, m
 func ParseUpdateAmmConfig(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
 }
 func ParseUpdatePoolStatus(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseCollectProtocolFee(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
 }
 func ParseCollectFundFee(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
 }
 func ParseInitialize(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse initialize", "program", raydium_cp.ProgramName)
 }
 func ParseDeposit(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	inst1 := inst.Impl.(*raydium_cp.Deposit)
+	addLiquidity := &types.AddLiquidity{
+		Pool:           inst1.GetPoolStateAccount().PublicKey,
+		User:           inst1.Get(0).PublicKey,
+		TokenATransfer: in.Children[0].Event[0].(*types.Transfer),
+		TokenBTransfer: in.Children[1].Event[0].(*types.Transfer),
+		TokenLpMint:    in.Children[2].Event[0].(*types.MintTo),
+	}
+	in.Event = []interface{}{addLiquidity}
 }
 func ParseWithdraw(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	inst1 := inst.Impl.(*raydium_cp.Withdraw)
+	// child 1 : transfer
+	// child 2 : transfer
+	removeLiquidity := &types.RemoveLiquidity{
+		Pool:           inst1.GetPoolStateAccount().PublicKey,
+		User:           inst1.GetAuthorityAccount().PublicKey,
+		TokenLpBurn:    in.Children[0].Event[0].(*types.Burn),
+		TokenATransfer: in.Children[1].Event[0].(*types.Transfer),
+		TokenBTransfer: in.Children[2].Event[0].(*types.Transfer),
+	}
+	in.Event = []interface{}{removeLiquidity}
 }
 func ParseSwapBaseInput(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_cp.SwapBaseInput)

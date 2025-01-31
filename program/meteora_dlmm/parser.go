@@ -1,6 +1,7 @@
 package meteora_dlmm
 
 import (
+	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go/programs/meteora_dlmm"
@@ -76,13 +77,13 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) {
 }
 
 func ParseInitializeLbPair(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	// create all accounts
 }
 func ParseInitializePermissionLbPair(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse initialize permission lb pair", "program", meteora_dlmm.ProgramName)
 }
 func ParseInitializeCustomizablePermissionlessLbPair(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse initialize customizable permissionless lb pair", "program", meteora_dlmm.ProgramName)
 }
 func ParseInitializeBinArrayBitmapExtension(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
 }
@@ -129,10 +130,10 @@ func ParseAddLiquidityByStrategy(inst *meteora_dlmm.Instruction, in *types.Instr
 	in.Event = []interface{}{addLiquidity}
 }
 func ParseAddLiquidityByStrategyOneSide(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse add liquidity by strategy one-side", "program", meteora_dlmm.ProgramName)
 }
 func ParseAddLiquidityOneSide(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse add liquidity one-side", "program", meteora_dlmm.ProgramName)
 }
 func ParseRemoveLiquidity(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*meteora_dlmm.RemoveLiquidity)
@@ -184,7 +185,7 @@ func ParseSwapExactOut(inst *meteora_dlmm.Instruction, in *types.Instruction, me
 	in.Event = []interface{}{swap}
 }
 func ParseSwapWithPriceImpact(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse swap with price impact", "program", meteora_dlmm.ProgramName)
 }
 func ParseWithdrawProtocolFee(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
 }
@@ -211,7 +212,7 @@ func ParseInitializePresetParameter(inst *meteora_dlmm.Instruction, in *types.In
 func ParseClosePresetParameter(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
 }
 func ParseRemoveAllLiquidity(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse remove all liquidity", "program", meteora_dlmm.ProgramName)
 }
 func ParseTogglePairStatus(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
 }
@@ -242,7 +243,7 @@ func ParseRemoveLiquidityByRange(inst *meteora_dlmm.Instruction, in *types.Instr
 	in.Event = []interface{}{removeLiquidity}
 }
 func ParseAddLiquidityOneSidePrecise(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse add liquidity one-side precise", "program", meteora_dlmm.ProgramName)
 }
 func ParseGoToABin(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
 }

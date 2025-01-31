@@ -1,6 +1,7 @@
 package phoenix_v1
 
 import (
+	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go/programs/phoenix_v1"
@@ -62,10 +63,10 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) {
 }
 
 func ParseSwap(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse swap", "program", phoenix_v1.ProgramName)
 }
 func ParseSwapWithFreeFunds(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse swap", "program", phoenix_v1.ProgramName)
 }
 func ParsePlaceLimitOrder(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")

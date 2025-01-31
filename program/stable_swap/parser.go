@@ -1,6 +1,7 @@
 package stable_swap
 
 import (
+	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go/programs/stable_swap"
@@ -79,7 +80,7 @@ func ParseDeposit(inst *stable_swap.Instruction, in *types.Instruction, meta *ty
 func ParseExecStrategy(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
 }
 func ParseInitialize(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse initialize", "program", stable_swap.ProgramName)
 }
 func ParsePause(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
 }
@@ -122,7 +123,6 @@ func ParseSwapV2(inst *stable_swap.Instruction, in *types.Instruction, meta *typ
 func ParseTransferOwner(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
 }
 func ParseUnpause(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseWithdraw(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*stable_swap.Withdraw)

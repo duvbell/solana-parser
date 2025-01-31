@@ -1,6 +1,7 @@
 package whirlpool
 
 import (
+	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go/programs/whirlpool"
@@ -82,7 +83,7 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) {
 func ParseInitializeConfig(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 }
 func ParseInitializePool(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse instruction initialize pool", "program", whirlpool.ProgramName)
 }
 func ParseInitializeTickArray(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 }
@@ -93,10 +94,10 @@ func ParseInitializeReward(inst *whirlpool.Instruction, in *types.Instruction, m
 func ParseSetRewardEmissions(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 }
 func ParseOpenPosition(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse instruction open position", "program", whirlpool.ProgramName)
 }
 func ParseOpenPositionWithMetadata(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse instruction open position with metadata", "program", whirlpool.ProgramName)
 }
 func ParseIncreaseLiquidity(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 	// child 1 : transfer
@@ -169,19 +170,19 @@ func ParseTwoHopSwap(inst *whirlpool.Instruction, in *types.Instruction, meta *t
 	in.Event = []interface{}{swap}
 }
 func ParseInitializePositionBundle(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse initialize position bundle", "program", whirlpool.ProgramName)
 }
 func ParseInitializePositionBundleWithMetadata(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse initialize position bundle", "program", whirlpool.ProgramName)
 }
 func ParseDeletePositionBundle(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse delete position bundle", "program", whirlpool.ProgramName)
 }
 func ParseOpenBundledPosition(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse open bundled position", "program", whirlpool.ProgramName)
 }
 func ParseCloseBundledPosition(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse close bundle position", "program", whirlpool.ProgramName)
 }
 func ParseCollectFeesV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 }
@@ -216,13 +217,13 @@ func ParseIncreaseLiquidityV2(inst *whirlpool.Instruction, in *types.Instruction
 	in.Event = []interface{}{addLiquidity}
 }
 func ParseInitializePoolV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse initialize pool v2", "program", whirlpool.ProgramName)
 }
 func ParseInitializeRewardV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse initialize reward v2", "program", whirlpool.ProgramName)
 }
 func ParseSetRewardEmissionsV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse set reward emissions v2", "program", whirlpool.ProgramName)
 }
 func ParseSwapV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*whirlpool.SwapV2)

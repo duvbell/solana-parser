@@ -30,9 +30,9 @@ func TestTransaction_RaydiumCP_SwapBaseInput(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
@@ -58,9 +58,65 @@ func TestTransaction_RaydiumCP_SwapBaseOutput(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx, err := ParseTransaction(0, transaction)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
+	}
+	txJson, _ := json.MarshalIndent(tx, "", "    ")
+	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
+}
+
+func TestTransaction_RaydiumCP_ParseDeposit(t *testing.T) {
+	solClient := rpc.New(rpc.MainNetBeta_RPC)
+	result, err := solClient.GetParsedTransaction(
+		context.Background(),
+		solana.MustSignatureFromBase58("61Wtpq6izXjuPAto93UvqTfssCwT774zVireLAnK3ZwnNiqnqiz35e9QRkrduTpwrGH1srcWZ4mmvuixMVY8pnt6"),
+		&rpc.GetParsedTransactionOpts{
+			Commitment:                     rpc.CommitmentConfirmed,
+			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,
+		})
 	if err != nil {
 		panic(err)
+	}
+	transaction := &rpc.ParsedTransactionWithMeta{
+		Slot:        result.Slot,
+		BlockTime:   result.BlockTime,
+		Transaction: result.Transaction,
+		Meta:        result.Meta,
+	}
+	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
+	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
+	}
+	txJson, _ := json.MarshalIndent(tx, "", "    ")
+	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
+}
+
+func TestTransaction_RaydiumCP_ParseWithdraw(t *testing.T) {
+	solClient := rpc.New(rpc.MainNetBeta_RPC)
+	result, err := solClient.GetParsedTransaction(
+		context.Background(),
+		solana.MustSignatureFromBase58("4Su8DPzEQJLqtkL2kkoaphD8gBhrYN5UK3BWh6e17YiKp6crvbww9aUSFmWD8pF5fgycLWyjNb7M1AyaQqswPt2B"),
+		&rpc.GetParsedTransactionOpts{
+			Commitment:                     rpc.CommitmentConfirmed,
+			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,
+		})
+	if err != nil {
+		panic(err)
+	}
+	transaction := &rpc.ParsedTransactionWithMeta{
+		Slot:        result.Slot,
+		BlockTime:   result.BlockTime,
+		Transaction: result.Transaction,
+		Meta:        result.Meta,
+	}
+	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
+	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)

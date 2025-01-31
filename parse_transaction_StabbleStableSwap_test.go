@@ -30,9 +30,9 @@ func TestTransaction_StabbleStableSwap_Swap(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
@@ -58,9 +58,9 @@ func TestTransaction_StabbleStableSwap_Swap_2(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
@@ -86,9 +86,9 @@ func TestTransaction_StabbleStableSwap_SwapV2(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)

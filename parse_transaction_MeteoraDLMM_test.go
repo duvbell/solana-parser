@@ -30,9 +30,9 @@ func TestTransaction_MeteoraDLMM_Swap(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
@@ -58,9 +58,9 @@ func TestTransaction_MeteoraDLMM_AddLiquidityByStrategy(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
@@ -86,9 +86,9 @@ func TestTransaction_MeteoraDLMM_AddLiquidityByStrategy2(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
@@ -114,9 +114,9 @@ func TestTransaction_MeteoraDLMM_RemoveLiquidityByRange(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
@@ -142,9 +142,9 @@ func TestTransaction_MeteoraDLMM_SwapExactOut(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
@@ -170,9 +170,37 @@ func TestTransaction_MeteoraDLMM_ParseAddLiquidityByWeight(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx, err := ParseTransaction(0, transaction)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
+	}
+	txJson, _ := json.MarshalIndent(tx, "", "    ")
+	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
+}
+
+func TestTransaction_MeteoraDLMM_ParseInitializeLbPair(t *testing.T) {
+	solClient := rpc.New(rpc.MainNetBeta_RPC)
+	result, err := solClient.GetParsedTransaction(
+		context.Background(),
+		solana.MustSignatureFromBase58("3bQcQS7H9aUCy2yQ5VovXWnVRF6zjLy86GMWY6m4Z4uSK4hJGBVLsTy8WtsEKHnrBqtmkQzXZHPouuQ8XC6p9m8w"),
+		&rpc.GetParsedTransactionOpts{
+			Commitment:                     rpc.CommitmentConfirmed,
+			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,
+		})
 	if err != nil {
 		panic(err)
+	}
+	transaction := &rpc.ParsedTransactionWithMeta{
+		Slot:        result.Slot,
+		BlockTime:   result.BlockTime,
+		Transaction: result.Transaction,
+		Meta:        result.Meta,
+	}
+	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
+	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)

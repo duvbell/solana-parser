@@ -2,8 +2,7 @@ package solanaparser
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
+	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	_ "github.com/blockchain-develop/solana-parser/program/lifinity"
 	_ "github.com/blockchain-develop/solana-parser/program/meteora_dlmm"
@@ -27,15 +26,15 @@ import (
 )
 
 func ParseBlock(slot uint64, b *rpc.GetParsedBlockResult) *types.Block {
+	log.Logger.Info("parse block", "slot", slot, "hash", b.Blockhash.String())
 	block := &types.Block{}
 	block.Slot = slot
 	block.Time = uint64(*b.BlockTime)
 	block.Hash = b.Blockhash
 	myTxs := make([]*types.Transaction, 0)
 	for i, tx := range b.Transactions {
-		fmt.Printf("%s\n", tx.Transaction.Signatures[0])
-		myTx, err := ParseTransaction(i+1, &tx)
-		if err != nil {
+		myTx := ParseTransaction(i+1, &tx)
+		if myTx == nil {
 			continue
 		}
 		if len(myTx.Instructions) == 0 {
@@ -48,9 +47,11 @@ func ParseBlock(slot uint64, b *rpc.GetParsedBlockResult) *types.Block {
 	return block
 }
 
-func ParseTransaction(seq int, tx *rpc.ParsedTransactionWithMeta) (*types.Transaction, error) {
+func ParseTransaction(seq int, tx *rpc.ParsedTransactionWithMeta) *types.Transaction {
+	log.Logger.Info("parse transaction", "seq", seq, "tx", tx.Transaction.Signatures[0].String())
 	if tx.Meta == nil || tx.Transaction == nil {
-		return nil, errors.New("transaction meta or data is missing")
+		log.Logger.Error("parse transaction: meta or transaction is missing")
+		return nil
 	}
 	t := &types.Transaction{
 		Meta: types.Meta{
@@ -69,15 +70,15 @@ func ParseTransaction(seq int, tx *rpc.ParsedTransactionWithMeta) (*types.Transa
 		// if failed, ignore this transaction
 		errJson, _ := json.Marshal(meta.Err)
 		t.Meta.ErrorMessage = errJson
-		return t, nil
+		return t
 	}
 	message := transaction.Message
 	instructions := message.Instructions
 	if len(instructions) == 0 {
-		return t, nil
+		return t
 	}
 	if instructions[0].ProgramId == solana.VoteProgramID {
-		return t, nil
+		return t
 	}
 	// account infos
 	for _, item := range message.AccountKeys {
@@ -116,7 +117,7 @@ func ParseTransaction(seq int, tx *rpc.ParsedTransactionWithMeta) (*types.Transa
 	for _, instruction := range t.Instructions {
 		parse(instruction, &t.Meta)
 	}
-	return t, nil
+	return t
 }
 
 func split(subIns []*rpc.ParsedInstruction) []int {

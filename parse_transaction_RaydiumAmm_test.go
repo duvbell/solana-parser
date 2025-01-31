@@ -28,9 +28,9 @@ func TestTransaction_RaydiumAmm_Initialize2(t *testing.T) {
 		Transaction: result.Transaction,
 		Meta:        result.Meta,
 	}
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
@@ -54,9 +54,9 @@ func TestTransaction_RaydiumAmm_SwapBaseIn(t *testing.T) {
 		Transaction: result.Transaction,
 		Meta:        result.Meta,
 	}
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
@@ -80,9 +80,9 @@ func TestTransaction_RaydiumAmm_SwapBaseOut(t *testing.T) {
 		Transaction: result.Transaction,
 		Meta:        result.Meta,
 	}
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
@@ -106,9 +106,35 @@ func TestTransaction_RaydiumAmm_ParseWithdraw(t *testing.T) {
 		Transaction: result.Transaction,
 		Meta:        result.Meta,
 	}
-	tx, err := ParseTransaction(0, transaction)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
+	}
+	txJson, _ := json.MarshalIndent(tx, "", "    ")
+	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
+}
+
+func TestTransaction_RaydiumAmm_ParseDeposit(t *testing.T) {
+	solClient := rpc.New(rpc.MainNetBeta_RPC)
+	result, err := solClient.GetParsedTransaction(
+		context.Background(),
+		solana.MustSignatureFromBase58("51rxKxvdb4XniLCwNrzr2eYJ8ynfNkGXbBXjPdh1rZG6tVT9qtJTXfrNJ3eaf9Bc6DrFzgA5CvD1xnnWZrjz9mxJ"),
+		&rpc.GetParsedTransactionOpts{
+			Commitment:                     rpc.CommitmentConfirmed,
+			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,
+		})
 	if err != nil {
 		panic(err)
+	}
+	transaction := &rpc.ParsedTransactionWithMeta{
+		Slot:        result.Slot,
+		BlockTime:   result.BlockTime,
+		Transaction: result.Transaction,
+		Meta:        result.Meta,
+	}
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)

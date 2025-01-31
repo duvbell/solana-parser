@@ -1,6 +1,7 @@
 package pump
 
 import (
+	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go/programs/pumpfun"
@@ -41,27 +42,27 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) {
 
 // Initialize
 func ParseInitialize(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse initialize", "program", pumpfun.ProgramName)
 }
 
 // Create
 func ParseCreate(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
-	// todo
+	log.Logger.Info("ignore parse create", "program", pumpfun.ProgramName)
 }
 
 // Buy
 func ParseBuy(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
-	// todo
+	log.Logger.Info("ignore parse buy", "program", pumpfun.ProgramName)
 }
 
 // Sell
 func ParseSell(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
-	// todo
+	log.Logger.Info("ignore parse sell", "program", pumpfun.ProgramName)
 }
 
 // Sell
 func ParseWithdraw(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse withdraw", "program", pumpfun.ProgramName)
 }
 
 // Default

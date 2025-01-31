@@ -30,9 +30,9 @@ func TestTransaction_WhirlPool_SwapV2(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
@@ -58,9 +58,9 @@ func TestTransaction_WhirlPool_SwapV2_2(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
@@ -86,9 +86,9 @@ func TestTransaction_WhirlPool_Swap(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
@@ -114,9 +114,9 @@ func TestTransaction_WhirlPool_ParseIncreaseLiquidityV2(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
@@ -142,9 +142,9 @@ func TestTransaction_WhirlPool_ParseTwoHopSwapV2(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
@@ -170,9 +170,9 @@ func TestTransaction_WhirlPool_ParseDecreaseLiquidityV2(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)

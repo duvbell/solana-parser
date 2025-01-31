@@ -1,6 +1,7 @@
 package lifinity
 
 import (
+	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go/programs/lifinity_v2"
@@ -53,12 +54,12 @@ func ParseSwap(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types
 
 func ParseDepositAllTokenTypes(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types.Meta) {
 	// add liquidity
-	panic("not supported")
+	log.Logger.Info("ignore parse deposit all token types", "program", lifinity_v2.ProgramName)
 }
 
 func ParseWithdrawAllTokenTypes(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types.Meta) {
 	// remove liquidity
-	panic("not supported")
+	log.Logger.Info("ignore parse withdraw all token types", "program", lifinity_v2.ProgramName)
 }
 
 // Default

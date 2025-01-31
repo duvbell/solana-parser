@@ -1,6 +1,7 @@
 package raydium_clmm
 
 import (
+	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go/programs/raydium_clmm"
@@ -58,10 +59,8 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) {
 }
 
 func ParseCreateAmmConfig(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseUpdateAmmConfig(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseCreatePool(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_clmm.CreatePool)
@@ -78,7 +77,6 @@ func ParseCreatePool(inst *raydium_clmm.Instruction, in *types.Instruction, meta
 	in.Receipt = []interface{}{pool}
 }
 func ParseUpdatePoolStatus(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
 }
 func ParseCreateOperationAccount(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 }
@@ -99,10 +97,10 @@ func ParseCollectProtocolFee(inst *raydium_clmm.Instruction, in *types.Instructi
 func ParseCollectFundFee(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 }
 func ParseOpenPosition(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse open position", "program", raydium_clmm.ProgramName)
 }
 func ParseOpenPositionV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse open position", "program", raydium_clmm.ProgramName)
 }
 func ParseOpenPositionWithToken22Nft(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	// todo
@@ -111,7 +109,7 @@ func ParseClosePosition(inst *raydium_clmm.Instruction, in *types.Instruction, m
 	// close all accounts
 }
 func ParseIncreaseLiquidity(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse increase liquidity", "program", raydium_clmm.ProgramName)
 }
 func ParseIncreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_clmm.IncreaseLiquidityV2)
@@ -129,18 +127,19 @@ func ParseIncreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruct
 	in.Event = []interface{}{addLiquidity}
 }
 func ParseDecreaseLiquidity(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse decrease liquidity", "program", raydium_clmm.ProgramName)
 }
 func ParseDecreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_clmm.DecreaseLiquidityV2)
-	t1 := in.Children[0].Event[0].(*types.Transfer)
-	t2 := in.Children[1].Event[0].(*types.Transfer)
-	//
 	removeLiquidity := &types.RemoveLiquidity{
-		Pool:           inst1.GetPoolStateAccount().PublicKey,
-		User:           inst1.Get(0).PublicKey,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
+		Pool: inst1.GetPoolStateAccount().PublicKey,
+		User: inst1.Get(0).PublicKey,
+	}
+	if len(in.Children) >= 0 {
+		removeLiquidity.TokenATransfer = in.Children[0].Event[0].(*types.Transfer)
+	}
+	if len(in.Children) >= 2 {
+		removeLiquidity.TokenBTransfer = in.Children[1].Event[0].(*types.Transfer)
 	}
 	in.Event = []interface{}{removeLiquidity}
 }
@@ -170,7 +169,7 @@ func ParseSwapV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *ty
 	in.Event = []interface{}{swap}
 }
 func ParseSwapRouterBaseIn(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	panic("not supported")
+	log.Logger.Info("ignore parse swap router base", "program", raydium_clmm.ProgramName)
 }
 
 // Default

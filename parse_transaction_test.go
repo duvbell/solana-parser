@@ -28,9 +28,9 @@ func TestTransaction_Parse_TokenBurn(t *testing.T) {
 		Transaction: result.Transaction,
 		Meta:        result.Meta,
 	}
-	tx, err := ParseTransaction(0, transaction)
-	if err != nil {
-		panic(err)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
 	}
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
