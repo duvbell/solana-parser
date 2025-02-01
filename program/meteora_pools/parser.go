@@ -84,8 +84,8 @@ func ParseSwap(inst *meteora_pools.Instruction, in *types.Instruction, meta *typ
 	swap := &types.Swap{
 		Pool:           inst1.GetPoolAccount().PublicKey,
 		User:           inst1.GetUserAccount().PublicKey,
-		TokenATransfer: deposit,
-		TokenBTransfer: withdraw,
+		InputTransfer:  deposit,
+		OutputTransfer: withdraw,
 	}
 	in.Event = []interface{}{swap}
 }

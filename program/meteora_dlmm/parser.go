@@ -165,8 +165,8 @@ func ParseSwap(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *type
 	swap := &types.Swap{
 		Pool:           inst1.GetLbPairAccount().PublicKey,
 		User:           inst1.GetUserAccount().PublicKey,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
+		InputTransfer:  t1,
+		OutputTransfer: t2,
 	}
 	in.Event = []interface{}{swap}
 }
@@ -179,8 +179,8 @@ func ParseSwapExactOut(inst *meteora_dlmm.Instruction, in *types.Instruction, me
 	swap := &types.Swap{
 		Pool:           inst1.GetLbPairAccount().PublicKey,
 		User:           inst1.GetUserAccount().PublicKey,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
+		InputTransfer:  t1,
+		OutputTransfer: t2,
 	}
 	in.Event = []interface{}{swap}
 }

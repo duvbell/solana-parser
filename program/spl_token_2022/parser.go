@@ -69,13 +69,17 @@ func ParseTransfer(in *types.Instruction, raw []byte, meta *types.Meta) {
 	}
 	mint := meta.TokenMint[instruction.Source]
 	from := instruction.Source
-	if k, ok := meta.TokenOwner[instruction.Source]; ok {
-		from = k
-	}
+	/*
+		if k, ok := meta.TokenOwner[instruction.Source]; ok {
+			from = k
+		}
+	*/
 	to := instruction.Destination
-	if k, ok := meta.TokenOwner[instruction.Destination]; ok {
-		to = k
-	}
+	/*
+		if k, ok := meta.TokenOwner[instruction.Destination]; ok {
+			to = k
+		}
+	*/
 	amount := instruction.Lamports
 	if amount == 0 {
 		amount = instruction.TokenAmount.Amount
@@ -103,9 +107,11 @@ func ParseMint(in *types.Instruction, raw []byte, meta *types.Meta) {
 		return
 	}
 	account := instruction.Account
-	if k, ok := meta.TokenOwner[instruction.Account]; ok {
-		account = k
-	}
+	/*
+		if k, ok := meta.TokenOwner[instruction.Account]; ok {
+			account = k
+		}
+	*/
 	mintTo := &types.MintTo{
 		Mint:    instruction.Mint,
 		Amount:  instruction.Amount,
@@ -128,9 +134,11 @@ func ParseBurn(in *types.Instruction, raw []byte, meta *types.Meta) {
 		return
 	}
 	account := instruction.Account
-	if k, ok := meta.TokenOwner[instruction.Account]; ok {
-		account = k
-	}
+	/*
+		if k, ok := meta.TokenOwner[instruction.Account]; ok {
+			account = k
+		}
+	*/
 	burn := &types.Burn{
 		Mint:    instruction.Mint,
 		Amount:  instruction.Amount,

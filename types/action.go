@@ -15,25 +15,25 @@ type CreatePool struct {
 
 type AddLiquidity struct {
 	Pool           solana.PublicKey
+	User           solana.PublicKey
 	TokenATransfer *Transfer
 	TokenBTransfer *Transfer
 	TokenLpMint    *MintTo
-	User           solana.PublicKey
 }
 
 type RemoveLiquidity struct {
 	Pool           solana.PublicKey
+	User           solana.PublicKey
 	TokenATransfer *Transfer
 	TokenBTransfer *Transfer
 	TokenLpBurn    *Burn
-	User           solana.PublicKey
 }
 
 type Swap struct {
 	Pool           solana.PublicKey
-	TokenATransfer *Transfer
-	TokenBTransfer *Transfer
 	User           solana.PublicKey
+	InputTransfer  *Transfer
+	OutputTransfer *Transfer
 }
 
 type Transfer struct {

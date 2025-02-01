@@ -46,8 +46,8 @@ func ParseSwap(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types
 	swap := &types.Swap{
 		Pool:           inst1.GetAmmAccount().PublicKey,
 		User:           inst1.GetAuthorityAccount().PublicKey,
-		TokenATransfer: transfers[0],
-		TokenBTransfer: transfers[1],
+		InputTransfer:  transfers[0],
+		OutputTransfer: transfers[1],
 	}
 	in.Event = []interface{}{swap}
 }

@@ -148,8 +148,8 @@ func ParseSwapBaseIn(inst *raydium_amm.Instruction, in *types.Instruction, meta 
 	t2 := in.Children[1].Event[0].(*types.Transfer)
 	swap := &types.Swap{
 		Pool:           inst1.GetAmmAccount().PublicKey,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
+		InputTransfer:  t1,
+		OutputTransfer: t2,
 		User:           inst1.GetUserSourceOwnerAccount().PublicKey,
 	}
 	in.Event = []interface{}{swap}
@@ -166,8 +166,8 @@ func ParseSwapBaseOut(inst *raydium_amm.Instruction, in *types.Instruction, meta
 	t2 := in.Children[1].Event[0].(*types.Transfer)
 	swap := &types.Swap{
 		Pool:           inst1.GetAmmAccount().PublicKey,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
+		InputTransfer:  t1,
+		OutputTransfer: t2,
 		User:           inst1.GetUserSourceOwnerAccount().PublicKey,
 	}
 	in.Event = []interface{}{swap}

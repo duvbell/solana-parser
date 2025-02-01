@@ -98,8 +98,8 @@ func ParseSwap(inst *stable_swap.Instruction, in *types.Instruction, meta *types
 	}
 	swap := &types.Swap{
 		Pool:           inst1.GetPoolAccount().PublicKey,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
+		InputTransfer:  t1,
+		OutputTransfer: t2,
 		User:           user,
 	}
 	in.Event = []interface{}{swap}
@@ -114,8 +114,8 @@ func ParseSwapV2(inst *stable_swap.Instruction, in *types.Instruction, meta *typ
 	}
 	swap := &types.Swap{
 		Pool:           inst1.GetPoolAccount().PublicKey,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
+		InputTransfer:  t1,
+		OutputTransfer: t2,
 		User:           user,
 	}
 	in.Event = []interface{}{swap}

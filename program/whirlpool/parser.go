@@ -128,8 +128,8 @@ func ParseSwap(inst *whirlpool.Instruction, in *types.Instruction, meta *types.M
 	transfers := in.FindChildrenTransfers()
 	swap := &types.Swap{
 		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
-		TokenATransfer: transfers[0],
-		TokenBTransfer: transfers[1],
+		InputTransfer:  transfers[0],
+		OutputTransfer: transfers[1],
 		User:           inst1.GetTokenOwnerAccountAAccount().PublicKey,
 	}
 	in.Event = []interface{}{swap}
@@ -163,8 +163,8 @@ func ParseTwoHopSwap(inst *whirlpool.Instruction, in *types.Instruction, meta *t
 	transfers := in.FindChildrenTransfers()
 	swap := &types.Swap{
 		Pool:           inst1.GetWhirlpoolOneAccount().PublicKey,
-		TokenATransfer: transfers[0],
-		TokenBTransfer: transfers[2],
+		InputTransfer:  transfers[0],
+		OutputTransfer: transfers[2],
 		User:           inst1.GetTokenAuthorityAccount().PublicKey,
 	}
 	in.Event = []interface{}{swap}
@@ -232,8 +232,8 @@ func ParseSwapV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types
 	transfers := in.FindChildrenTransfers()
 	swap := &types.Swap{
 		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
-		TokenATransfer: transfers[0],
-		TokenBTransfer: transfers[1],
+		InputTransfer:  transfers[0],
+		OutputTransfer: transfers[1],
 		User:           inst1.GetTokenOwnerAccountAAccount().PublicKey,
 	}
 	in.Event = []interface{}{swap}
@@ -246,8 +246,8 @@ func ParseTwoHopSwapV2(inst *whirlpool.Instruction, in *types.Instruction, meta 
 	transfers := in.FindChildrenTransfers()
 	swap := &types.Swap{
 		Pool:           inst1.GetWhirlpoolOneAccount().PublicKey,
-		TokenATransfer: transfers[0],
-		TokenBTransfer: transfers[2],
+		InputTransfer:  transfers[0],
+		OutputTransfer: transfers[2],
 		User:           inst1.GetTokenAuthorityAccount().PublicKey,
 	}
 	in.Event = []interface{}{swap}

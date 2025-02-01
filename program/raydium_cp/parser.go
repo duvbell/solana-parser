@@ -91,8 +91,8 @@ func ParseSwapBaseInput(inst *raydium_cp.Instruction, in *types.Instruction, met
 	}
 	swap := &types.Swap{
 		Pool:           inst1.GetPoolStateAccount().PublicKey,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
+		InputTransfer:  t1,
+		OutputTransfer: t2,
 		User:           user,
 	}
 	in.Event = []interface{}{swap}
@@ -107,8 +107,8 @@ func ParseSwapBaseOutput(inst *raydium_cp.Instruction, in *types.Instruction, me
 	}
 	swap := &types.Swap{
 		Pool:           inst1.GetPoolStateAccount().PublicKey,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
+		InputTransfer:  t1,
+		OutputTransfer: t2,
 		User:           user,
 	}
 	in.Event = []interface{}{swap}
