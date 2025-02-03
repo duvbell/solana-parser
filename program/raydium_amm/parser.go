@@ -1,6 +1,7 @@
 package raydium_amm
 
 import (
+	"errors"
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
@@ -38,17 +39,18 @@ func init() {
 	RegisterParser(uint64(raydium_amm.Instruction_UpdateConfigAccount), ParseUpdateConfigAccount)
 }
 
-func ProgramParser(in *types.Instruction, meta *types.Meta) {
+func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	inst, err := raydium_amm.DecodeInstruction(in.AccountMetas(), in.Instruction.Data)
 	if err != nil {
-		return
+		return err
 	}
 	id := uint64(inst.TypeID.Uint32())
 	parser, ok := Parsers[id]
 	if !ok {
-		return
+		return errors.New("parser not found")
 	}
 	parser(inst, in, meta)
+	return nil
 }
 
 func insertAccount(accounts []*solana.AccountMeta, index int) []*solana.AccountMeta {
@@ -74,14 +76,14 @@ func ParseInitialize2(inst *raydium_amm.Instruction, in *types.Instruction, meta
 	t2 := in.Children[index-2].Event[0].(*types.Transfer)
 	t3 := in.Children[index-1].Event[0].(*types.MintTo)
 	createPool := &types.CreatePool{
-		Pool:      inst1.GetAmmAccount().PublicKey,
-		TokenA:    inst1.GetPcMintAccount().PublicKey,
-		TokenB:    inst1.GetCoinMintAccount().PublicKey,
-		TokenLP:   inst1.GetLpMintAccount().PublicKey,
-		AccountA:  inst1.GetPoolPcTokenAccountAccount().PublicKey,
-		AccountB:  inst1.GetPoolCoinTokenAccountAccount().PublicKey,
-		AccountLP: inst1.GetPoolTempLpAccount().PublicKey,
-		User:      inst1.GetAmmAuthorityAccount().PublicKey,
+		Pool:    inst1.GetAmmAccount().PublicKey,
+		User:    inst1.GetAmmAuthorityAccount().PublicKey,
+		TokenA:  inst1.GetPcMintAccount().PublicKey,
+		TokenB:  inst1.GetCoinMintAccount().PublicKey,
+		TokenLP: inst1.GetLpMintAccount().PublicKey,
+		VaultA:  inst1.GetPoolPcTokenAccountAccount().PublicKey,
+		VaultB:  inst1.GetPoolCoinTokenAccountAccount().PublicKey,
+		VaultLP: inst1.GetPoolTempLpAccount().PublicKey,
 	}
 	addLiquidity := &types.AddLiquidity{
 		Pool:           inst1.GetAmmAccount().PublicKey,
@@ -124,10 +126,10 @@ func ParseWithdraw(inst *raydium_amm.Instruction, in *types.Instruction, meta *t
 	t3 := in.Children[2].Event[0].(*types.Burn)
 	removeLiquidity := &types.RemoveLiquidity{
 		Pool:           inst1.GetAmmAccount().PublicKey,
+		User:           inst1.GetUserOwnerAccount().PublicKey,
 		TokenATransfer: t1,
 		TokenBTransfer: t2,
 		TokenLpBurn:    t3,
-		User:           inst1.GetUserOwnerAccount().PublicKey,
 	}
 	in.Event = []interface{}{removeLiquidity}
 }
@@ -148,9 +150,9 @@ func ParseSwapBaseIn(inst *raydium_amm.Instruction, in *types.Instruction, meta 
 	t2 := in.Children[1].Event[0].(*types.Transfer)
 	swap := &types.Swap{
 		Pool:           inst1.GetAmmAccount().PublicKey,
+		User:           inst1.GetUserSourceOwnerAccount().PublicKey,
 		InputTransfer:  t1,
 		OutputTransfer: t2,
-		User:           inst1.GetUserSourceOwnerAccount().PublicKey,
 	}
 	in.Event = []interface{}{swap}
 }
@@ -166,9 +168,9 @@ func ParseSwapBaseOut(inst *raydium_amm.Instruction, in *types.Instruction, meta
 	t2 := in.Children[1].Event[0].(*types.Transfer)
 	swap := &types.Swap{
 		Pool:           inst1.GetAmmAccount().PublicKey,
+		User:           inst1.GetUserSourceOwnerAccount().PublicKey,
 		InputTransfer:  t1,
 		OutputTransfer: t2,
-		User:           inst1.GetUserSourceOwnerAccount().PublicKey,
 	}
 	in.Event = []interface{}{swap}
 }

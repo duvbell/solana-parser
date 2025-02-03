@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestTransaction_WhirlPool_SwapV2(t *testing.T) {
+func TestTransaction_WhirlPool_ParseSwapV2(t *testing.T) {
 	solClient := rpc.New(rpc.MainNetBeta_RPC)
 	result, err := solClient.GetParsedTransaction(
 		context.Background(),
@@ -38,7 +38,7 @@ func TestTransaction_WhirlPool_SwapV2(t *testing.T) {
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
 }
 
-func TestTransaction_WhirlPool_SwapV2_2(t *testing.T) {
+func TestTransaction_WhirlPool_ParseSwapV2_2(t *testing.T) {
 	solClient := rpc.New(rpc.MainNetBeta_RPC)
 	result, err := solClient.GetParsedTransaction(
 		context.Background(),
@@ -66,7 +66,7 @@ func TestTransaction_WhirlPool_SwapV2_2(t *testing.T) {
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
 }
 
-func TestTransaction_WhirlPool_Swap(t *testing.T) {
+func TestTransaction_WhirlPool_ParseSwap(t *testing.T) {
 	solClient := rpc.New(rpc.MainNetBeta_RPC)
 	result, err := solClient.GetParsedTransaction(
 		context.Background(),
@@ -155,6 +155,34 @@ func TestTransaction_WhirlPool_ParseDecreaseLiquidityV2(t *testing.T) {
 	result, err := solClient.GetParsedTransaction(
 		context.Background(),
 		solana.MustSignatureFromBase58("5TH5HaYRDRacVS8YRqvTZjPwvfn19AiN6qKdyEBnroCP8yX1QHNwxDXoaTcQwG4Pfu2Wm4L3kHXPiLtMCSHPe8Yd"),
+		&rpc.GetParsedTransactionOpts{
+			Commitment:                     rpc.CommitmentConfirmed,
+			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,
+		})
+	if err != nil {
+		panic(err)
+	}
+	transaction := &rpc.ParsedTransactionWithMeta{
+		Slot:        result.Slot,
+		BlockTime:   result.BlockTime,
+		Transaction: result.Transaction,
+		Meta:        result.Meta,
+	}
+	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
+	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
+	}
+	txJson, _ := json.MarshalIndent(tx, "", "    ")
+	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
+}
+
+func TestTransaction_WhirlPool_ParseInitializePoolV2(t *testing.T) {
+	solClient := rpc.New(rpc.MainNetBeta_RPC)
+	result, err := solClient.GetParsedTransaction(
+		context.Background(),
+		solana.MustSignatureFromBase58("43TbXXDGHvHSTr68dz9Yx79bV9s2tSZxSndTJmfCVc2jus7LL7MFctdqoUkHPnEz2qRojbmLfD8Z7WVfFv7CjmM9"),
 		&rpc.GetParsedTransactionOpts{
 			Commitment:                     rpc.CommitmentConfirmed,
 			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,

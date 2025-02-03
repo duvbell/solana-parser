@@ -48,7 +48,7 @@ func ParseBlock(slot uint64, b *rpc.GetParsedBlockResult) *types.Block {
 }
 
 func ParseTransaction(seq int, tx *rpc.ParsedTransactionWithMeta) *types.Transaction {
-	log.Logger.Info("parse transaction", "seq", seq, "tx", tx.Transaction.Signatures[0].String())
+	//log.Logger.Info("parse transaction", "seq", seq, "tx", tx.Transaction.Signatures[0].String())
 	if tx.Meta == nil || tx.Transaction == nil {
 		log.Logger.Error("parse transaction: meta or transaction is missing")
 		return nil
@@ -80,6 +80,7 @@ func ParseTransaction(seq int, tx *rpc.ParsedTransactionWithMeta) *types.Transac
 	if instructions[0].ProgramId == solana.VoteProgramID {
 		return t
 	}
+	log.Logger.Info("parse transaction", "seq", seq, "tx", tx.Transaction.Signatures[0].String())
 	// account infos
 	for _, item := range message.AccountKeys {
 		t.Meta.Accounts[item.PublicKey] = &solana.AccountMeta{
@@ -155,5 +156,8 @@ func parse(in *types.Instruction, meta *types.Meta) {
 	for _, child := range in.Children {
 		parse(child, meta)
 	}
-	program.Parse(in, meta)
+	err := program.Parse(in, meta)
+	if err != nil {
+		log.Logger.Error("program parse error", "err", err, "program", in.Instruction.ProgramId.String())
+	}
 }

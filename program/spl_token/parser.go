@@ -34,19 +34,20 @@ type Instruction struct {
 	Raw json.RawMessage `json:"info"`
 }
 
-func ProgramParser(in *types.Instruction, meta *types.Meta) {
+func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	inJson, _ := in.Instruction.Parsed.MarshalJSON()
 	var instruction Instruction
 	err := json.Unmarshal(inJson, &instruction)
 	if err != nil {
-		return
+		return err
 	}
 	id := new(big.Int).SetBytes([]byte(instruction.T)).Uint64()
 	parser, ok := Parsers[id]
 	if !ok {
-		return
+		return nil
 	}
 	parser(in, instruction.Raw, meta)
+	return nil
 }
 
 // transfer instruction

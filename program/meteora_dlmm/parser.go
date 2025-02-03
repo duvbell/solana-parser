@@ -1,9 +1,11 @@
 package meteora_dlmm
 
 import (
+	"errors"
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
+	ag_binary "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go/programs/meteora_dlmm"
 )
 
@@ -16,6 +18,10 @@ type Parser func(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *ty
 func RegisterParser(id uint64, p Parser) {
 	Parsers[id] = p
 }
+
+var (
+	Instruction_AnchorSelfCPILog = ag_binary.TypeID([8]byte{228, 69, 165, 46, 81, 203, 154, 29})
+)
 
 func init() {
 	program.RegisterParser(meteora_dlmm.ProgramID, ProgramParser)
@@ -63,21 +69,27 @@ func init() {
 	RegisterParser(uint64(meteora_dlmm.Instruction_SetPreActivationSwapAddress.Uint32()), ParseSetPreActivationSwapAddress)
 }
 
-func ProgramParser(in *types.Instruction, meta *types.Meta) {
+func ProgramParser(in *types.Instruction, meta *types.Meta) error {
+	dec := ag_binary.NewBorshDecoder(in.Instruction.Data)
+	typeID, err := dec.ReadTypeID()
+	if typeID == Instruction_AnchorSelfCPILog {
+		return nil
+	}
 	inst, err := meteora_dlmm.DecodeInstruction(in.AccountMetas(), in.Instruction.Data)
 	if err != nil {
-		return
+		return err
 	}
 	id := uint64(inst.TypeID.Uint32())
 	parser, ok := Parsers[id]
 	if !ok {
-		return
+		return errors.New("parser not found")
 	}
 	parser(inst, in, meta)
+	return nil
 }
 
 func ParseInitializeLbPair(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	// create all accounts
+	log.Logger.Info("ignore parse initialize lb pair", "program", meteora_dlmm.ProgramName)
 }
 func ParseInitializePermissionLbPair(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	log.Logger.Info("ignore parse initialize permission lb pair", "program", meteora_dlmm.ProgramName)

@@ -1,6 +1,7 @@
 package raydium_cp
 
 import (
+	"errors"
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
@@ -31,17 +32,18 @@ func init() {
 	RegisterParser(uint64(raydium_cp.Instruction_SwapBaseOutput.Uint32()), ParseSwapBaseOutput)
 }
 
-func ProgramParser(in *types.Instruction, meta *types.Meta) {
+func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	inst, err := raydium_cp.DecodeInstruction(in.AccountMetas(), in.Instruction.Data)
 	if err != nil {
-		return
+		return err
 	}
 	id := uint64(inst.TypeID.Uint32())
 	parser, ok := Parsers[id]
 	if !ok {
-		return
+		return errors.New("parser not found")
 	}
 	parser(inst, in, meta)
+	return nil
 }
 
 func ParseCreateAmmConfig(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
@@ -74,7 +76,7 @@ func ParseWithdraw(inst *raydium_cp.Instruction, in *types.Instruction, meta *ty
 	// child 2 : transfer
 	removeLiquidity := &types.RemoveLiquidity{
 		Pool:           inst1.GetPoolStateAccount().PublicKey,
-		User:           inst1.GetAuthorityAccount().PublicKey,
+		User:           inst1.GetOwnerAccount().PublicKey,
 		TokenLpBurn:    in.Children[0].Event[0].(*types.Burn),
 		TokenATransfer: in.Children[1].Event[0].(*types.Transfer),
 		TokenBTransfer: in.Children[2].Event[0].(*types.Transfer),

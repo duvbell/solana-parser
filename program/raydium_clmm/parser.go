@@ -1,9 +1,11 @@
 package raydium_clmm
 
 import (
+	"errors"
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
+	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/raydium_clmm"
 )
 
@@ -45,17 +47,18 @@ func init() {
 	RegisterParser(uint64(raydium_clmm.Instruction_SwapRouterBaseIn.Uint32()), ParseSwapRouterBaseIn)
 }
 
-func ProgramParser(in *types.Instruction, meta *types.Meta) {
+func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	inst, err := raydium_clmm.DecodeInstruction(in.AccountMetas(), in.Instruction.Data)
 	if err != nil {
-		return
+		return err
 	}
 	id := uint64(inst.TypeID.Uint32())
 	parser, ok := Parsers[id]
 	if !ok {
-		return
+		return errors.New("parser not found")
 	}
 	parser(inst, in, meta)
+	return nil
 }
 
 func ParseCreateAmmConfig(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
@@ -64,17 +67,17 @@ func ParseUpdateAmmConfig(inst *raydium_clmm.Instruction, in *types.Instruction,
 }
 func ParseCreatePool(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_clmm.CreatePool)
-	pool := &types.Pool{
-		Hash:     inst1.GetPoolStateAccount().PublicKey,
-		MintA:    inst1.GetTokenMint0Account().PublicKey,
-		MintB:    inst1.GetTokenMint1Account().PublicKey,
-		MintLp:   inst1.GetTokenVault1Account().PublicKey,
-		VaultA:   inst1.GetTokenVault1Account().PublicKey,
-		VaultB:   inst1.GetTokenVault1Account().PublicKey,
-		ReserveA: 0,
-		ReserveB: 0,
+	createPool := &types.CreatePool{
+		Pool:    inst1.GetPoolStateAccount().PublicKey,
+		User:    inst1.GetPoolCreatorAccount().PublicKey,
+		TokenA:  inst1.GetTokenMint0Account().PublicKey,
+		TokenB:  inst1.GetTokenMint1Account().PublicKey,
+		TokenLP: solana.PublicKey{},
+		VaultA:  inst1.GetTokenVault0Account().PublicKey,
+		VaultB:  inst1.GetTokenVault1Account().PublicKey,
+		VaultLP: solana.PublicKey{},
 	}
-	in.Receipt = []interface{}{pool}
+	in.Event = []interface{}{createPool}
 }
 func ParseUpdatePoolStatus(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 }
@@ -100,10 +103,22 @@ func ParseOpenPosition(inst *raydium_clmm.Instruction, in *types.Instruction, me
 	log.Logger.Info("ignore parse open position", "program", raydium_clmm.ProgramName)
 }
 func ParseOpenPositionV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	log.Logger.Info("ignore parse open position", "program", raydium_clmm.ProgramName)
+	log.Logger.Info("ignore parse open position v2", "program", raydium_clmm.ProgramName)
 }
 func ParseOpenPositionWithToken22Nft(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	// todo
+	inst1 := inst.Impl.(*raydium_clmm.OpenPositionWithToken22Nft)
+	transfers := in.FindChildrenTransfers()
+	addLiquidity := &types.AddLiquidity{
+		Pool: inst1.GetPoolStateAccount().PublicKey,
+		User: inst1.GetPayerAccount().PublicKey,
+	}
+	if len(transfers) >= 1 {
+		addLiquidity.TokenATransfer = transfers[0]
+	}
+	if len(transfers) >= 2 {
+		addLiquidity.TokenBTransfer = transfers[1]
+	}
+	in.Event = []interface{}{addLiquidity}
 }
 func ParseClosePosition(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	// close all accounts
@@ -116,7 +131,7 @@ func ParseIncreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruct
 	transfers := in.FindChildrenTransfers()
 	addLiquidity := &types.AddLiquidity{
 		Pool: inst1.GetPoolStateAccount().PublicKey,
-		User: inst1.Get(0).PublicKey,
+		User: inst1.GetNftOwnerAccount().PublicKey,
 	}
 	if len(transfers) >= 1 {
 		addLiquidity.TokenATransfer = transfers[0]
@@ -133,7 +148,7 @@ func ParseDecreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruct
 	inst1 := inst.Impl.(*raydium_clmm.DecreaseLiquidityV2)
 	removeLiquidity := &types.RemoveLiquidity{
 		Pool: inst1.GetPoolStateAccount().PublicKey,
-		User: inst1.Get(0).PublicKey,
+		User: inst1.GetNftOwnerAccount().PublicKey,
 	}
 	if len(in.Children) >= 1 {
 		removeLiquidity.TokenATransfer = in.Children[0].Event[0].(*types.Transfer)
@@ -162,14 +177,14 @@ func ParseSwapV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *ty
 	t2 := in.Children[1].Event[0].(*types.Transfer)
 	swap := &types.Swap{
 		Pool:           inst1.GetPoolStateAccount().PublicKey,
-		User:           inst1.Get(0).PublicKey,
+		User:           inst1.GetPayerAccount().PublicKey,
 		InputTransfer:  t1,
 		OutputTransfer: t2,
 	}
 	in.Event = []interface{}{swap}
 }
 func ParseSwapRouterBaseIn(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	log.Logger.Info("ignore parse swap router base", "program", raydium_clmm.ProgramName)
+	log.Logger.Info("ignore parse swap router base in", "program", raydium_clmm.ProgramName)
 }
 
 // Default

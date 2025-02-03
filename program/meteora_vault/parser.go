@@ -1,6 +1,7 @@
 package meteora_vault
 
 import (
+	"errors"
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
@@ -35,17 +36,18 @@ func init() {
 	RegisterParser(uint64(meteora_vault.Instruction_WithdrawDirectlyFromStrategy.Uint32()), ParseWithdrawDirectlyFromStrategy)
 }
 
-func ProgramParser(in *types.Instruction, meta *types.Meta) {
+func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	inst, err := meteora_vault.DecodeInstruction(in.AccountMetas(), in.Instruction.Data)
 	if err != nil {
-		return
+		return err
 	}
 	id := uint64(inst.TypeID.Uint32())
 	parser, ok := Parsers[id]
 	if !ok {
-		return
+		return errors.New("parser not found")
 	}
 	parser(inst, in, meta)
+	return nil
 }
 
 func ParseInitialize(inst *meteora_vault.Instruction, in *types.Instruction, meta *types.Meta) {

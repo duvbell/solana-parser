@@ -1,6 +1,7 @@
 package meteora_pools
 
 import (
+	"errors"
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
@@ -48,17 +49,18 @@ func init() {
 	RegisterParser(uint64(meteora_pools.Instruction_PartnerClaimFee.Uint32()), ParsePartnerClaimFee)
 }
 
-func ProgramParser(in *types.Instruction, meta *types.Meta) {
+func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	inst, err := meteora_pools.DecodeInstruction(in.AccountMetas(), in.Instruction.Data)
 	if err != nil {
-		return
+		return err
 	}
 	id := uint64(inst.TypeID.Uint32())
 	parser, ok := Parsers[id]
 	if !ok {
-		return
+		return errors.New("parser not found")
 	}
 	parser(inst, in, meta)
+	return nil
 }
 
 func ParseInitializePermissionedPool(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
@@ -95,7 +97,17 @@ func ParseRemoveLiquiditySingleSide(inst *meteora_pools.Instruction, in *types.I
 }
 
 func ParseAddImbalanceLiquidity(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
-	log.Logger.Info("ignore parse add imbalance liquidity", "program", meteora_pools.ProgramName)
+	// log.Logger.Info("ignore parse add imbalance liquidity", "program", meteora_pools.ProgramName)
+	inst1 := inst.Impl.(*meteora_pools.AddImbalanceLiquidity)
+	t1 := in.Children[0].Event[0].(*types.Transfer)
+	t2 := in.Children[1].Event[0].(*types.Transfer)
+	addLiquidity := &types.AddLiquidity{
+		Pool:           inst1.GetPoolAccount().PublicKey,
+		User:           inst1.GetUserAccount().PublicKey,
+		TokenATransfer: t1,
+		TokenBTransfer: t2,
+	}
+	in.Event = []interface{}{addLiquidity}
 }
 
 func ParseRemoveBalanceLiquidity(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {

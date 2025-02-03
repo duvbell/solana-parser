@@ -1,6 +1,7 @@
 package stable_vault
 
 import (
+	"errors"
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
@@ -31,17 +32,18 @@ func init() {
 	RegisterParser(uint64(stable_vault.Instruction_WithdrawV2.Uint32()), ParseWithdrawV2)
 }
 
-func ProgramParser(in *types.Instruction, meta *types.Meta) {
+func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	inst, err := stable_vault.DecodeInstruction(in.AccountMetas(), in.Instruction.Data)
 	if err != nil {
-		return
+		return err
 	}
 	id := uint64(inst.TypeID.Uint32())
 	parser, ok := Parsers[id]
 	if !ok {
-		return
+		return errors.New("parser not found")
 	}
 	parser(inst, in, meta)
+	return nil
 }
 
 func ParseAcceptAdmin(inst *stable_vault.Instruction, in *types.Instruction, meta *types.Meta) {

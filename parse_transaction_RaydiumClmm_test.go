@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestTransaction_RaydiumClmm_SwapV2(t *testing.T) {
+func TestTransaction_RaydiumClmm_ParseSwapV2(t *testing.T) {
 	solClient := rpc.New(rpc.MainNetBeta_RPC)
 	result, err := solClient.GetParsedTransaction(
 		context.Background(),
@@ -38,7 +38,7 @@ func TestTransaction_RaydiumClmm_SwapV2(t *testing.T) {
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
 }
 
-func TestTransaction_RaydiumClmm_Swap(t *testing.T) {
+func TestTransaction_RaydiumClmm_ParseSwap(t *testing.T) {
 	solClient := rpc.New(rpc.MainNetBeta_RPC)
 	result, err := solClient.GetParsedTransaction(
 		context.Background(),

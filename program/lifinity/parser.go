@@ -1,9 +1,11 @@
 package lifinity
 
 import (
+	"errors"
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
+	ag_binary "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go/programs/lifinity_v2"
 )
 
@@ -17,6 +19,11 @@ func RegisterParser(id uint64, p Parser) {
 	Parsers[id] = p
 }
 
+var (
+	Instruction_UpdateTargetPriceBufferParam = ag_binary.TypeID([8]byte{175, 241, 237, 224, 206, 9, 187, 30})
+	Instruction_UpdateConfigSpreadParam      = ag_binary.TypeID([8]byte{162, 176, 79, 86, 208, 217, 104, 246})
+)
+
 func init() {
 	program.RegisterParser(lifinity_v2.ProgramID, ProgramParser)
 	RegisterParser(uint64(lifinity_v2.Instruction_Swap.Uint32()), ParseSwap)
@@ -24,17 +31,23 @@ func init() {
 	RegisterParser(uint64(lifinity_v2.Instruction_WithdrawAllTokenTypes.Uint32()), ParseWithdrawAllTokenTypes)
 }
 
-func ProgramParser(in *types.Instruction, meta *types.Meta) {
+func ProgramParser(in *types.Instruction, meta *types.Meta) error {
+	dec := ag_binary.NewBorshDecoder(in.Instruction.Data)
+	typeID, err := dec.ReadTypeID()
+	if typeID == Instruction_UpdateTargetPriceBufferParam || typeID == Instruction_UpdateConfigSpreadParam {
+		return nil
+	}
 	inst, err := lifinity_v2.DecodeInstruction(in.AccountMetas(), in.Instruction.Data)
 	if err != nil {
-		return
+		return err
 	}
 	id := uint64(inst.TypeID.Uint32())
 	parser, ok := Parsers[id]
 	if !ok {
-		return
+		return errors.New("parser not found")
 	}
 	parser(inst, in, meta)
+	return nil
 }
 
 // Swap

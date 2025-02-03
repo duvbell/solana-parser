@@ -3,14 +3,14 @@ package types
 import "github.com/gagliardetto/solana-go"
 
 type CreatePool struct {
-	Pool      solana.PublicKey
-	TokenA    solana.PublicKey
-	TokenB    solana.PublicKey
-	TokenLP   solana.PublicKey
-	AccountA  solana.PublicKey
-	AccountB  solana.PublicKey
-	AccountLP solana.PublicKey
-	User      solana.PublicKey
+	Pool    solana.PublicKey
+	User    solana.PublicKey
+	TokenA  solana.PublicKey
+	TokenB  solana.PublicKey
+	TokenLP solana.PublicKey
+	VaultA  solana.PublicKey
+	VaultB  solana.PublicKey
+	VaultLP solana.PublicKey
 }
 
 type AddLiquidity struct {

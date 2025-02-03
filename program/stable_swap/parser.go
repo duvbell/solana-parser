@@ -1,6 +1,7 @@
 package stable_swap
 
 import (
+	"errors"
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
@@ -37,17 +38,18 @@ func init() {
 	RegisterParser(uint64(stable_swap.Instruction_Withdraw.Uint32()), ParseWithdraw)
 }
 
-func ProgramParser(in *types.Instruction, meta *types.Meta) {
+func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	inst, err := stable_swap.DecodeInstruction(in.AccountMetas(), in.Instruction.Data)
 	if err != nil {
-		return
+		return err
 	}
 	id := uint64(inst.TypeID.Uint32())
 	parser, ok := Parsers[id]
 	if !ok {
-		return
+		return errors.New("parser not found")
 	}
 	parser(inst, in, meta)
+	return nil
 }
 
 func ParseAcceptOwner(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
@@ -64,18 +66,14 @@ func ParseDeposit(inst *stable_swap.Instruction, in *types.Instruction, meta *ty
 	inst1 := inst.Impl.(*stable_swap.Deposit)
 	t1 := in.Children[0].Event[0].(*types.Transfer)
 	t2 := in.Children[1].Event[0].(*types.Transfer)
-	user := inst1.GetUserPoolTokenAccount().PublicKey
-	if owner, ok := meta.TokenOwner[user]; ok {
-		user = owner
-	}
 	addLiquidity := &types.AddLiquidity{
 		Pool:           inst1.GetPoolAccount().PublicKey,
-		User:           user,
+		User:           inst1.GetUserAccount().PublicKey,
 		TokenATransfer: t1,
 		TokenBTransfer: t2,
 	}
-	panic("not supported")
 	in.Event = []interface{}{addLiquidity}
+	log.Logger.Info("ignore parse deposit", "program", stable_swap.ProgramName)
 }
 func ParseExecStrategy(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
 }
@@ -92,15 +90,11 @@ func ParseSwap(inst *stable_swap.Instruction, in *types.Instruction, meta *types
 	inst1 := inst.Impl.(*stable_swap.Swap)
 	t1 := in.Children[0].Event[0].(*types.Transfer)
 	t2 := in.Children[1].Event[0].(*types.Transfer)
-	user := inst1.GetUserTokenInAccount().PublicKey
-	if owner, ok := meta.TokenOwner[user]; ok {
-		user = owner
-	}
 	swap := &types.Swap{
 		Pool:           inst1.GetPoolAccount().PublicKey,
+		User:           inst1.GetUserAccount().PublicKey,
 		InputTransfer:  t1,
 		OutputTransfer: t2,
-		User:           user,
 	}
 	in.Event = []interface{}{swap}
 }
@@ -108,15 +102,11 @@ func ParseSwapV2(inst *stable_swap.Instruction, in *types.Instruction, meta *typ
 	inst1 := inst.Impl.(*stable_swap.SwapV2)
 	t1 := in.Children[0].Event[0].(*types.Transfer)
 	t2 := in.Children[1].Event[0].(*types.Transfer)
-	user := inst1.GetUserTokenInAccount().PublicKey
-	if owner, ok := meta.TokenOwner[user]; ok {
-		user = owner
-	}
 	swap := &types.Swap{
 		Pool:           inst1.GetPoolAccount().PublicKey,
+		User:           inst1.GetUserAccount().PublicKey,
 		InputTransfer:  t1,
 		OutputTransfer: t2,
-		User:           user,
 	}
 	in.Event = []interface{}{swap}
 }
@@ -128,17 +118,14 @@ func ParseWithdraw(inst *stable_swap.Instruction, in *types.Instruction, meta *t
 	inst1 := inst.Impl.(*stable_swap.Withdraw)
 	t1 := in.Children[0].Event[0].(*types.Transfer)
 	t2 := in.Children[1].Event[0].(*types.Transfer)
-	user := inst1.GetUserPoolTokenAccount().PublicKey
-	if owner, ok := meta.TokenOwner[user]; ok {
-		user = owner
-	}
 	removeLiquidity := &types.RemoveLiquidity{
 		Pool:           inst1.GetPoolAccount().PublicKey,
-		User:           user,
+		User:           inst1.GetUserAccount().PublicKey,
 		TokenATransfer: t1,
 		TokenBTransfer: t2,
 	}
 	in.Event = []interface{}{removeLiquidity}
+	log.Logger.Info("ignore parse withdraw", "program", stable_swap.ProgramName)
 }
 
 // Default
