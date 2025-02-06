@@ -53,15 +53,17 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 // Swap
 func ParseSwap(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*lifinity_v2.Swap)
-	// the first one is user deposit
-	// the second is vault withdraw
-	transfers := in.FindChildrenTransfers()
 	swap := &types.Swap{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetAmmAccount().PublicKey,
-		User:           inst1.GetAuthorityAccount().PublicKey,
-		InputTransfer:  transfers[0],
-		OutputTransfer: transfers[1],
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetAmmAccount().PublicKey,
+		User: inst1.GetAuthorityAccount().PublicKey,
+	}
+	if *inst1.AmountIn > 0 {
+		// the first one is user deposit
+		// the second is vault withdraw
+		transfers := in.FindChildrenTransfers()
+		swap.InputTransfer = transfers[0]
+		swap.OutputTransfer = transfers[1]
 	}
 	in.Event = []interface{}{swap}
 }

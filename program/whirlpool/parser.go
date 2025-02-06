@@ -128,30 +128,42 @@ func ParseOpenPositionWithMetadata(inst *whirlpool.Instruction, in *types.Instru
 }
 func ParseIncreaseLiquidity(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*whirlpool.IncreaseLiquidity)
+	addLiquidity := &types.AddLiquidity{
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetWhirlpoolAccount().PublicKey,
+		User: inst1.GetPositionAuthorityAccount().PublicKey,
+	}
 	// child 1 : transfer
 	// child 2 : transfer
 	transfers := in.FindChildrenTransfers()
-	addLiquidity := &types.AddLiquidity{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
-		User:           inst1.GetPositionAuthorityAccount().PublicKey,
-		TokenATransfer: transfers[0],
-		TokenBTransfer: transfers[1],
+	for _, transfer := range transfers {
+		if transfer.To == inst1.GetTokenVaultAAccount().PublicKey {
+			addLiquidity.TokenATransfer = transfer
+		}
+		if transfer.To == inst1.GetTokenVaultBAccount().PublicKey {
+			addLiquidity.TokenBTransfer = transfer
+		}
 	}
 	in.Event = []interface{}{addLiquidity}
 
 }
 func ParseDecreaseLiquidity(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*whirlpool.DecreaseLiquidity)
+	removeLiquidity := &types.RemoveLiquidity{
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetWhirlpoolAccount().PublicKey,
+		User: inst1.GetPositionAuthorityAccount().PublicKey,
+	}
 	// child 1 : transfer
 	// child 2 : transfer
 	transfers := in.FindChildrenTransfers()
-	removeLiquidity := &types.RemoveLiquidity{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
-		User:           inst1.GetPositionAuthorityAccount().PublicKey,
-		TokenATransfer: transfers[0],
-		TokenBTransfer: transfers[1],
+	for _, transfer := range transfers {
+		if transfer.From == inst1.GetTokenVaultAAccount().PublicKey {
+			removeLiquidity.TokenATransfer = transfer
+		}
+		if transfer.From == inst1.GetTokenVaultBAccount().PublicKey {
+			removeLiquidity.TokenBTransfer = transfer
+		}
 	}
 	in.Event = []interface{}{removeLiquidity}
 }
@@ -165,15 +177,17 @@ func ParseCollectProtocolFees(inst *whirlpool.Instruction, in *types.Instruction
 }
 func ParseSwap(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*whirlpool.Swap)
-	// child 1 : input transfer
-	// child 2 : output transfer
-	transfers := in.FindChildrenTransfers()
 	swap := &types.Swap{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
-		User:           inst1.GetTokenAuthorityAccount().PublicKey,
-		InputTransfer:  transfers[0],
-		OutputTransfer: transfers[1],
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetWhirlpoolAccount().PublicKey,
+		User: inst1.GetTokenAuthorityAccount().PublicKey,
+	}
+	if *inst1.Amount > 0 {
+		// child 1 : input transfer
+		// child 2 : output transfer
+		transfers := in.FindChildrenTransfers()
+		swap.InputTransfer = transfers[0]
+		swap.OutputTransfer = transfers[1]
 	}
 	in.Event = []interface{}{swap}
 }
@@ -200,16 +214,18 @@ func ParseSetRewardEmissionsSuperAuthority(inst *whirlpool.Instruction, in *type
 }
 func ParseTwoHopSwap(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*whirlpool.TwoHopSwap)
-	// child 1 : transfer
-	// child 2 : transfer
-	// child 3 : transfer
-	transfers := in.FindChildrenTransfers()
 	swap := &types.Swap{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetWhirlpoolOneAccount().PublicKey,
-		User:           inst1.GetTokenAuthorityAccount().PublicKey,
-		InputTransfer:  transfers[0],
-		OutputTransfer: transfers[2],
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetWhirlpoolOneAccount().PublicKey,
+		User: inst1.GetTokenAuthorityAccount().PublicKey,
+	}
+	if *inst1.Amount > 0 {
+		// child 1 : transfer
+		// child 2 : transfer
+		// child 3 : transfer
+		transfers := in.FindChildrenTransfers()
+		swap.InputTransfer = transfers[0]
+		swap.OutputTransfer = transfers[2]
 	}
 	in.Event = []interface{}{swap}
 }
@@ -236,29 +252,41 @@ func ParseCollectRewardV2(inst *whirlpool.Instruction, in *types.Instruction, me
 }
 func ParseDecreaseLiquidityV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*whirlpool.DecreaseLiquidityV2)
+	removeLiquidity := &types.RemoveLiquidity{
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetWhirlpoolAccount().PublicKey,
+		User: inst1.GetPositionAuthorityAccount().PublicKey,
+	}
 	// child 1 : transfer
 	// child 2 : transfer
 	transfers := in.FindChildrenTransfers()
-	removeLiquidity := &types.RemoveLiquidity{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
-		User:           inst1.GetPositionAuthorityAccount().PublicKey,
-		TokenATransfer: transfers[0],
-		TokenBTransfer: transfers[1],
+	for _, transfer := range transfers {
+		if transfer.From == inst1.GetTokenVaultAAccount().PublicKey {
+			removeLiquidity.TokenATransfer = transfer
+		}
+		if transfer.From == inst1.GetTokenVaultBAccount().PublicKey {
+			removeLiquidity.TokenBTransfer = transfer
+		}
 	}
 	in.Event = []interface{}{removeLiquidity}
 }
 func ParseIncreaseLiquidityV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*whirlpool.IncreaseLiquidityV2)
+	addLiquidity := &types.AddLiquidity{
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetWhirlpoolAccount().PublicKey,
+		User: inst1.GetPositionAuthorityAccount().PublicKey,
+	}
 	// child 1 : transfer
 	// child 2 : transfer
 	transfers := in.FindChildrenTransfers()
-	addLiquidity := &types.AddLiquidity{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
-		User:           inst1.GetPositionAuthorityAccount().PublicKey,
-		TokenATransfer: transfers[0],
-		TokenBTransfer: transfers[1],
+	for _, transfer := range transfers {
+		if transfer.To == inst1.GetTokenVaultAAccount().PublicKey {
+			addLiquidity.TokenATransfer = transfer
+		}
+		if transfer.To == inst1.GetTokenVaultBAccount().PublicKey {
+			addLiquidity.TokenBTransfer = transfer
+		}
 	}
 	in.Event = []interface{}{addLiquidity}
 }
@@ -286,30 +314,34 @@ func ParseSetRewardEmissionsV2(inst *whirlpool.Instruction, in *types.Instructio
 }
 func ParseSwapV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*whirlpool.SwapV2)
-	// child 1 : input transfer
-	// child 2 : output transfer
-	transfers := in.FindChildrenTransfers()
 	swap := &types.Swap{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
-		User:           inst1.GetTokenAuthorityAccount().PublicKey,
-		InputTransfer:  transfers[0],
-		OutputTransfer: transfers[1],
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetWhirlpoolAccount().PublicKey,
+		User: inst1.GetTokenAuthorityAccount().PublicKey,
+	}
+	if *inst1.Amount > 0 {
+		// child 1 : input transfer
+		// child 2 : output transfer
+		transfers := in.FindChildrenTransfers()
+		swap.InputTransfer = transfers[0]
+		swap.OutputTransfer = transfers[1]
 	}
 	in.Event = []interface{}{swap}
 }
 func ParseTwoHopSwapV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*whirlpool.TwoHopSwapV2)
-	// child 1 : transfer
-	// child 2 : transfer
-	// child 3 : transfer
-	transfers := in.FindChildrenTransfers()
 	swap := &types.Swap{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetWhirlpoolOneAccount().PublicKey,
-		User:           inst1.GetTokenAuthorityAccount().PublicKey,
-		InputTransfer:  transfers[0],
-		OutputTransfer: transfers[2],
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetWhirlpoolOneAccount().PublicKey,
+		User: inst1.GetTokenAuthorityAccount().PublicKey,
+	}
+	if *inst1.Amount > 0 {
+		// child 1 : transfer
+		// child 2 : transfer
+		// child 3 : transfer
+		transfers := in.FindChildrenTransfers()
+		swap.InputTransfer = transfers[0]
+		swap.OutputTransfer = transfers[2]
 	}
 	in.Event = []interface{}{swap}
 }

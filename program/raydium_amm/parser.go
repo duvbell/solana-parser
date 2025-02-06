@@ -19,6 +19,11 @@ func RegisterParser(id uint64, p Parser) {
 	Parsers[id] = p
 }
 
+/*
+coin : token 0
+pc : token 1
+*/
+
 func init() {
 	program.RegisterParser(raydium_amm.ProgramID, raydium_amm.ProgramName, ProgramParser)
 	RegisterParser(uint64(raydium_amm.Instruction_Initialize), ParseInitialize)
@@ -71,28 +76,30 @@ func ParseInitialize(inst *raydium_amm.Instruction, in *types.Instruction, meta 
 func ParseInitialize2(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_amm.Initialize2)
 	// the latest three transfer
-	index := len(in.Children)
-	t1 := in.Children[index-3].Event[0].(*types.Transfer)
-	t2 := in.Children[index-2].Event[0].(*types.Transfer)
-	t3 := in.Children[index-1].Event[0].(*types.MintTo)
 	createPool := &types.CreatePool{
 		Dex:     in.Instruction.ProgramId,
 		Pool:    inst1.GetAmmAccount().PublicKey,
-		User:    inst1.GetAmmAuthorityAccount().PublicKey,
-		TokenA:  inst1.GetPcMintAccount().PublicKey,
-		TokenB:  inst1.GetCoinMintAccount().PublicKey,
+		User:    inst1.GetUserWalletAccount().PublicKey,
+		TokenA:  inst1.GetCoinMintAccount().PublicKey,
+		TokenB:  inst1.GetPcMintAccount().PublicKey,
 		TokenLP: inst1.GetLpMintAccount().PublicKey,
-		VaultA:  inst1.GetPoolPcTokenAccountAccount().PublicKey,
-		VaultB:  inst1.GetPoolCoinTokenAccountAccount().PublicKey,
+		VaultA:  inst1.GetPoolCoinTokenAccountAccount().PublicKey,
+		VaultB:  inst1.GetPoolPcTokenAccountAccount().PublicKey,
 		VaultLP: inst1.GetPoolTempLpAccount().PublicKey,
 	}
 	addLiquidity := &types.AddLiquidity{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetAmmAccount().PublicKey,
-		User:           inst1.GetAmmAuthorityAccount().PublicKey,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
-		TokenLpMint:    t3,
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetAmmAccount().PublicKey,
+		User: inst1.GetUserWalletAccount().PublicKey,
+	}
+	transfers := in.FindChildrenTransfers()
+	for _, transfer := range transfers {
+		if transfer.To == inst1.GetPoolCoinTokenAccountAccount().PublicKey && transfer.Mint == inst1.GetCoinMintAccount().PublicKey {
+			addLiquidity.TokenATransfer = transfer
+		}
+		if transfer.To == inst1.GetPoolPcTokenAccountAccount().PublicKey && transfer.Mint == inst1.GetPcMintAccount().PublicKey {
+			addLiquidity.TokenBTransfer = transfer
+		}
 	}
 	pool := &types.Pool{
 		Hash:     inst1.GetAmmAccount().PublicKey,
@@ -111,29 +118,37 @@ func ParseMonitorStep(inst *raydium_amm.Instruction, in *types.Instruction, meta
 }
 func ParseDeposit(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_amm.Deposit)
-	t1 := in.Children[0].Event[0].(*types.Transfer)
-	t2 := in.Children[1].Event[0].(*types.Transfer)
 	addLiquidity := &types.AddLiquidity{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetAmmAccount().PublicKey,
-		User:           inst1.GetUserOwnerAccount().PublicKey,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetAmmAccount().PublicKey,
+		User: inst1.GetUserOwnerAccount().PublicKey,
+	}
+	transfers := in.FindChildrenTransfers()
+	for _, transfer := range transfers {
+		if transfer.To == inst1.GetPoolCoinTokenAccountAccount().PublicKey {
+			addLiquidity.TokenATransfer = transfer
+		}
+		if transfer.To == inst1.GetPoolPcTokenAccountAccount().PublicKey {
+			addLiquidity.TokenBTransfer = transfer
+		}
 	}
 	in.Event = []interface{}{addLiquidity, addLiquidity}
 }
 func ParseWithdraw(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_amm.Withdraw)
-	t1 := in.Children[0].Event[0].(*types.Transfer)
-	t2 := in.Children[1].Event[0].(*types.Transfer)
-	t3 := in.Children[2].Event[0].(*types.Burn)
 	removeLiquidity := &types.RemoveLiquidity{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetAmmAccount().PublicKey,
-		User:           inst1.GetUserOwnerAccount().PublicKey,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
-		TokenLpBurn:    t3,
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetAmmAccount().PublicKey,
+		User: inst1.GetUserOwnerAccount().PublicKey,
+	}
+	transfers := in.FindChildrenTransfers()
+	for _, transfer := range transfers {
+		if transfer.From == inst1.GetPoolCoinTokenAccountAccount().PublicKey {
+			removeLiquidity.TokenATransfer = transfer
+		}
+		if transfer.From == inst1.GetPoolPcTokenAccountAccount().PublicKey {
+			removeLiquidity.TokenBTransfer = transfer
+		}
 	}
 	in.Event = []interface{}{removeLiquidity}
 }
@@ -150,14 +165,14 @@ func ParseSwapBaseIn(inst *raydium_amm.Instruction, in *types.Instruction, meta 
 	if len(inst1.GetAccounts()) == 17 {
 		inst1.SetAccounts(insertAccount(inst1.GetAccounts(), 4))
 	}
-	t1 := in.Children[0].Event[0].(*types.Transfer)
-	t2 := in.Children[1].Event[0].(*types.Transfer)
 	swap := &types.Swap{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetAmmAccount().PublicKey,
-		User:           inst1.GetUserSourceOwnerAccount().PublicKey,
-		InputTransfer:  t1,
-		OutputTransfer: t2,
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetAmmAccount().PublicKey,
+		User: inst1.GetUserSourceOwnerAccount().PublicKey,
+	}
+	if *inst1.AmountIn > 0 {
+		swap.InputTransfer = in.Children[0].Event[0].(*types.Transfer)
+		swap.OutputTransfer = in.Children[1].Event[0].(*types.Transfer)
 	}
 	in.Event = []interface{}{swap}
 }
@@ -169,15 +184,17 @@ func ParseSwapBaseOut(inst *raydium_amm.Instruction, in *types.Instruction, meta
 	if len(inst1.GetAccounts()) == 17 {
 		inst1.SetAccounts(insertAccount(inst1.GetAccounts(), 4))
 	}
-	t1 := in.Children[0].Event[0].(*types.Transfer)
-	t2 := in.Children[1].Event[0].(*types.Transfer)
 	swap := &types.Swap{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetAmmAccount().PublicKey,
-		User:           inst1.GetUserSourceOwnerAccount().PublicKey,
-		InputTransfer:  t1,
-		OutputTransfer: t2,
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetAmmAccount().PublicKey,
+		User: inst1.GetUserSourceOwnerAccount().PublicKey,
 	}
+
+	if *inst1.AmountOut > 0 {
+		swap.InputTransfer = in.Children[0].Event[0].(*types.Transfer)
+		swap.OutputTransfer = in.Children[1].Event[0].(*types.Transfer)
+	}
+
 	in.Event = []interface{}{swap}
 }
 func ParseSimulateInfo(inst *raydium_amm.Instruction, in *types.Instruction, meta *types.Meta) {

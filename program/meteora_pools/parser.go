@@ -6,7 +6,6 @@ import (
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go/programs/meteora_pools"
-	"github.com/gagliardetto/solana-go/programs/meteora_vault"
 )
 
 var (
@@ -80,15 +79,15 @@ func ParseEnableOrDisablePool(inst *meteora_pools.Instruction, in *types.Instruc
 
 func ParseSwap(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*meteora_pools.Swap)
-	// the transfer is execute by vault deposit & withdraw & this first transfer is fee
-	deposit := in.Children[0].Event[0].(*types.Transfer)
-	withdraw := in.Children[1].Event[0].(*types.Transfer)
 	swap := &types.Swap{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetPoolAccount().PublicKey,
-		User:           inst1.GetUserAccount().PublicKey,
-		InputTransfer:  deposit,
-		OutputTransfer: withdraw,
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetPoolAccount().PublicKey,
+		User: inst1.GetUserAccount().PublicKey,
+	}
+	if *inst1.InAmount != 0 {
+		// the transfer is execute by vault deposit & withdraw & this first transfer is fee
+		swap.InputTransfer = in.Children[0].Event[0].(*types.Transfer)
+		swap.OutputTransfer = in.Children[1].Event[0].(*types.Transfer)
 	}
 	in.Event = []interface{}{swap}
 }
@@ -100,45 +99,57 @@ func ParseRemoveLiquiditySingleSide(inst *meteora_pools.Instruction, in *types.I
 func ParseAddImbalanceLiquidity(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
 	// log.Logger.Info("ignore parse add imbalance liquidity", "program", meteora_pools.ProgramName)
 	inst1 := inst.Impl.(*meteora_pools.AddImbalanceLiquidity)
-	transfers := in.FindChildrenTransfers()
 	addLiquidity := &types.AddLiquidity{
 		Dex:  in.Instruction.ProgramId,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	if len(transfers) >= 1 {
-		addLiquidity.TokenATransfer = transfers[0]
-	}
-	if len(transfers) >= 2 {
-		addLiquidity.TokenBTransfer = transfers[1]
+	transfers := in.FindChildrenTransfers()
+	for _, transfer := range transfers {
+		if transfer.To == inst1.GetATokenVaultAccount().PublicKey {
+			addLiquidity.TokenATransfer = transfer
+		}
+		if transfer.To == inst1.GetBTokenVaultAccount().PublicKey {
+			addLiquidity.TokenBTransfer = transfer
+		}
 	}
 	in.Event = []interface{}{addLiquidity}
 }
 
 func ParseRemoveBalanceLiquidity(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*meteora_pools.RemoveBalanceLiquidity)
-	t1 := in.Children[0].Event[0].(*types.Transfer)
-	t2 := in.Children[1].Event[0].(*types.Transfer)
 	removeLiquidity := &types.RemoveLiquidity{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetPoolAccount().PublicKey,
-		User:           inst1.GetUserAccount().PublicKey,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetPoolAccount().PublicKey,
+		User: inst1.GetUserAccount().PublicKey,
+	}
+	transfers := in.FindChildrenTransfers()
+	for _, transfer := range transfers {
+		if transfer.From == inst1.GetATokenVaultAccount().PublicKey {
+			removeLiquidity.TokenATransfer = transfer
+		}
+		if transfer.From == inst1.GetBTokenVaultAccount().PublicKey {
+			removeLiquidity.TokenBTransfer = transfer
+		}
 	}
 	in.Event = []interface{}{removeLiquidity}
 }
 
 func ParseAddBalanceLiquidity(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*meteora_pools.AddBalanceLiquidity)
-	t1 := in.Children[0].Event[0].(*types.Transfer)
-	t2 := in.Children[1].Event[0].(*types.Transfer)
 	addLiquidity := &types.AddLiquidity{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetPoolAccount().PublicKey,
-		User:           inst1.GetUserAccount().PublicKey,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetPoolAccount().PublicKey,
+		User: inst1.GetUserAccount().PublicKey,
+	}
+	transfers := in.FindChildrenTransfers()
+	for _, transfer := range transfers {
+		if transfer.To == inst1.GetATokenVaultAccount().PublicKey {
+			addLiquidity.TokenATransfer = transfer
+		}
+		if transfer.To == inst1.GetBTokenVaultAccount().PublicKey {
+			addLiquidity.TokenBTransfer = transfer
+		}
 	}
 	in.Event = []interface{}{addLiquidity}
 }
@@ -181,16 +192,20 @@ func ParseInitializePermissionlessConstantProductPoolWithConfig(inst *meteora_po
 func ParseInitializePermissionlessConstantProductPoolWithConfig2(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
 	// todo, add liquidity
 	// find two deposit
-	instructions := in.FindChildrenPrograms(meteora_vault.ProgramID)
 	inst1 := inst.Impl.(*meteora_pools.InitializePermissionlessConstantProductPoolWithConfig2)
-	t1 := instructions[0].Event[0].(*types.Transfer)
-	t2 := instructions[1].Event[0].(*types.Transfer)
 	addLiquidity := &types.AddLiquidity{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetPoolAccount().PublicKey,
-		User:           inst1.GetPayerAccount().PublicKey,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetPoolAccount().PublicKey,
+		User: inst1.GetPayerAccount().PublicKey,
+	}
+	transfers := in.FindChildrenTransfers()
+	for _, transfer := range transfers {
+		if transfer.To == inst1.GetATokenVaultAccount().PublicKey {
+			addLiquidity.TokenATransfer = transfer
+		}
+		if transfer.To == inst1.GetBTokenVaultAccount().PublicKey {
+			addLiquidity.TokenBTransfer = transfer
+		}
 	}
 	in.Event = []interface{}{addLiquidity}
 }

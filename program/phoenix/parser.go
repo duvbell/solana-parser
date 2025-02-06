@@ -66,16 +66,15 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 
 func ParseSwap(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*phoenix_v1.Swap)
-	transfers := in.FindChildrenTransfers()
-	if len(transfers) != 2 {
-		return
-	}
 	swap := &types.Swap{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetMarketAccount().PublicKey,
-		User:           inst1.GetTraderAccount().PublicKey,
-		InputTransfer:  transfers[1],
-		OutputTransfer: transfers[0],
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetMarketAccount().PublicKey,
+		User: inst1.GetTraderAccount().PublicKey,
+	}
+	transfers := in.FindChildrenTransfers()
+	if len(transfers) >= 2 {
+		swap.InputTransfer = transfers[1]
+		swap.OutputTransfer = transfers[0]
 	}
 	in.Event = []interface{}{swap}
 }

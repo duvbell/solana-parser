@@ -108,17 +108,19 @@ func ParseOpenPositionV2(inst *raydium_clmm.Instruction, in *types.Instruction, 
 }
 func ParseOpenPositionWithToken22Nft(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_clmm.OpenPositionWithToken22Nft)
-	transfers := in.FindChildrenTransfers()
 	addLiquidity := &types.AddLiquidity{
 		Dex:  in.Instruction.ProgramId,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetPayerAccount().PublicKey,
 	}
-	if len(transfers) >= 1 {
-		addLiquidity.TokenATransfer = transfers[0]
-	}
-	if len(transfers) >= 2 {
-		addLiquidity.TokenBTransfer = transfers[1]
+	transfers := in.FindChildrenTransfers()
+	for _, transfer := range transfers {
+		if transfer.To == inst1.GetTokenVault0Account().PublicKey {
+			addLiquidity.TokenATransfer = transfer
+		}
+		if transfer.To == inst1.GetTokenVault1Account().PublicKey {
+			addLiquidity.TokenBTransfer = transfer
+		}
 	}
 	in.Event = []interface{}{addLiquidity}
 }
@@ -126,25 +128,59 @@ func ParseClosePosition(inst *raydium_clmm.Instruction, in *types.Instruction, m
 	// close all accounts
 }
 func ParseIncreaseLiquidity(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	log.Logger.Info("ignore parse increase liquidity", "program", raydium_clmm.ProgramName)
-}
-func ParseIncreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	inst1 := inst.Impl.(*raydium_clmm.IncreaseLiquidityV2)
-	transfers := in.FindChildrenTransfers()
+	inst1 := inst.Impl.(*raydium_clmm.IncreaseLiquidity)
 	addLiquidity := &types.AddLiquidity{
 		Dex:  in.Instruction.ProgramId,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetNftOwnerAccount().PublicKey,
 	}
-	if len(transfers) >= 1 {
-		addLiquidity.TokenATransfer = transfers[0]
+	transfers := in.FindChildrenTransfers()
+	for _, transfer := range transfers {
+		if transfer.To == inst1.GetTokenVault0Account().PublicKey {
+			addLiquidity.TokenATransfer = transfer
+		}
+		if transfer.To == inst1.GetTokenVault1Account().PublicKey {
+			addLiquidity.TokenBTransfer = transfer
+		}
 	}
-	if len(transfers) >= 2 {
-		addLiquidity.TokenBTransfer = transfers[1]
+	in.Event = []interface{}{addLiquidity}
+	log.Logger.Info("ignore parse increase liquidity", "program", raydium_clmm.ProgramName)
+}
+func ParseIncreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	inst1 := inst.Impl.(*raydium_clmm.IncreaseLiquidityV2)
+	addLiquidity := &types.AddLiquidity{
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetPoolStateAccount().PublicKey,
+		User: inst1.GetNftOwnerAccount().PublicKey,
+	}
+	transfers := in.FindChildrenTransfers()
+	for _, transfer := range transfers {
+		if transfer.To == inst1.GetTokenVault0Account().PublicKey {
+			addLiquidity.TokenATransfer = transfer
+		}
+		if transfer.To == inst1.GetTokenVault1Account().PublicKey {
+			addLiquidity.TokenBTransfer = transfer
+		}
 	}
 	in.Event = []interface{}{addLiquidity}
 }
 func ParseDecreaseLiquidity(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
+	inst1 := inst.Impl.(*raydium_clmm.DecreaseLiquidity)
+	removeLiquidity := &types.RemoveLiquidity{
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetPoolStateAccount().PublicKey,
+		User: inst1.GetNftOwnerAccount().PublicKey,
+	}
+	transfers := in.FindChildrenTransfers()
+	for _, transfer := range transfers {
+		if transfer.From == inst1.GetTokenVault0Account().PublicKey {
+			removeLiquidity.TokenATransfer = transfer
+		}
+		if transfer.From == inst1.GetTokenVault1Account().PublicKey {
+			removeLiquidity.TokenBTransfer = transfer
+		}
+	}
+	in.Event = []interface{}{removeLiquidity}
 	log.Logger.Info("ignore parse decrease liquidity", "program", raydium_clmm.ProgramName)
 }
 func ParseDecreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
@@ -154,38 +190,40 @@ func ParseDecreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruct
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetNftOwnerAccount().PublicKey,
 	}
-	if len(in.Children) >= 1 {
-		removeLiquidity.TokenATransfer = in.Children[0].Event[0].(*types.Transfer)
-	}
-	if len(in.Children) >= 2 {
-		removeLiquidity.TokenBTransfer = in.Children[1].Event[0].(*types.Transfer)
+	transfers := in.FindChildrenTransfers()
+	for _, transfer := range transfers {
+		if transfer.From == inst1.GetTokenVault0Account().PublicKey {
+			removeLiquidity.TokenATransfer = transfer
+		}
+		if transfer.From == inst1.GetTokenVault1Account().PublicKey {
+			removeLiquidity.TokenBTransfer = transfer
+		}
 	}
 	in.Event = []interface{}{removeLiquidity}
 }
 func ParseSwap(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_clmm.Swap)
-	t1 := in.Children[0].Event[0].(*types.Transfer)
-	t2 := in.Children[1].Event[0].(*types.Transfer)
-	//
 	swap := &types.Swap{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetPoolStateAccount().PublicKey,
-		User:           inst1.GetPayerAccount().PublicKey,
-		InputTransfer:  t1,
-		OutputTransfer: t2,
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetPoolStateAccount().PublicKey,
+		User: inst1.GetPayerAccount().PublicKey,
+	}
+	if *inst1.Amount > 0 {
+		swap.InputTransfer = in.Children[0].Event[0].(*types.Transfer)
+		swap.OutputTransfer = in.Children[1].Event[0].(*types.Transfer)
 	}
 	in.Event = []interface{}{swap}
 }
 func ParseSwapV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_clmm.SwapV2)
-	t1 := in.Children[0].Event[0].(*types.Transfer)
-	t2 := in.Children[1].Event[0].(*types.Transfer)
 	swap := &types.Swap{
-		Dex:            in.Instruction.ProgramId,
-		Pool:           inst1.GetPoolStateAccount().PublicKey,
-		User:           inst1.GetPayerAccount().PublicKey,
-		InputTransfer:  t1,
-		OutputTransfer: t2,
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetPoolStateAccount().PublicKey,
+		User: inst1.GetPayerAccount().PublicKey,
+	}
+	if *inst1.Amount > 0 {
+		swap.InputTransfer = in.Children[0].Event[0].(*types.Transfer)
+		swap.OutputTransfer = in.Children[1].Event[0].(*types.Transfer)
 	}
 	in.Event = []interface{}{swap}
 }
