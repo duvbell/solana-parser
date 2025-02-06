@@ -2,9 +2,9 @@ package raydium_cp
 
 import (
 	"errors"
-	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
+	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/raydium_cp"
 )
 
@@ -19,7 +19,7 @@ func RegisterParser(id uint64, p Parser) {
 }
 
 func init() {
-	program.RegisterParser(raydium_cp.ProgramID, ProgramParser)
+	program.RegisterParser(raydium_cp.ProgramID, raydium_cp.ProgramName, ProgramParser)
 	RegisterParser(uint64(raydium_cp.Instruction_CreateAmmConfig.Uint32()), ParseCreateAmmConfig)
 	RegisterParser(uint64(raydium_cp.Instruction_UpdateAmmConfig.Uint32()), ParseUpdateAmmConfig)
 	RegisterParser(uint64(raydium_cp.Instruction_UpdatePoolStatus.Uint32()), ParseUpdatePoolStatus)
@@ -57,11 +57,34 @@ func ParseCollectProtocolFee(inst *raydium_cp.Instruction, in *types.Instruction
 func ParseCollectFundFee(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
 }
 func ParseInitialize(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
-	log.Logger.Info("ignore parse initialize", "program", raydium_cp.ProgramName)
+	// log.Logger.Info("ignore parse initialize", "program", raydium_cp.ProgramName)
+	inst1 := inst.Impl.(*raydium_cp.Initialize)
+	// the latest three transfer
+	transfers := in.FindChildrenTransfers()
+	createPool := &types.CreatePool{
+		Dex:     in.Instruction.ProgramId,
+		Pool:    inst1.GetPoolStateAccount().PublicKey,
+		User:    inst1.GetCreatorAccount().PublicKey,
+		TokenA:  inst1.GetToken0MintAccount().PublicKey,
+		TokenB:  inst1.GetToken1MintAccount().PublicKey,
+		TokenLP: inst1.GetLpMintAccount().PublicKey,
+		VaultA:  inst1.GetToken0VaultAccount().PublicKey,
+		VaultB:  inst1.GetToken1VaultAccount().PublicKey,
+		VaultLP: solana.PublicKey{},
+	}
+	addLiquidity := &types.AddLiquidity{
+		Dex:            in.Instruction.ProgramId,
+		Pool:           inst1.GetPoolStateAccount().PublicKey,
+		User:           inst1.GetCreatorAccount().PublicKey,
+		TokenATransfer: transfers[0],
+		TokenBTransfer: transfers[1],
+	}
+	in.Event = []interface{}{createPool, addLiquidity}
 }
 func ParseDeposit(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_cp.Deposit)
 	addLiquidity := &types.AddLiquidity{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetPoolStateAccount().PublicKey,
 		User:           inst1.Get(0).PublicKey,
 		TokenATransfer: in.Children[0].Event[0].(*types.Transfer),
@@ -75,6 +98,7 @@ func ParseWithdraw(inst *raydium_cp.Instruction, in *types.Instruction, meta *ty
 	// child 1 : transfer
 	// child 2 : transfer
 	removeLiquidity := &types.RemoveLiquidity{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetPoolStateAccount().PublicKey,
 		User:           inst1.GetOwnerAccount().PublicKey,
 		TokenLpBurn:    in.Children[0].Event[0].(*types.Burn),
@@ -92,6 +116,7 @@ func ParseSwapBaseInput(inst *raydium_cp.Instruction, in *types.Instruction, met
 		user = owner
 	}
 	swap := &types.Swap{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetPoolStateAccount().PublicKey,
 		InputTransfer:  t1,
 		OutputTransfer: t2,
@@ -108,6 +133,7 @@ func ParseSwapBaseOutput(inst *raydium_cp.Instruction, in *types.Instruction, me
 		user = owner
 	}
 	swap := &types.Swap{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetPoolStateAccount().PublicKey,
 		InputTransfer:  t1,
 		OutputTransfer: t2,

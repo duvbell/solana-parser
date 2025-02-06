@@ -20,7 +20,7 @@ func RegisterParser(id uint64, p Parser) {
 }
 
 func init() {
-	program.RegisterParser(programId, ProgramParser)
+	program.RegisterParser(solana.TokenProgramID, "token", ProgramParser)
 	RegisterParser(new(big.Int).SetBytes([]byte("transfer")).Uint64(), ParseTransfer)
 	RegisterParser(new(big.Int).SetBytes([]byte("transferChecked")).Uint64(), ParseTransfer)
 	RegisterParser(new(big.Int).SetBytes([]byte("mintTo")).Uint64(), ParseMint)

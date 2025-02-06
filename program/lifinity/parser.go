@@ -25,7 +25,7 @@ var (
 )
 
 func init() {
-	program.RegisterParser(lifinity_v2.ProgramID, ProgramParser)
+	program.RegisterParser(lifinity_v2.ProgramID, lifinity_v2.ProgramName, ProgramParser)
 	RegisterParser(uint64(lifinity_v2.Instruction_Swap.Uint32()), ParseSwap)
 	RegisterParser(uint64(lifinity_v2.Instruction_DepositAllTokenTypes.Uint32()), ParseDepositAllTokenTypes)
 	RegisterParser(uint64(lifinity_v2.Instruction_WithdrawAllTokenTypes.Uint32()), ParseWithdrawAllTokenTypes)
@@ -57,6 +57,7 @@ func ParseSwap(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types
 	// the second is vault withdraw
 	transfers := in.FindChildrenTransfers()
 	swap := &types.Swap{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetAmmAccount().PublicKey,
 		User:           inst1.GetAuthorityAccount().PublicKey,
 		InputTransfer:  transfers[0],

@@ -19,7 +19,7 @@ func RegisterParser(id uint64, p Parser) {
 }
 
 func init() {
-	program.RegisterParser(stable_swap.ProgramID, ProgramParser)
+	program.RegisterParser(stable_swap.ProgramID, stable_swap.ProgramName, ProgramParser)
 	RegisterParser(uint64(stable_swap.Instruction_AcceptOwner.Uint32()), ParseAcceptOwner)
 	RegisterParser(uint64(stable_swap.Instruction_ApproveStrategy.Uint32()), ParseApproveStrategy)
 	RegisterParser(uint64(stable_swap.Instruction_ChangeAmpFactor.Uint32()), ParseChangeAmpFactor)
@@ -64,16 +64,20 @@ func ParseCreateStrategy(inst *stable_swap.Instruction, in *types.Instruction, m
 }
 func ParseDeposit(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*stable_swap.Deposit)
-	t1 := in.Children[0].Event[0].(*types.Transfer)
-	t2 := in.Children[1].Event[0].(*types.Transfer)
+	transfers := in.FindChildrenTransfers()
 	addLiquidity := &types.AddLiquidity{
-		Pool:           inst1.GetPoolAccount().PublicKey,
-		User:           inst1.GetUserAccount().PublicKey,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetPoolAccount().PublicKey,
+		User: inst1.GetUserAccount().PublicKey,
+	}
+	if len(transfers) >= 1 {
+		addLiquidity.TokenATransfer = transfers[0]
+	}
+	if len(transfers) >= 2 {
+		addLiquidity.TokenBTransfer = transfers[1]
 	}
 	in.Event = []interface{}{addLiquidity}
-	log.Logger.Info("ignore parse deposit", "program", stable_swap.ProgramName)
+	// log.Logger.Info("ignore parse deposit", "program", stable_swap.ProgramName)
 }
 func ParseExecStrategy(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
 }
@@ -91,6 +95,7 @@ func ParseSwap(inst *stable_swap.Instruction, in *types.Instruction, meta *types
 	t1 := in.Children[0].Event[0].(*types.Transfer)
 	t2 := in.Children[1].Event[0].(*types.Transfer)
 	swap := &types.Swap{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetPoolAccount().PublicKey,
 		User:           inst1.GetUserAccount().PublicKey,
 		InputTransfer:  t1,
@@ -103,6 +108,7 @@ func ParseSwapV2(inst *stable_swap.Instruction, in *types.Instruction, meta *typ
 	t1 := in.Children[0].Event[0].(*types.Transfer)
 	t2 := in.Children[1].Event[0].(*types.Transfer)
 	swap := &types.Swap{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetPoolAccount().PublicKey,
 		User:           inst1.GetUserAccount().PublicKey,
 		InputTransfer:  t1,
@@ -116,16 +122,20 @@ func ParseUnpause(inst *stable_swap.Instruction, in *types.Instruction, meta *ty
 }
 func ParseWithdraw(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*stable_swap.Withdraw)
-	t1 := in.Children[0].Event[0].(*types.Transfer)
-	t2 := in.Children[1].Event[0].(*types.Transfer)
+	transfers := in.FindChildrenTransfers()
 	removeLiquidity := &types.RemoveLiquidity{
-		Pool:           inst1.GetPoolAccount().PublicKey,
-		User:           inst1.GetUserAccount().PublicKey,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetPoolAccount().PublicKey,
+		User: inst1.GetUserAccount().PublicKey,
+	}
+	if len(transfers) >= 1 {
+		removeLiquidity.TokenATransfer = transfers[0]
+	}
+	if len(transfers) >= 2 {
+		removeLiquidity.TokenBTransfer = transfers[1]
 	}
 	in.Event = []interface{}{removeLiquidity}
-	log.Logger.Info("ignore parse withdraw", "program", stable_swap.ProgramName)
+	// log.Logger.Info("ignore parse withdraw", "program", stable_swap.ProgramName)
 }
 
 // Default

@@ -25,7 +25,7 @@ var (
 )
 
 func init() {
-	program.RegisterParser(whirlpool.ProgramID, ProgramParser)
+	program.RegisterParser(whirlpool.ProgramID, whirlpool.ProgramName, ProgramParser)
 	RegisterParser(uint64(whirlpool.Instruction_InitializeConfig.Uint32()), ParseInitializeConfig)
 	RegisterParser(uint64(whirlpool.Instruction_InitializePool.Uint32()), ParseInitializePool)
 	RegisterParser(uint64(whirlpool.Instruction_InitializeTickArray.Uint32()), ParseInitializeTickArray)
@@ -99,6 +99,7 @@ func ParseInitializePool(inst *whirlpool.Instruction, in *types.Instruction, met
 	// log.Logger.Info("ignore parse initialize pool", "program", whirlpool.ProgramName)
 	inst1 := inst.Impl.(*whirlpool.InitializePool)
 	createPool := &types.CreatePool{
+		Dex:     in.Instruction.ProgramId,
 		Pool:    inst1.GetWhirlpoolAccount().PublicKey,
 		User:    inst1.GetFunderAccount().PublicKey,
 		TokenA:  inst1.GetTokenMintAAccount().PublicKey,
@@ -131,6 +132,7 @@ func ParseIncreaseLiquidity(inst *whirlpool.Instruction, in *types.Instruction, 
 	// child 2 : transfer
 	transfers := in.FindChildrenTransfers()
 	addLiquidity := &types.AddLiquidity{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
 		User:           inst1.GetPositionAuthorityAccount().PublicKey,
 		TokenATransfer: transfers[0],
@@ -145,6 +147,7 @@ func ParseDecreaseLiquidity(inst *whirlpool.Instruction, in *types.Instruction, 
 	// child 2 : transfer
 	transfers := in.FindChildrenTransfers()
 	removeLiquidity := &types.RemoveLiquidity{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
 		User:           inst1.GetPositionAuthorityAccount().PublicKey,
 		TokenATransfer: transfers[0],
@@ -166,6 +169,7 @@ func ParseSwap(inst *whirlpool.Instruction, in *types.Instruction, meta *types.M
 	// child 2 : output transfer
 	transfers := in.FindChildrenTransfers()
 	swap := &types.Swap{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
 		User:           inst1.GetTokenAuthorityAccount().PublicKey,
 		InputTransfer:  transfers[0],
@@ -201,6 +205,7 @@ func ParseTwoHopSwap(inst *whirlpool.Instruction, in *types.Instruction, meta *t
 	// child 3 : transfer
 	transfers := in.FindChildrenTransfers()
 	swap := &types.Swap{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetWhirlpoolOneAccount().PublicKey,
 		User:           inst1.GetTokenAuthorityAccount().PublicKey,
 		InputTransfer:  transfers[0],
@@ -235,6 +240,7 @@ func ParseDecreaseLiquidityV2(inst *whirlpool.Instruction, in *types.Instruction
 	// child 2 : transfer
 	transfers := in.FindChildrenTransfers()
 	removeLiquidity := &types.RemoveLiquidity{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
 		User:           inst1.GetPositionAuthorityAccount().PublicKey,
 		TokenATransfer: transfers[0],
@@ -248,6 +254,7 @@ func ParseIncreaseLiquidityV2(inst *whirlpool.Instruction, in *types.Instruction
 	// child 2 : transfer
 	transfers := in.FindChildrenTransfers()
 	addLiquidity := &types.AddLiquidity{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
 		User:           inst1.GetPositionAuthorityAccount().PublicKey,
 		TokenATransfer: transfers[0],
@@ -259,6 +266,7 @@ func ParseInitializePoolV2(inst *whirlpool.Instruction, in *types.Instruction, m
 	// log.Logger.Info("ignore parse initialize pool v2", "program", whirlpool.ProgramName)
 	inst1 := inst.Impl.(*whirlpool.InitializePoolV2)
 	createPool := &types.CreatePool{
+		Dex:     in.Instruction.ProgramId,
 		Pool:    inst1.GetWhirlpoolAccount().PublicKey,
 		User:    inst1.GetFunderAccount().PublicKey,
 		TokenA:  inst1.GetTokenMintAAccount().PublicKey,
@@ -282,6 +290,7 @@ func ParseSwapV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types
 	// child 2 : output transfer
 	transfers := in.FindChildrenTransfers()
 	swap := &types.Swap{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetWhirlpoolAccount().PublicKey,
 		User:           inst1.GetTokenAuthorityAccount().PublicKey,
 		InputTransfer:  transfers[0],
@@ -296,6 +305,7 @@ func ParseTwoHopSwapV2(inst *whirlpool.Instruction, in *types.Instruction, meta 
 	// child 3 : transfer
 	transfers := in.FindChildrenTransfers()
 	swap := &types.Swap{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetWhirlpoolOneAccount().PublicKey,
 		User:           inst1.GetTokenAuthorityAccount().PublicKey,
 		InputTransfer:  transfers[0],

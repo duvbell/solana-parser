@@ -3,6 +3,7 @@ package types
 import "github.com/gagliardetto/solana-go"
 
 type CreatePool struct {
+	Dex     solana.PublicKey
 	Pool    solana.PublicKey
 	User    solana.PublicKey
 	TokenA  solana.PublicKey
@@ -14,6 +15,7 @@ type CreatePool struct {
 }
 
 type AddLiquidity struct {
+	Dex            solana.PublicKey
 	Pool           solana.PublicKey
 	User           solana.PublicKey
 	TokenATransfer *Transfer
@@ -22,6 +24,7 @@ type AddLiquidity struct {
 }
 
 type RemoveLiquidity struct {
+	Dex            solana.PublicKey
 	Pool           solana.PublicKey
 	User           solana.PublicKey
 	TokenATransfer *Transfer
@@ -30,6 +33,7 @@ type RemoveLiquidity struct {
 }
 
 type Swap struct {
+	Dex            solana.PublicKey
 	Pool           solana.PublicKey
 	User           solana.PublicKey
 	InputTransfer  *Transfer

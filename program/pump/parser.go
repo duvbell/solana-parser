@@ -24,14 +24,13 @@ var (
 )
 
 func init() {
-	program.RegisterParser(pumpfun.ProgramID, ProgramParser)
+	program.RegisterParser(pumpfun.ProgramID, pumpfun.ProgramName, ProgramParser)
 	RegisterParser(uint64(pumpfun.Instruction_Initialize.Uint32()), ParseInitialize)
 	RegisterParser(uint64(pumpfun.Instruction_Create.Uint32()), ParseCreate)
 	RegisterParser(uint64(pumpfun.Instruction_Buy.Uint32()), ParseBuy)
 	RegisterParser(uint64(pumpfun.Instruction_Sell.Uint32()), ParseSell)
 	RegisterParser(uint64(pumpfun.Instruction_Withdraw.Uint32()), ParseWithdraw)
 	RegisterParser(uint64(pumpfun.Instruction_SetParams.Uint32()), ParseDefault)
-	RegisterParser(uint64(pumpfun.Instruction_AnchorSelfCPILog.Uint32()), ParseDefault)
 }
 
 func ProgramParser(in *types.Instruction, meta *types.Meta) error {

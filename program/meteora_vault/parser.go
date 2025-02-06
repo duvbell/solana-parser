@@ -19,7 +19,7 @@ func RegisterParser(id uint64, p Parser) {
 }
 
 func init() {
-	program.RegisterParser(meteora_vault.ProgramID, ProgramParser)
+	program.RegisterParser(meteora_vault.ProgramID, meteora_vault.ProgramName, ProgramParser)
 	RegisterParser(uint64(meteora_vault.Instruction_Initialize.Uint32()), ParseInitialize)
 	RegisterParser(uint64(meteora_vault.Instruction_EnableVault.Uint32()), ParseEnableVault)
 	RegisterParser(uint64(meteora_vault.Instruction_SetOperator.Uint32()), ParseSetOperator)

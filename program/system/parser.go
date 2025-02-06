@@ -20,7 +20,7 @@ func RegisterParser(id uint64, p Parser) {
 type Parser func(in *types.Instruction, raw []byte, meta *types.Meta)
 
 func init() {
-	program.RegisterParser(programId, ProgramParser)
+	program.RegisterParser(programId, "system", ProgramParser)
 	RegisterParser(new(big.Int).SetBytes([]byte("transfer")).Uint64(), ParseTransfer)
 }
 

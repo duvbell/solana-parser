@@ -20,7 +20,7 @@ func RegisterParser(id uint64, p Parser) {
 }
 
 func init() {
-	program.RegisterParser(raydium_clmm.ProgramID, ProgramParser)
+	program.RegisterParser(raydium_clmm.ProgramID, raydium_clmm.ProgramName, ProgramParser)
 	RegisterParser(uint64(raydium_clmm.Instruction_CreateAmmConfig.Uint32()), ParseCreateAmmConfig)
 	RegisterParser(uint64(raydium_clmm.Instruction_UpdateAmmConfig.Uint32()), ParseUpdateAmmConfig)
 	RegisterParser(uint64(raydium_clmm.Instruction_CreatePool.Uint32()), ParseCreatePool)
@@ -68,6 +68,7 @@ func ParseUpdateAmmConfig(inst *raydium_clmm.Instruction, in *types.Instruction,
 func ParseCreatePool(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_clmm.CreatePool)
 	createPool := &types.CreatePool{
+		Dex:     in.Instruction.ProgramId,
 		Pool:    inst1.GetPoolStateAccount().PublicKey,
 		User:    inst1.GetPoolCreatorAccount().PublicKey,
 		TokenA:  inst1.GetTokenMint0Account().PublicKey,
@@ -109,6 +110,7 @@ func ParseOpenPositionWithToken22Nft(inst *raydium_clmm.Instruction, in *types.I
 	inst1 := inst.Impl.(*raydium_clmm.OpenPositionWithToken22Nft)
 	transfers := in.FindChildrenTransfers()
 	addLiquidity := &types.AddLiquidity{
+		Dex:  in.Instruction.ProgramId,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetPayerAccount().PublicKey,
 	}
@@ -130,6 +132,7 @@ func ParseIncreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruct
 	inst1 := inst.Impl.(*raydium_clmm.IncreaseLiquidityV2)
 	transfers := in.FindChildrenTransfers()
 	addLiquidity := &types.AddLiquidity{
+		Dex:  in.Instruction.ProgramId,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetNftOwnerAccount().PublicKey,
 	}
@@ -147,6 +150,7 @@ func ParseDecreaseLiquidity(inst *raydium_clmm.Instruction, in *types.Instructio
 func ParseDecreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *types.Meta) {
 	inst1 := inst.Impl.(*raydium_clmm.DecreaseLiquidityV2)
 	removeLiquidity := &types.RemoveLiquidity{
+		Dex:  in.Instruction.ProgramId,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetNftOwnerAccount().PublicKey,
 	}
@@ -164,6 +168,7 @@ func ParseSwap(inst *raydium_clmm.Instruction, in *types.Instruction, meta *type
 	t2 := in.Children[1].Event[0].(*types.Transfer)
 	//
 	swap := &types.Swap{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetPoolStateAccount().PublicKey,
 		User:           inst1.GetPayerAccount().PublicKey,
 		InputTransfer:  t1,
@@ -176,6 +181,7 @@ func ParseSwapV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *ty
 	t1 := in.Children[0].Event[0].(*types.Transfer)
 	t2 := in.Children[1].Event[0].(*types.Transfer)
 	swap := &types.Swap{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetPoolStateAccount().PublicKey,
 		User:           inst1.GetPayerAccount().PublicKey,
 		InputTransfer:  t1,

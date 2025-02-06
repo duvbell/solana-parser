@@ -20,7 +20,7 @@ func RegisterParser(id uint64, p Parser) {
 }
 
 func init() {
-	program.RegisterParser(meteora_pools.ProgramID, ProgramParser)
+	program.RegisterParser(meteora_pools.ProgramID, meteora_pools.ProgramName, ProgramParser)
 	RegisterParser(uint64(meteora_pools.Instruction_InitializePermissionedPool.Uint32()), ParseInitializePermissionedPool)
 	RegisterParser(uint64(meteora_pools.Instruction_InitializePermissionlessPool.Uint32()), ParseInitializePermissionlessPool)
 	RegisterParser(uint64(meteora_pools.Instruction_InitializePermissionlessPoolWithFeeTier.Uint32()), ParseInitializePermissionlessPoolWithFeeTier)
@@ -84,6 +84,7 @@ func ParseSwap(inst *meteora_pools.Instruction, in *types.Instruction, meta *typ
 	deposit := in.Children[0].Event[0].(*types.Transfer)
 	withdraw := in.Children[1].Event[0].(*types.Transfer)
 	swap := &types.Swap{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetPoolAccount().PublicKey,
 		User:           inst1.GetUserAccount().PublicKey,
 		InputTransfer:  deposit,
@@ -99,13 +100,17 @@ func ParseRemoveLiquiditySingleSide(inst *meteora_pools.Instruction, in *types.I
 func ParseAddImbalanceLiquidity(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) {
 	// log.Logger.Info("ignore parse add imbalance liquidity", "program", meteora_pools.ProgramName)
 	inst1 := inst.Impl.(*meteora_pools.AddImbalanceLiquidity)
-	t1 := in.Children[0].Event[0].(*types.Transfer)
-	t2 := in.Children[1].Event[0].(*types.Transfer)
+	transfers := in.FindChildrenTransfers()
 	addLiquidity := &types.AddLiquidity{
-		Pool:           inst1.GetPoolAccount().PublicKey,
-		User:           inst1.GetUserAccount().PublicKey,
-		TokenATransfer: t1,
-		TokenBTransfer: t2,
+		Dex:  in.Instruction.ProgramId,
+		Pool: inst1.GetPoolAccount().PublicKey,
+		User: inst1.GetUserAccount().PublicKey,
+	}
+	if len(transfers) >= 1 {
+		addLiquidity.TokenATransfer = transfers[0]
+	}
+	if len(transfers) >= 2 {
+		addLiquidity.TokenBTransfer = transfers[1]
 	}
 	in.Event = []interface{}{addLiquidity}
 }
@@ -115,6 +120,7 @@ func ParseRemoveBalanceLiquidity(inst *meteora_pools.Instruction, in *types.Inst
 	t1 := in.Children[0].Event[0].(*types.Transfer)
 	t2 := in.Children[1].Event[0].(*types.Transfer)
 	removeLiquidity := &types.RemoveLiquidity{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetPoolAccount().PublicKey,
 		User:           inst1.GetUserAccount().PublicKey,
 		TokenATransfer: t1,
@@ -128,6 +134,7 @@ func ParseAddBalanceLiquidity(inst *meteora_pools.Instruction, in *types.Instruc
 	t1 := in.Children[0].Event[0].(*types.Transfer)
 	t2 := in.Children[1].Event[0].(*types.Transfer)
 	addLiquidity := &types.AddLiquidity{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetPoolAccount().PublicKey,
 		User:           inst1.GetUserAccount().PublicKey,
 		TokenATransfer: t1,
@@ -179,6 +186,7 @@ func ParseInitializePermissionlessConstantProductPoolWithConfig2(inst *meteora_p
 	t1 := instructions[0].Event[0].(*types.Transfer)
 	t2 := instructions[1].Event[0].(*types.Transfer)
 	addLiquidity := &types.AddLiquidity{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetPoolAccount().PublicKey,
 		User:           inst1.GetPayerAccount().PublicKey,
 		TokenATransfer: t1,

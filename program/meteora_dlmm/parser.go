@@ -24,7 +24,7 @@ var (
 )
 
 func init() {
-	program.RegisterParser(meteora_dlmm.ProgramID, ProgramParser)
+	program.RegisterParser(meteora_dlmm.ProgramID, meteora_dlmm.ProgramName, ProgramParser)
 	RegisterParser(uint64(meteora_dlmm.Instruction_InitializeLbPair.Uint32()), ParseInitializeLbPair)
 	RegisterParser(uint64(meteora_dlmm.Instruction_InitializePermissionLbPair.Uint32()), ParseInitializePermissionLbPair)
 	RegisterParser(uint64(meteora_dlmm.Instruction_InitializeCustomizablePermissionlessLbPair.Uint32()), ParseInitializeCustomizablePermissionlessLbPair)
@@ -106,6 +106,7 @@ func ParseAddLiquidity(inst *meteora_dlmm.Instruction, in *types.Instruction, me
 	t1 := in.Children[0].Event[0].(*types.Transfer)
 	t2 := in.Children[1].Event[0].(*types.Transfer)
 	addLiquidity := &types.AddLiquidity{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetLbPairAccount().PublicKey,
 		User:           inst1.GetSenderAccount().PublicKey,
 		TokenATransfer: t1,
@@ -120,6 +121,7 @@ func ParseAddLiquidityByWeight(inst *meteora_dlmm.Instruction, in *types.Instruc
 		panic("not supported")
 	}
 	addLiquidity := &types.AddLiquidity{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetLbPairAccount().PublicKey,
 		User:           inst1.GetSenderAccount().PublicKey,
 		TokenATransfer: transfers[0],
@@ -134,6 +136,7 @@ func ParseAddLiquidityByStrategy(inst *meteora_dlmm.Instruction, in *types.Instr
 		panic("not supported")
 	}
 	addLiquidity := &types.AddLiquidity{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetLbPairAccount().PublicKey,
 		User:           inst1.GetSenderAccount().PublicKey,
 		TokenATransfer: transfers[0],
@@ -152,6 +155,7 @@ func ParseRemoveLiquidity(inst *meteora_dlmm.Instruction, in *types.Instruction,
 	t1 := in.Children[0].Event[0].(*types.Transfer)
 	t2 := in.Children[1].Event[0].(*types.Transfer)
 	removeLiquidity := &types.RemoveLiquidity{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetLbPairAccount().PublicKey,
 		User:           inst1.GetSenderAccount().PublicKey,
 		TokenATransfer: t1,
@@ -175,6 +179,7 @@ func ParseSwap(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *type
 	t1 := in.Children[0].Event[0].(*types.Transfer)
 	t2 := in.Children[1].Event[0].(*types.Transfer)
 	swap := &types.Swap{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetLbPairAccount().PublicKey,
 		User:           inst1.GetUserAccount().PublicKey,
 		InputTransfer:  t1,
@@ -189,6 +194,7 @@ func ParseSwapExactOut(inst *meteora_dlmm.Instruction, in *types.Instruction, me
 	t1 := in.Children[0].Event[0].(*types.Transfer)
 	t2 := in.Children[1].Event[0].(*types.Transfer)
 	swap := &types.Swap{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetLbPairAccount().PublicKey,
 		User:           inst1.GetUserAccount().PublicKey,
 		InputTransfer:  t1,
@@ -247,6 +253,7 @@ func ParseRemoveLiquidityByRange(inst *meteora_dlmm.Instruction, in *types.Instr
 		t2 = transfers[1]
 	}
 	removeLiquidity := &types.RemoveLiquidity{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetLbPairAccount().PublicKey,
 		User:           inst1.GetSenderAccount().PublicKey,
 		TokenATransfer: t1,

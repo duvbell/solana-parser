@@ -19,7 +19,7 @@ func RegisterParser(id uint64, p Parser) {
 }
 
 func init() {
-	program.RegisterParser(phoenix_v1.ProgramID, ProgramParser)
+	program.RegisterParser(phoenix_v1.ProgramID, phoenix_v1.ProgramName, ProgramParser)
 	RegisterParser(uint64(phoenix_v1.Instruction_Swap), ParseSwap)
 	RegisterParser(uint64(phoenix_v1.Instruction_SwapWithFreeFunds), ParseSwapWithFreeFunds)
 	RegisterParser(uint64(phoenix_v1.Instruction_PlaceLimitOrder), ParsePlaceLimitOrder)
@@ -71,6 +71,7 @@ func ParseSwap(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.
 		return
 	}
 	swap := &types.Swap{
+		Dex:            in.Instruction.ProgramId,
 		Pool:           inst1.GetMarketAccount().PublicKey,
 		User:           inst1.GetTraderAccount().PublicKey,
 		InputTransfer:  transfers[1],
