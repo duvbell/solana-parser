@@ -25,7 +25,7 @@ pc : token 1
 */
 
 func init() {
-	program.RegisterParser(raydium_amm.ProgramID, raydium_amm.ProgramName, ProgramParser)
+	program.RegisterParser(raydium_amm.ProgramID, raydium_amm.ProgramName, program.Swap, ProgramParser)
 	RegisterParser(uint64(raydium_amm.Instruction_Initialize), ParseInitialize)
 	RegisterParser(uint64(raydium_amm.Instruction_Initialize2), ParseInitialize2)
 	RegisterParser(uint64(raydium_amm.Instruction_MonitorStep), ParseMonitorStep)

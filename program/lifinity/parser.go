@@ -25,7 +25,7 @@ var (
 )
 
 func init() {
-	program.RegisterParser(lifinity_v2.ProgramID, lifinity_v2.ProgramName, ProgramParser)
+	program.RegisterParser(lifinity_v2.ProgramID, lifinity_v2.ProgramName, program.Swap, ProgramParser)
 	RegisterParser(uint64(lifinity_v2.Instruction_Swap.Uint32()), ParseSwap)
 	RegisterParser(uint64(lifinity_v2.Instruction_DepositAllTokenTypes.Uint32()), ParseDepositAllTokenTypes)
 	RegisterParser(uint64(lifinity_v2.Instruction_WithdrawAllTokenTypes.Uint32()), ParseWithdrawAllTokenTypes)

@@ -25,7 +25,7 @@ var (
 )
 
 func init() {
-	program.RegisterParser(whirlpool.ProgramID, whirlpool.ProgramName, ProgramParser)
+	program.RegisterParser(whirlpool.ProgramID, whirlpool.ProgramName, program.Swap, ProgramParser)
 	RegisterParser(uint64(whirlpool.Instruction_InitializeConfig.Uint32()), ParseInitializeConfig)
 	RegisterParser(uint64(whirlpool.Instruction_InitializePool.Uint32()), ParseInitializePool)
 	RegisterParser(uint64(whirlpool.Instruction_InitializeTickArray.Uint32()), ParseInitializeTickArray)

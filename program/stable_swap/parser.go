@@ -19,7 +19,7 @@ func RegisterParser(id uint64, p Parser) {
 }
 
 func init() {
-	program.RegisterParser(stable_swap.ProgramID, stable_swap.ProgramName, ProgramParser)
+	program.RegisterParser(stable_swap.ProgramID, stable_swap.ProgramName, program.StableSwap, ProgramParser)
 	RegisterParser(uint64(stable_swap.Instruction_AcceptOwner.Uint32()), ParseAcceptOwner)
 	RegisterParser(uint64(stable_swap.Instruction_ApproveStrategy.Uint32()), ParseApproveStrategy)
 	RegisterParser(uint64(stable_swap.Instruction_ChangeAmpFactor.Uint32()), ParseChangeAmpFactor)
@@ -96,7 +96,7 @@ func ParseSwap(inst *stable_swap.Instruction, in *types.Instruction, meta *types
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	if *inst1.AmountIn > 0 {
+	if inst1.AmountIn == nil || *inst1.AmountIn > 0 {
 		swap.InputTransfer = in.Children[0].Event[0].(*types.Transfer)
 		swap.OutputTransfer = in.Children[1].Event[0].(*types.Transfer)
 	}
@@ -109,7 +109,7 @@ func ParseSwapV2(inst *stable_swap.Instruction, in *types.Instruction, meta *typ
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	if *inst1.AmountIn > 0 {
+	if inst1.AmountIn == nil || *inst1.AmountIn > 0 {
 		swap.InputTransfer = in.Children[0].Event[0].(*types.Transfer)
 		swap.OutputTransfer = in.Children[1].Event[0].(*types.Transfer)
 	}

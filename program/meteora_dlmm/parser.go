@@ -24,7 +24,7 @@ var (
 )
 
 func init() {
-	program.RegisterParser(meteora_dlmm.ProgramID, meteora_dlmm.ProgramName, ProgramParser)
+	program.RegisterParser(meteora_dlmm.ProgramID, meteora_dlmm.ProgramName, program.Swap, ProgramParser)
 	RegisterParser(uint64(meteora_dlmm.Instruction_InitializeLbPair.Uint32()), ParseInitializeLbPair)
 	RegisterParser(uint64(meteora_dlmm.Instruction_InitializePermissionLbPair.Uint32()), ParseInitializePermissionLbPair)
 	RegisterParser(uint64(meteora_dlmm.Instruction_InitializeCustomizablePermissionlessLbPair.Uint32()), ParseInitializeCustomizablePermissionlessLbPair)

@@ -61,11 +61,11 @@ func ParseTransaction(seq int, tx *rpc.ParsedTransactionWithMeta) *types.Transac
 			PreBalance:  make(map[solana.PublicKey]decimal.Decimal),
 			PostBalance: make(map[solana.PublicKey]decimal.Decimal),
 		},
-		Seq: seq,
+		Seq:  seq,
+		Hash: tx.Transaction.Signatures[0],
 	}
 	meta := tx.Meta
 	transaction := tx.Transaction
-	t.Hash = transaction.Signatures[0]
 	if meta.Err != nil {
 		// if failed, ignore this transaction
 		errJson, _ := json.Marshal(meta.Err)

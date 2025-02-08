@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestTransaction_MeteoraPools_Swap(t *testing.T) {
+func TestTransaction_MeteoraPools_ParseSwap(t *testing.T) {
 	solClient := rpc.New(rpc.MainNetBeta_RPC)
 	result, err := solClient.GetParsedTransaction(
 		context.Background(),
@@ -38,7 +38,7 @@ func TestTransaction_MeteoraPools_Swap(t *testing.T) {
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
 }
 
-func TestTransaction_MeteoraPools_Swap2(t *testing.T) {
+func TestTransaction_MeteoraPools_ParseSwap2(t *testing.T) {
 	solClient := rpc.New(rpc.MainNetBeta_RPC)
 	result, err := solClient.GetParsedTransaction(
 		context.Background(),
@@ -183,6 +183,34 @@ func TestTransaction_MeteoraPools_ParseAddImbalanceLiquidity_2(t *testing.T) {
 	result, err := solClient.GetParsedTransaction(
 		context.Background(),
 		solana.MustSignatureFromBase58("4yCACUfgkLhx7SueVoueNfpraUiVh3SoqyTsTQjrQWyuxcRgCC6FDxt8U2C2vZZWkZjSnatLVvFA99RrW9WwhXt8"),
+		&rpc.GetParsedTransactionOpts{
+			Commitment:                     rpc.CommitmentConfirmed,
+			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,
+		})
+	if err != nil {
+		panic(err)
+	}
+	transaction := &rpc.ParsedTransactionWithMeta{
+		Slot:        result.Slot,
+		BlockTime:   result.BlockTime,
+		Transaction: result.Transaction,
+		Meta:        result.Meta,
+	}
+	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
+	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
+	tx := ParseTransaction(0, transaction)
+	if tx == nil {
+		panic("invalid transaction")
+	}
+	txJson, _ := json.MarshalIndent(tx, "", "    ")
+	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
+}
+
+func TestTransaction_MeteoraPools_ParseSwap_2(t *testing.T) {
+	solClient := rpc.New(rpc.MainNetBeta_RPC)
+	result, err := solClient.GetParsedTransaction(
+		context.Background(),
+		solana.MustSignatureFromBase58("2We6Zto8NYG8TDbCqoL1Fw4og4JSDYAHbkYfjmmtzkve79zVvCPmCfpTzdVvVk4unG4qZQVWZpG5vGDMRfJDwXx8"),
 		&rpc.GetParsedTransactionOpts{
 			Commitment:                     rpc.CommitmentConfirmed,
 			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,

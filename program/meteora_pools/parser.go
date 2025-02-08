@@ -19,7 +19,7 @@ func RegisterParser(id uint64, p Parser) {
 }
 
 func init() {
-	program.RegisterParser(meteora_pools.ProgramID, meteora_pools.ProgramName, ProgramParser)
+	program.RegisterParser(meteora_pools.ProgramID, meteora_pools.ProgramName, program.Swap, ProgramParser)
 	RegisterParser(uint64(meteora_pools.Instruction_InitializePermissionedPool.Uint32()), ParseInitializePermissionedPool)
 	RegisterParser(uint64(meteora_pools.Instruction_InitializePermissionlessPool.Uint32()), ParseInitializePermissionlessPool)
 	RegisterParser(uint64(meteora_pools.Instruction_InitializePermissionlessPoolWithFeeTier.Uint32()), ParseInitializePermissionlessPoolWithFeeTier)
@@ -86,8 +86,15 @@ func ParseSwap(inst *meteora_pools.Instruction, in *types.Instruction, meta *typ
 	}
 	if *inst1.InAmount != 0 {
 		// the transfer is execute by vault deposit & withdraw & this first transfer is fee
-		swap.InputTransfer = in.Children[0].Event[0].(*types.Transfer)
-		swap.OutputTransfer = in.Children[1].Event[0].(*types.Transfer)
+		transfers := in.FindChildrenTransfers()
+		for _, transfer := range transfers {
+			if transfer.To == inst1.GetATokenVaultAccount().PublicKey || transfer.To == inst1.GetBTokenVaultAccount().PublicKey {
+				swap.InputTransfer = transfer
+			}
+			if transfer.From == inst1.GetATokenVaultAccount().PublicKey || transfer.From == inst1.GetBTokenVaultAccount().PublicKey {
+				swap.OutputTransfer = transfer
+			}
+		}
 	}
 	in.Event = []interface{}{swap}
 }

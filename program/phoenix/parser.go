@@ -19,7 +19,7 @@ func RegisterParser(id uint64, p Parser) {
 }
 
 func init() {
-	program.RegisterParser(phoenix_v1.ProgramID, phoenix_v1.ProgramName, ProgramParser)
+	program.RegisterParser(phoenix_v1.ProgramID, phoenix_v1.ProgramName, program.OrderBook, ProgramParser)
 	RegisterParser(uint64(phoenix_v1.Instruction_Swap), ParseSwap)
 	RegisterParser(uint64(phoenix_v1.Instruction_SwapWithFreeFunds), ParseSwapWithFreeFunds)
 	RegisterParser(uint64(phoenix_v1.Instruction_PlaceLimitOrder), ParsePlaceLimitOrder)

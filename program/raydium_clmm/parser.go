@@ -20,7 +20,7 @@ func RegisterParser(id uint64, p Parser) {
 }
 
 func init() {
-	program.RegisterParser(raydium_clmm.ProgramID, raydium_clmm.ProgramName, ProgramParser)
+	program.RegisterParser(raydium_clmm.ProgramID, raydium_clmm.ProgramName, program.Swap, ProgramParser)
 	RegisterParser(uint64(raydium_clmm.Instruction_CreateAmmConfig.Uint32()), ParseCreateAmmConfig)
 	RegisterParser(uint64(raydium_clmm.Instruction_UpdateAmmConfig.Uint32()), ParseUpdateAmmConfig)
 	RegisterParser(uint64(raydium_clmm.Instruction_CreatePool.Uint32()), ParseCreatePool)

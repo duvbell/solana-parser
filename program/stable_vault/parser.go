@@ -19,7 +19,7 @@ func RegisterParser(id uint64, p Parser) {
 }
 
 func init() {
-	program.RegisterParser(stable_vault.ProgramID, stable_vault.ProgramName, ProgramParser)
+	program.RegisterParser(stable_vault.ProgramID, stable_vault.ProgramName, program.StableSwap, ProgramParser)
 	RegisterParser(uint64(stable_vault.Instruction_AcceptAdmin.Uint32()), ParseAcceptAdmin)
 	RegisterParser(uint64(stable_vault.Instruction_ChangeBeneficiary.Uint32()), ParseChangeBeneficiary)
 	RegisterParser(uint64(stable_vault.Instruction_ChangeBeneficiaryFee.Uint32()), ParseChangeBeneficiaryFee)

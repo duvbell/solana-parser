@@ -26,7 +26,6 @@ type Transaction struct {
 	Hash         solana.Signature
 	Instructions []*Instruction
 	Meta         Meta
-	BlockHash    solana.Hash
 	Seq          int
 }
 

@@ -24,7 +24,7 @@ var (
 )
 
 func init() {
-	program.RegisterParser(pumpfun.ProgramID, pumpfun.ProgramName, ProgramParser)
+	program.RegisterParser(pumpfun.ProgramID, pumpfun.ProgramName, program.Swap, ProgramParser)
 	RegisterParser(uint64(pumpfun.Instruction_Initialize.Uint32()), ParseInitialize)
 	RegisterParser(uint64(pumpfun.Instruction_Create.Uint32()), ParseCreate)
 	RegisterParser(uint64(pumpfun.Instruction_Buy.Uint32()), ParseBuy)
