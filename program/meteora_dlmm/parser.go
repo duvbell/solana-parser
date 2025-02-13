@@ -75,7 +75,7 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	if typeID == Instruction_AnchorSelfCPILog {
 		return nil
 	}
-	inst, err := meteora_dlmm.DecodeInstruction(in.AccountMetas(), in.Instruction.Data)
+	inst, err := meteora_dlmm.DecodeInstruction(in.AccountMetas(meta.Accounts), in.Instruction.Data)
 	if err != nil {
 		return err
 	}

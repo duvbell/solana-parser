@@ -33,7 +33,7 @@ func init() {
 }
 
 func ProgramParser(in *types.Instruction, meta *types.Meta) error {
-	inst, err := stable_vault.DecodeInstruction(in.AccountMetas(), in.Instruction.Data)
+	inst, err := stable_vault.DecodeInstruction(in.AccountMetas(meta.Accounts), in.Instruction.Data)
 	if err != nil {
 		return err
 	}

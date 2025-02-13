@@ -6,13 +6,24 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type TokenAccount struct {
+	Owner     *solana.PublicKey
+	ProgramId *solana.PublicKey
+	Mint      solana.PublicKey
+}
+
+type MintAccount struct {
+	Mint     solana.PublicKey
+	Decimals uint8
+}
+
 type Meta struct {
-	Accounts     map[solana.PublicKey]*solana.AccountMeta
-	TokenOwner   map[solana.PublicKey]solana.PublicKey
-	TokenMint    map[solana.PublicKey]solana.PublicKey
-	PreBalance   map[solana.PublicKey]decimal.Decimal
-	PostBalance  map[solana.PublicKey]decimal.Decimal
-	ErrorMessage []byte
+	Accounts      map[solana.PublicKey]*solana.AccountMeta
+	TokenAccounts map[solana.PublicKey]*TokenAccount
+	MintAccounts  map[solana.PublicKey]*MintAccount
+	PreBalance    map[solana.PublicKey]decimal.Decimal
+	PostBalance   map[solana.PublicKey]decimal.Decimal
+	ErrorMessage  []byte
 }
 
 type Block struct {
@@ -37,14 +48,11 @@ type Instruction struct {
 	Children    []*Instruction
 }
 
-func (in *Instruction) AccountMetas() []*solana.AccountMeta {
+func (in *Instruction) AccountMetas(messageAccounts map[solana.PublicKey]*solana.AccountMeta) []*solana.AccountMeta {
 	accounts := make([]*solana.AccountMeta, 0)
 	for _, item := range in.Instruction.Accounts {
-		accounts = append(accounts, &solana.AccountMeta{
-			PublicKey:  item,
-			IsWritable: false,
-			IsSigner:   false,
-		})
+		account := messageAccounts[item]
+		accounts = append(accounts, account)
 	}
 	return accounts
 }

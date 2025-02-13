@@ -55,11 +55,11 @@ func ParseTransaction(seq int, tx *rpc.ParsedTransactionWithMeta) *types.Transac
 	}
 	t := &types.Transaction{
 		Meta: types.Meta{
-			Accounts:    make(map[solana.PublicKey]*solana.AccountMeta),
-			TokenOwner:  make(map[solana.PublicKey]solana.PublicKey),
-			TokenMint:   make(map[solana.PublicKey]solana.PublicKey),
-			PreBalance:  make(map[solana.PublicKey]decimal.Decimal),
-			PostBalance: make(map[solana.PublicKey]decimal.Decimal),
+			Accounts:      make(map[solana.PublicKey]*solana.AccountMeta),
+			TokenAccounts: make(map[solana.PublicKey]*types.TokenAccount),
+			MintAccounts:  make(map[solana.PublicKey]*types.MintAccount),
+			PreBalance:    make(map[solana.PublicKey]decimal.Decimal),
+			PostBalance:   make(map[solana.PublicKey]decimal.Decimal),
 		},
 		Seq:  seq,
 		Hash: tx.Transaction.Signatures[0],
@@ -91,12 +91,31 @@ func ParseTransaction(seq int, tx *rpc.ParsedTransactionWithMeta) *types.Transac
 	}
 	for _, item := range meta.PostTokenBalances {
 		account := message.AccountKeys[item.AccountIndex]
-		t.Meta.TokenOwner[account.PublicKey] = *item.Owner
-		t.Meta.TokenMint[account.PublicKey] = item.Mint
+		t.Meta.TokenAccounts[account.PublicKey] = &types.TokenAccount{
+			Owner:     item.Owner,
+			ProgramId: item.ProgramId,
+			Mint:      item.Mint,
+		}
+		t.Meta.MintAccounts[item.Mint] = &types.MintAccount{
+			Mint:     item.Mint,
+			Decimals: item.UiTokenAmount.Decimals,
+		}
 		t.Meta.PostBalance[account.PublicKey], _ = decimal.NewFromString(item.UiTokenAmount.Amount)
 	}
 	for _, item := range meta.PreTokenBalances {
 		account := message.AccountKeys[item.AccountIndex]
+		_, ok := t.Meta.TokenAccounts[account.PublicKey]
+		if !ok {
+			t.Meta.TokenAccounts[account.PublicKey] = &types.TokenAccount{
+				Owner:     item.Owner,
+				ProgramId: item.ProgramId,
+				Mint:      item.Mint,
+			}
+			t.Meta.MintAccounts[item.Mint] = &types.MintAccount{
+				Mint:     item.Mint,
+				Decimals: item.UiTokenAmount.Decimals,
+			}
+		}
 		t.Meta.PreBalance[account.PublicKey], _ = decimal.NewFromString(item.UiTokenAmount.Amount)
 	}
 	for index, instruction := range instructions {

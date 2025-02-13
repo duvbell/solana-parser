@@ -41,7 +41,7 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	if err != nil {
 		return err
 	}
-	id := new(big.Int).SetBytes([]byte(instruction.T)).Uint64()
+	id := new(big.Int).SetBytes([]byte(instruction.T)[0:8]).Uint64()
 	parser, ok := Parsers[id]
 	if !ok {
 		return nil
@@ -53,7 +53,7 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 // transfer instruction
 type Transfer struct {
 	Destination solana.PublicKey `json:"destination"`
-	Lamports    uint64           `json:"amount,string"`
+	Amount      uint64           `json:"amount,string"`
 	Source      solana.PublicKey `json:"source"`
 	Authority   solana.PublicKey `json:"authority"`
 	Mint        solana.PublicKey `json:"mint"`
@@ -68,7 +68,6 @@ func ParseTransfer(in *types.Instruction, raw []byte, meta *types.Meta) {
 	if err := json.Unmarshal(raw, instruction); err != nil {
 		return
 	}
-	mint := meta.TokenMint[instruction.Source]
 	from := instruction.Source
 	/*
 		if k, ok := meta.TokenOwner[instruction.Source]; ok {
@@ -81,12 +80,13 @@ func ParseTransfer(in *types.Instruction, raw []byte, meta *types.Meta) {
 			to = k
 		}
 	*/
-	amount := instruction.Lamports
+	amount := instruction.Amount
 	if amount == 0 {
 		amount = instruction.TokenAmount.Amount
 	}
+	tokenAccount := meta.TokenAccounts[from]
 	transfer := &types.Transfer{
-		Mint:   mint,
+		Mint:   tokenAccount.Mint,
 		Amount: amount,
 		From:   from,
 		To:     to,
@@ -166,7 +166,10 @@ func ParseInitialize(in *types.Instruction, raw []byte, meta *types.Meta) {
 		Owner:   instruction.Owner,
 	}
 	// update token owner & mint by spl token instructions
-	meta.TokenOwner[init.Account] = init.Owner
-	meta.TokenMint[init.Account] = init.Mint
+	meta.TokenAccounts[init.Account] = &types.TokenAccount{
+		Owner:     &instruction.Owner,
+		ProgramId: &in.Instruction.ProgramId,
+		Mint:      instruction.Mint,
+	}
 	in.Event = []interface{}{init}
 }

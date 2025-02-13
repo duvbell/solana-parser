@@ -45,7 +45,7 @@ func init() {
 }
 
 func ProgramParser(in *types.Instruction, meta *types.Meta) error {
-	inst, err := raydium_amm.DecodeInstruction(in.AccountMetas(), in.Instruction.Data)
+	inst, err := raydium_amm.DecodeInstruction(in.AccountMetas(meta.Accounts), in.Instruction.Data)
 	if err != nil {
 		return err
 	}

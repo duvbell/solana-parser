@@ -39,7 +39,7 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	if typeID == Instruction_AnchorSelfCPILog {
 		return nil
 	}
-	inst, err := pumpfun.DecodeInstruction(in.AccountMetas(), in.Instruction.Data)
+	inst, err := pumpfun.DecodeInstruction(in.AccountMetas(meta.Accounts), in.Instruction.Data)
 	if err != nil {
 		return err
 	}

@@ -51,7 +51,7 @@ func init() {
 }
 
 func ProgramParser(in *types.Instruction, meta *types.Meta) error {
-	inst, err := phoenix_v1.DecodeInstruction(in.AccountMetas(), in.Instruction.Data)
+	inst, err := phoenix_v1.DecodeInstruction(in.AccountMetas(meta.Accounts), in.Instruction.Data)
 	if err != nil {
 		return err
 	}

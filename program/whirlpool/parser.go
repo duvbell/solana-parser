@@ -80,7 +80,7 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	if typeID == Instruction_ClosePositionWithTokenExtensions || typeID == Instruction_OpenPositionWithTokenExtensions {
 		return nil
 	}
-	inst, err := whirlpool.DecodeInstruction(in.AccountMetas(), in.Instruction.Data)
+	inst, err := whirlpool.DecodeInstruction(in.AccountMetas(meta.Accounts), in.Instruction.Data)
 	if err != nil {
 		return err
 	}

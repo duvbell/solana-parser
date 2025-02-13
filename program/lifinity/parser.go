@@ -37,7 +37,7 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	if typeID == Instruction_UpdateTargetPriceBufferParam || typeID == Instruction_UpdateConfigSpreadParam {
 		return nil
 	}
-	inst, err := lifinity_v2.DecodeInstruction(in.AccountMetas(), in.Instruction.Data)
+	inst, err := lifinity_v2.DecodeInstruction(in.AccountMetas(meta.Accounts), in.Instruction.Data)
 	if err != nil {
 		return err
 	}
