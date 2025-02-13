@@ -5,7 +5,6 @@ import (
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go"
-	"math/big"
 )
 
 var (
@@ -21,7 +20,7 @@ type Parser func(in *types.Instruction, raw []byte, meta *types.Meta)
 
 func init() {
 	program.RegisterParser(programId, "system", program.Token, ProgramParser)
-	RegisterParser(new(big.Int).SetBytes([]byte("transfer")).Uint64(), ParseTransfer)
+	RegisterParser(types.CreateId([]byte("transfer")), ParseTransfer)
 }
 
 type Instruction struct {
@@ -36,7 +35,7 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	if err != nil {
 		return err
 	}
-	id := new(big.Int).SetBytes([]byte(instruction.T)).Uint64()
+	id := types.CreateId([]byte(instruction.T))
 	parser, ok := Parsers[id]
 	if !ok {
 		return nil

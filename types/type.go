@@ -4,6 +4,7 @@ import (
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/shopspring/decimal"
+	"math/big"
 )
 
 type TokenAccount struct {
@@ -79,4 +80,12 @@ func (in *Instruction) FindChildrenPrograms(id solana.PublicKey) []*Instruction 
 		}
 	}
 	return instructions
+}
+
+func CreateId(value []byte) uint64 {
+	data := make([]byte, 8)
+	for i := 0; i < len(value); i++ {
+		data[i%8] = data[i%8] + value[i]
+	}
+	return new(big.Int).SetBytes(data).Uint64()
 }

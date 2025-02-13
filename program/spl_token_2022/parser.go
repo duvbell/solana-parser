@@ -5,7 +5,6 @@ import (
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go"
-	"math/big"
 )
 
 var (
@@ -21,12 +20,12 @@ func RegisterParser(id uint64, p Parser) {
 
 func init() {
 	program.RegisterParser(programId, "token2022", program.Token, ProgramParser)
-	RegisterParser(new(big.Int).SetBytes([]byte("transfer")).Uint64(), ParseTransfer)
-	RegisterParser(new(big.Int).SetBytes([]byte("transferChecked")).Uint64(), ParseTransfer)
-	RegisterParser(new(big.Int).SetBytes([]byte("mintTo")).Uint64(), ParseMint)
-	RegisterParser(new(big.Int).SetBytes([]byte("burn")).Uint64(), ParseBurn)
-	RegisterParser(new(big.Int).SetBytes([]byte("initializeAccount")).Uint64(), ParseInitialize)
-	RegisterParser(new(big.Int).SetBytes([]byte("initializeAccount3")).Uint64(), ParseInitialize)
+	RegisterParser(types.CreateId([]byte("transfer")), ParseTransfer)
+	RegisterParser(types.CreateId([]byte("transferChecked")), ParseTransfer)
+	RegisterParser(types.CreateId([]byte("mintTo")), ParseMint)
+	RegisterParser(types.CreateId([]byte("burn")), ParseBurn)
+	RegisterParser(types.CreateId([]byte("initializeAccount")), ParseInitialize)
+	RegisterParser(types.CreateId([]byte("initializeAccount3")), ParseInitialize)
 }
 
 type Instruction struct {
@@ -41,7 +40,7 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	if err != nil {
 		return err
 	}
-	id := new(big.Int).SetBytes([]byte(instruction.T)[0:8]).Uint64()
+	id := types.CreateId([]byte(instruction.T))
 	parser, ok := Parsers[id]
 	if !ok {
 		return nil
