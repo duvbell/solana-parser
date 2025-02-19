@@ -1,7 +1,9 @@
 package pump
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
@@ -54,27 +56,120 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 
 // Initialize
 func ParseInitialize(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
-	log.Logger.Info("ignore parse initialize", "program", pumpfun.ProgramName)
+	//log.Logger.Info("ignore parse initialize", "program", pumpfun.ProgramName)
 }
 
 // Create
 func ParseCreate(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
-	log.Logger.Info("ignore parse create", "program", pumpfun.ProgramName)
+	//log.Logger.Info("ignore parse create", "program", pumpfun.ProgramName)
+	inst1 := inst.Impl.(*pumpfun.Create)
+	memeMint := &types.MemeCreate{
+		Dex:                    in.Instruction.ProgramId,
+		Mint:                   inst1.GetMintAccount().PublicKey,
+		User:                   inst1.GetUserAccount().PublicKey,
+		BondingCurve:           inst1.GetBondingCurveAccount().PublicKey,
+		AssociatedBondingCurve: inst1.GetAssociatedBondingCurveAccount().PublicKey,
+	}
+	mintTos := in.FindChildrenMintTos()
+	if len(mintTos) >= 1 {
+		memeMint.MintTo = mintTos[0]
+	}
+	in.Event = []interface{}{memeMint}
+
+	children := in.FindChildrenPrograms(pumpfun.ProgramID)
+	if len(children) > 0 {
+		myLog := children[0]
+		data, err := myLog.Instruction.Data.MarshalJSON()
+		if err != nil {
+			return
+		}
+		var tradeEvent pumpfun.TradeEvent
+		if err = ag_binary.NewBorshDecoder(data).Decode(&tradeEvent); err != nil {
+			return
+		}
+		memeBuyEvent := types.MemeBuyEvent{}
+		in.Receipt = []interface{}{&memeBuyEvent}
+	}
 }
 
 // Buy
 func ParseBuy(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
-	log.Logger.Info("ignore parse buy", "program", pumpfun.ProgramName)
+	//log.Logger.Info("ignore parse buy", "program", pumpfun.ProgramName)
+	inst1 := inst.Impl.(*pumpfun.Buy)
+	memeBuy := &types.MemeBuy{
+		Dex:                    in.Instruction.ProgramId,
+		Mint:                   inst1.GetMintAccount().PublicKey,
+		User:                   inst1.GetUserAccount().PublicKey,
+		BondingCurve:           inst1.GetBondingCurveAccount().PublicKey,
+		AssociatedBondingCurve: inst1.GetAssociatedBondingCurveAccount().PublicKey,
+	}
+	transfers := in.FindChildrenTransfers()
+	if len(transfers) >= 2 {
+		memeBuy.MintTransfer = transfers[0]
+		memeBuy.SolTransfer = transfers[1]
+	}
+	if len(transfers) >= 3 {
+		memeBuy.FeeTransfer = transfers[2]
+	}
+	in.Event = []interface{}{memeBuy}
+
+	children := in.FindChildrenPrograms(pumpfun.ProgramID)
+	if len(children) > 0 {
+		myLog := children[0]
+		data, err := myLog.Instruction.Data.MarshalJSON()
+		if err != nil {
+			return
+		}
+		var tradeEvent pumpfun.TradeEvent
+		if err = ag_binary.NewBorshDecoder(data).Decode(&tradeEvent); err != nil {
+			return
+		}
+		memeSellEvent := types.MemeSellEvent{}
+		in.Receipt = []interface{}{&memeSellEvent}
+	}
 }
 
 // Sell
 func ParseSell(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
-	log.Logger.Info("ignore parse sell", "program", pumpfun.ProgramName)
+	//log.Logger.Info("ignore parse sell", "program", pumpfun.ProgramName)
+	inst1 := inst.Impl.(*pumpfun.Sell)
+	memeSell := &types.MemeSell{
+		Dex:                    in.Instruction.ProgramId,
+		Mint:                   inst1.GetMintAccount().PublicKey,
+		User:                   inst1.GetUserAccount().PublicKey,
+		BondingCurve:           inst1.GetBondingCurveAccount().PublicKey,
+		AssociatedBondingCurve: inst1.GetAssociatedBondingCurveAccount().PublicKey,
+	}
+	transfers := in.FindChildrenTransfers()
+	if len(transfers) >= 1 {
+		memeSell.MintTransfer = transfers[0]
+	}
+	in.Event = []interface{}{memeSell}
+
+	children := in.FindChildrenPrograms(pumpfun.ProgramID)
+	if len(children) > 0 {
+		myLog := children[0]
+		myEventJson := myLog.Event[0].(json.RawMessage)
+		var createEvent types.MemeSellEvent
+		json.Unmarshal(myEventJson, &createEvent)
+		in.Receipt = []interface{}{&createEvent}
+	}
 }
 
 // Sell
 func ParseWithdraw(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
 	log.Logger.Info("ignore parse withdraw", "program", pumpfun.ProgramName)
+}
+
+func ParseLog(in *types.Instruction, meta *types.Meta) {
+	data := []byte(in.Instruction.Data)
+	data = data[8:]
+	event, err := types.DecodeEventsFromEmitCPI(data)
+	if err != nil {
+		return
+	}
+	fmt.Printf("%s\n", string(event))
+	in.Event = []interface{}{json.RawMessage(event)}
 }
 
 // Default

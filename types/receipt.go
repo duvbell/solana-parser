@@ -32,3 +32,12 @@ type Pool struct {
 	ReserveA uint64
 	ReserveB uint64
 }
+
+type MemeCreateEvent struct {
+}
+
+type MemeBuyEvent struct {
+}
+
+type MemeSellEvent struct {
+}

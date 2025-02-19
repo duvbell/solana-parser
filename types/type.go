@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/base64"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/shopspring/decimal"
@@ -72,6 +73,20 @@ func (in *Instruction) FindChildrenTransfers() []*Transfer {
 	return transfers
 }
 
+func (in *Instruction) FindChildrenMintTos() []*MintTo {
+	mintTos := make([]*MintTo, 0)
+	for _, item := range in.Children {
+		if len(item.Event) != 1 {
+			continue
+		}
+		switch item.Event[0].(type) {
+		case *MintTo:
+			mintTos = append(mintTos, item.Event[0].(*MintTo))
+		}
+	}
+	return mintTos
+}
+
 func (in *Instruction) FindChildrenPrograms(id solana.PublicKey) []*Instruction {
 	instructions := make([]*Instruction, 0)
 	for _, item := range in.Children {
@@ -88,4 +103,9 @@ func CreateId(value []byte) uint64 {
 		data[i%8] = data[i%8] + value[i]
 	}
 	return new(big.Int).SetBytes(data).Uint64()
+}
+
+func DecodeEventsFromEmitCPI(data []byte) (eventBinaries []byte, err error) {
+	eventBase64 := base64.StdEncoding.EncodeToString(data)
+	return base64.StdEncoding.DecodeString(eventBase64)
 }
