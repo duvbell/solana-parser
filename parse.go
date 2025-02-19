@@ -26,9 +26,13 @@ import (
 )
 
 func ParseBlock(slot uint64, b *rpc.GetParsedBlockResult) *types.Block {
-	log.Logger.Info("parse block", "slot", slot, "hash", b.Blockhash.String())
+	log.Logger.Info("parse block", "slot", slot)
 	block := &types.Block{}
 	block.Slot = slot
+	if b == nil {
+		log.Logger.Info("empty block")
+		return block
+	}
 	block.Time = uint64(*b.BlockTime)
 	block.Hash = b.Blockhash
 	myTxs := make([]*types.Transaction, 0)
