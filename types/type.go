@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/base64"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/shopspring/decimal"
@@ -103,9 +102,4 @@ func CreateId(value []byte) uint64 {
 		data[i%8] = data[i%8] + value[i]
 	}
 	return new(big.Int).SetBytes(data).Uint64()
-}
-
-func DecodeEventsFromEmitCPI(data []byte) (eventBinaries []byte, err error) {
-	eventBase64 := base64.StdEncoding.EncodeToString(data)
-	return base64.StdEncoding.DecodeString(eventBase64)
 }

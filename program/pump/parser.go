@@ -1,9 +1,7 @@
 package pump
 
 import (
-	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
@@ -79,16 +77,23 @@ func ParseCreate(inst *pumpfun.Instruction, in *types.Instruction, meta *types.M
 	children := in.FindChildrenPrograms(pumpfun.ProgramID)
 	if len(children) > 0 {
 		myLog := children[0]
-		data, err := myLog.Instruction.Data.MarshalJSON()
-		if err != nil {
+		data := []byte(myLog.Instruction.Data)
+		dec := ag_binary.NewBorshDecoder(data)
+		dec.ReadBytes(8)
+		dec.ReadBytes(8)
+		var createEvent pumpfun.CreateEvent
+		if err := dec.Decode(&createEvent); err != nil {
 			return
 		}
-		var tradeEvent pumpfun.TradeEvent
-		if err = ag_binary.NewBorshDecoder(data).Decode(&tradeEvent); err != nil {
-			return
+		memeCreateEvent := types.MemeCreateEvent{
+			Name:         createEvent.Name,
+			Symbol:       createEvent.Symbol,
+			Uri:          createEvent.Uri,
+			Mint:         createEvent.Mint,
+			BondingCurve: createEvent.BondingCurve,
+			User:         createEvent.User,
 		}
-		memeBuyEvent := types.MemeBuyEvent{}
-		in.Receipt = []interface{}{&memeBuyEvent}
+		in.Receipt = []interface{}{&memeCreateEvent}
 	}
 }
 
@@ -116,16 +121,25 @@ func ParseBuy(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta
 	children := in.FindChildrenPrograms(pumpfun.ProgramID)
 	if len(children) > 0 {
 		myLog := children[0]
-		data, err := myLog.Instruction.Data.MarshalJSON()
-		if err != nil {
-			return
-		}
+		data := []byte(myLog.Instruction.Data)
+		dec := ag_binary.NewBorshDecoder(data)
+		dec.ReadBytes(8)
+		dec.ReadBytes(8)
 		var tradeEvent pumpfun.TradeEvent
-		if err = ag_binary.NewBorshDecoder(data).Decode(&tradeEvent); err != nil {
+		if err := dec.Decode(&tradeEvent); err != nil {
 			return
 		}
-		memeSellEvent := types.MemeSellEvent{}
-		in.Receipt = []interface{}{&memeSellEvent}
+		memeBuyEvent := types.MemeBuyEvent{
+			Mint:                 tradeEvent.Mint,
+			SolAmount:            tradeEvent.SolAmount,
+			TokenAmount:          tradeEvent.TokenAmount,
+			IsBuy:                tradeEvent.IsBuy,
+			User:                 tradeEvent.User,
+			Timestamp:            tradeEvent.Timestamp,
+			VirtualSolReserves:   tradeEvent.VirtualSolReserves,
+			VirtualTokenReserves: tradeEvent.VirtualTokenReserves,
+		}
+		in.Receipt = []interface{}{&memeBuyEvent}
 	}
 }
 
@@ -149,27 +163,32 @@ func ParseSell(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Met
 	children := in.FindChildrenPrograms(pumpfun.ProgramID)
 	if len(children) > 0 {
 		myLog := children[0]
-		myEventJson := myLog.Event[0].(json.RawMessage)
-		var createEvent types.MemeSellEvent
-		json.Unmarshal(myEventJson, &createEvent)
-		in.Receipt = []interface{}{&createEvent}
+		data := []byte(myLog.Instruction.Data)
+		dec := ag_binary.NewBorshDecoder(data)
+		dec.ReadBytes(8)
+		dec.ReadBytes(8)
+
+		var tradeEvent pumpfun.TradeEvent
+		if err := dec.Decode(&tradeEvent); err != nil {
+			return
+		}
+		memeSellEvent := types.MemeSellEvent{
+			Mint:                 tradeEvent.Mint,
+			SolAmount:            tradeEvent.SolAmount,
+			TokenAmount:          tradeEvent.TokenAmount,
+			IsBuy:                tradeEvent.IsBuy,
+			User:                 tradeEvent.User,
+			Timestamp:            tradeEvent.Timestamp,
+			VirtualSolReserves:   tradeEvent.VirtualSolReserves,
+			VirtualTokenReserves: tradeEvent.VirtualTokenReserves,
+		}
+		in.Receipt = []interface{}{&memeSellEvent}
 	}
 }
 
 // Sell
 func ParseWithdraw(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
 	log.Logger.Info("ignore parse withdraw", "program", pumpfun.ProgramName)
-}
-
-func ParseLog(in *types.Instruction, meta *types.Meta) {
-	data := []byte(in.Instruction.Data)
-	data = data[8:]
-	event, err := types.DecodeEventsFromEmitCPI(data)
-	if err != nil {
-		return
-	}
-	fmt.Printf("%s\n", string(event))
-	in.Event = []interface{}{json.RawMessage(event)}
 }
 
 // Default

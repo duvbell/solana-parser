@@ -34,10 +34,32 @@ type Pool struct {
 }
 
 type MemeCreateEvent struct {
+	Name         string
+	Symbol       string
+	Uri          string
+	Mint         solana.PublicKey
+	BondingCurve solana.PublicKey
+	User         solana.PublicKey
 }
 
 type MemeBuyEvent struct {
+	Mint                 solana.PublicKey
+	SolAmount            uint64
+	TokenAmount          uint64
+	IsBuy                bool
+	User                 solana.PublicKey
+	Timestamp            int64
+	VirtualSolReserves   uint64
+	VirtualTokenReserves uint64
 }
 
 type MemeSellEvent struct {
+	Mint                 solana.PublicKey
+	SolAmount            uint64
+	TokenAmount          uint64
+	IsBuy                bool
+	User                 solana.PublicKey
+	Timestamp            int64
+	VirtualSolReserves   uint64
+	VirtualTokenReserves uint64
 }
