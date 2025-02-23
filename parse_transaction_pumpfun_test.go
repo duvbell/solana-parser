@@ -12,25 +12,25 @@ import (
 
 func TestTransaction_PumpFun_ParseCreate(t *testing.T) {
 	solClient := rpc.New(rpc.MainNetBeta_RPC)
-	result, err := solClient.GetParsedTransaction(
+	result, err := solClient.GetTransaction(
 		context.Background(),
 		solana.MustSignatureFromBase58("2gxXCfpeU4DLPDRjqp5crVvPfCxxuQijp6CB4TgMsUAujLbL9hdRi9enZosdK3bCi7eGeEfsX2vgb8W59Mr6gjqw"),
-		&rpc.GetParsedTransactionOpts{
+		&rpc.GetTransactionOpts{
 			Commitment:                     rpc.CommitmentConfirmed,
 			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,
 		})
 	if err != nil {
 		panic(err)
 	}
-	transaction := &rpc.ParsedTransactionWithMeta{
-		Slot:        result.Slot,
-		BlockTime:   result.BlockTime,
-		Transaction: result.Transaction,
+	transaction, _ := result.Transaction.GetTransaction()
+	transactionParsed := &rpc.TransactionParsed{
+		Transaction: transaction,
 		Meta:        result.Meta,
 	}
-	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
+	txRawJson, _ := json.MarshalIndent(transactionParsed, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx := ParseTransaction(0, transaction)
+
+	tx := ParseTransaction(0, transaction, result.Meta)
 	if tx == nil {
 		panic("invalid transaction")
 	}
@@ -40,25 +40,24 @@ func TestTransaction_PumpFun_ParseCreate(t *testing.T) {
 
 func TestTransaction_PumpFun_ParseBuy(t *testing.T) {
 	solClient := rpc.New(rpc.MainNetBeta_RPC)
-	result, err := solClient.GetParsedTransaction(
+	result, err := solClient.GetTransaction(
 		context.Background(),
 		solana.MustSignatureFromBase58("2gxXCfpeU4DLPDRjqp5crVvPfCxxuQijp6CB4TgMsUAujLbL9hdRi9enZosdK3bCi7eGeEfsX2vgb8W59Mr6gjqw"),
-		&rpc.GetParsedTransactionOpts{
+		&rpc.GetTransactionOpts{
 			Commitment:                     rpc.CommitmentConfirmed,
 			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,
 		})
 	if err != nil {
 		panic(err)
 	}
-	transaction := &rpc.ParsedTransactionWithMeta{
-		Slot:        result.Slot,
-		BlockTime:   result.BlockTime,
-		Transaction: result.Transaction,
+	transaction, _ := result.Transaction.GetTransaction()
+	transactionParsed := &rpc.TransactionParsed{
+		Transaction: transaction,
 		Meta:        result.Meta,
 	}
-	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
+	txRawJson, _ := json.MarshalIndent(transactionParsed, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx := ParseTransaction(0, transaction)
+	tx := ParseTransaction(0, transaction, result.Meta)
 	if tx == nil {
 		panic("invalid transaction")
 	}
@@ -68,25 +67,24 @@ func TestTransaction_PumpFun_ParseBuy(t *testing.T) {
 
 func TestTransaction_PumpFun_ParseSell(t *testing.T) {
 	solClient := rpc.New(rpc.MainNetBeta_RPC)
-	result, err := solClient.GetParsedTransaction(
+	result, err := solClient.GetTransaction(
 		context.Background(),
 		solana.MustSignatureFromBase58("45QxHzAfEqnTSuHkQARHbHwJFve37e1fBqsaGGbuYEhrPmpFZdQm4a1c4yrdu3rU7QR9XWfBLw1Vkr4PmpuxVmSZ"),
-		&rpc.GetParsedTransactionOpts{
+		&rpc.GetTransactionOpts{
 			Commitment:                     rpc.CommitmentConfirmed,
 			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,
 		})
 	if err != nil {
 		panic(err)
 	}
-	transaction := &rpc.ParsedTransactionWithMeta{
-		Slot:        result.Slot,
-		BlockTime:   result.BlockTime,
-		Transaction: result.Transaction,
+	transaction, _ := result.Transaction.GetTransaction()
+	transactionParsed := &rpc.TransactionParsed{
+		Transaction: transaction,
 		Meta:        result.Meta,
 	}
-	txRawJson, _ := json.MarshalIndent(transaction, "", "    ")
+	txRawJson, _ := json.MarshalIndent(transactionParsed, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
-	tx := ParseTransaction(0, transaction)
+	tx := ParseTransaction(0, transaction, result.Meta)
 	if tx == nil {
 		panic("invalid transaction")
 	}

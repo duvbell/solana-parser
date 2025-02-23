@@ -2,9 +2,7 @@ package types
 
 import (
 	"github.com/gagliardetto/solana-go"
-	"github.com/gagliardetto/solana-go/rpc"
 	"github.com/shopspring/decimal"
-	"math/big"
 )
 
 type TokenAccount struct {
@@ -19,7 +17,7 @@ type MintAccount struct {
 }
 
 type Meta struct {
-	Accounts      map[solana.PublicKey]*solana.AccountMeta
+	Accounts      []*solana.AccountMeta
 	TokenAccounts map[solana.PublicKey]*TokenAccount
 	MintAccounts  map[solana.PublicKey]*MintAccount
 	PreBalance    map[solana.PublicKey]decimal.Decimal
@@ -37,69 +35,74 @@ type Block struct {
 type Transaction struct {
 	Hash         solana.Signature
 	Instructions []*Instruction
-	Meta         Meta
+	Meta         *Meta
 	Seq          int
 }
 
-type Instruction struct {
-	Seq         int
-	Instruction *rpc.ParsedInstruction
-	Event       []interface{}
-	Receipt     []interface{}
-	Children    []*Instruction
-}
-
-func (in *Instruction) AccountMetas(messageAccounts map[solana.PublicKey]*solana.AccountMeta) []*solana.AccountMeta {
-	accounts := make([]*solana.AccountMeta, 0)
-	for _, item := range in.Instruction.Accounts {
-		account := messageAccounts[item]
-		accounts = append(accounts, account)
-	}
-	return accounts
-}
-
-func (in *Instruction) FindChildrenTransfers() []*Transfer {
-	transfers := make([]*Transfer, 0)
-	for _, item := range in.Children {
+func (tx *Transaction) FindNextTransferByTo(index int, to solana.PublicKey) *Transfer {
+	for i := index; i < len(tx.Instructions); i++ {
+		item := tx.Instructions[i]
 		if len(item.Event) != 1 {
 			continue
 		}
 		switch item.Event[0].(type) {
 		case *Transfer:
-			transfers = append(transfers, item.Event[0].(*Transfer))
+			transfer := item.Event[0].(*Transfer)
+			if transfer.To == to {
+				return transfer
+			}
 		}
 	}
-	return transfers
+	return nil
 }
 
-func (in *Instruction) FindChildrenMintTos() []*MintTo {
-	mintTos := make([]*MintTo, 0)
-	for _, item := range in.Children {
+func (tx *Transaction) FindNextTransferByFrom(index int, from solana.PublicKey) *Transfer {
+	for i := index; i < len(tx.Instructions); i++ {
+		item := tx.Instructions[i]
+		if len(item.Event) != 1 {
+			continue
+		}
+		switch item.Event[0].(type) {
+		case *Transfer:
+			transfer := item.Event[0].(*Transfer)
+			if transfer.From == from {
+				return transfer
+			}
+		}
+	}
+	return nil
+}
+
+func (tx *Transaction) FindNextMintTo(index int, to solana.PublicKey) *MintTo {
+	for i := index; i < len(tx.Instructions); i++ {
+		item := tx.Instructions[i]
 		if len(item.Event) != 1 {
 			continue
 		}
 		switch item.Event[0].(type) {
 		case *MintTo:
-			mintTos = append(mintTos, item.Event[0].(*MintTo))
+			mintTo := item.Event[0].(*MintTo)
+			if mintTo.Account == to {
+				return mintTo
+			}
 		}
 	}
-	return mintTos
+	return nil
 }
 
-func (in *Instruction) FindChildrenPrograms(id solana.PublicKey) []*Instruction {
-	instructions := make([]*Instruction, 0)
-	for _, item := range in.Children {
-		if item.Instruction.ProgramId == id {
-			instructions = append(instructions, item)
+func (tx *Transaction) FindNextInstructionByProgram(index int, id solana.PublicKey) *Instruction {
+	for i := index + 1; i < len(tx.Instructions); i++ {
+		item := tx.Instructions[i]
+		if item.Raw.ProgID == id {
+			return item
 		}
 	}
-	return instructions
+	return nil
 }
 
-func CreateId(value []byte) uint64 {
-	data := make([]byte, 8)
-	for i := 0; i < len(value); i++ {
-		data[i%8] = data[i%8] + value[i]
-	}
-	return new(big.Int).SetBytes(data).Uint64()
+type Instruction struct {
+	Seq     int
+	Raw     *solana.GenericInstruction
+	Event   []interface{}
+	Receipt []interface{}
 }

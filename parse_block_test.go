@@ -18,15 +18,14 @@ func TestBlock_Scan(t *testing.T) {
 	client := rpc.New(rpc.MainNetBeta_RPC)
 	rewards := false
 	version := uint64(0)
-	slot := uint64(315811015)
+	slot := uint64(322474000)
 	for i := 0; i < 500; i++ {
 		time.Sleep(time.Second * 2)
 		slot += 1
-		r, err := client.GetParsedBlockWithOpts(
+		r, err := client.GetBlockWithOpts(
 			context.Background(),
 			slot,
 			&rpc.GetBlockOpts{
-				Encoding:                       solana.EncodingJSONParsed,
 				TransactionDetails:             rpc.TransactionDetailsFull,
 				Rewards:                        &rewards,
 				Commitment:                     rpc.CommitmentConfirmed,
@@ -47,7 +46,7 @@ func TestBlock_Parse(t *testing.T) {
 	rewards := false
 	version := uint64(0)
 	slot := uint64(315806587)
-	r, err := client.GetParsedBlockWithOpts(
+	r, err := client.GetBlockWithOpts(
 		context.Background(),
 		slot,
 		&rpc.GetBlockOpts{

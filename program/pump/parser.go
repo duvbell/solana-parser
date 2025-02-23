@@ -13,7 +13,7 @@ var (
 	Parsers = make(map[uint64]Parser, 0)
 )
 
-type Parser func(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta)
+type Parser func(inst *pumpfun.Instruction, transaction *types.Transaction, index int) error
 
 func RegisterParser(id uint64, p Parser) {
 	Parsers[id] = p
@@ -24,7 +24,7 @@ var (
 )
 
 func init() {
-	program.RegisterParser(pumpfun.ProgramID, pumpfun.ProgramName, program.Swap, ProgramParser)
+	program.RegisterParser(pumpfun.ProgramID, pumpfun.ProgramName, program.Swap, 1, ProgramParser)
 	RegisterParser(uint64(pumpfun.Instruction_Initialize.Uint32()), ParseInitialize)
 	RegisterParser(uint64(pumpfun.Instruction_Create.Uint32()), ParseCreate)
 	RegisterParser(uint64(pumpfun.Instruction_Buy.Uint32()), ParseBuy)
@@ -33,13 +33,14 @@ func init() {
 	RegisterParser(uint64(pumpfun.Instruction_SetParams.Uint32()), ParseDefault)
 }
 
-func ProgramParser(in *types.Instruction, meta *types.Meta) error {
-	dec := ag_binary.NewBorshDecoder(in.Instruction.Data)
+func ProgramParser(transaction *types.Transaction, index int) error {
+	in := transaction.Instructions[index]
+	dec := ag_binary.NewBorshDecoder(in.Raw.DataBytes)
 	typeID, err := dec.ReadTypeID()
 	if typeID == Instruction_AnchorSelfCPILog {
 		return nil
 	}
-	inst, err := pumpfun.DecodeInstruction(in.AccountMetas(meta.Accounts), in.Instruction.Data)
+	inst, err := pumpfun.DecodeInstruction(in.Raw.AccountValues, in.Raw.DataBytes)
 	if err != nil {
 		return err
 	}
@@ -48,42 +49,39 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	if !ok {
 		return errors.New("parser not found")
 	}
-	parser(inst, in, meta)
-	return nil
+	return parser(inst, transaction, index)
 }
 
 // Initialize
-func ParseInitialize(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseInitialize(inst *pumpfun.Instruction, transaction *types.Transaction, index int) error {
 	//log.Logger.Info("ignore parse initialize", "program", pumpfun.ProgramName)
+	return nil
 }
 
 // Create
-func ParseCreate(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseCreate(inst *pumpfun.Instruction, transaction *types.Transaction, index int) error {
 	//log.Logger.Info("ignore parse create", "program", pumpfun.ProgramName)
 	inst1 := inst.Impl.(*pumpfun.Create)
+	in := transaction.Instructions[index]
 	memeMint := &types.MemeCreate{
-		Dex:                    in.Instruction.ProgramId,
+		Dex:                    in.Raw.ProgID,
 		Mint:                   inst1.GetMintAccount().PublicKey,
 		User:                   inst1.GetUserAccount().PublicKey,
 		BondingCurve:           inst1.GetBondingCurveAccount().PublicKey,
 		AssociatedBondingCurve: inst1.GetAssociatedBondingCurveAccount().PublicKey,
 	}
-	mintTos := in.FindChildrenMintTos()
-	if len(mintTos) >= 1 {
-		memeMint.MintTo = mintTos[0]
-	}
+	memeMint.MintTo = transaction.FindNextMintTo(index, inst1.GetAssociatedBondingCurveAccount().PublicKey)
 	in.Event = []interface{}{memeMint}
 
-	children := in.FindChildrenPrograms(pumpfun.ProgramID)
-	if len(children) > 0 {
-		myLog := children[0]
-		data := []byte(myLog.Instruction.Data)
+	myLog := transaction.FindNextInstructionByProgram(index, pumpfun.ProgramID)
+	if myLog != nil {
+		data := myLog.Raw.DataBytes
 		dec := ag_binary.NewBorshDecoder(data)
 		dec.ReadBytes(8)
 		dec.ReadBytes(8)
 		var createEvent pumpfun.CreateEvent
 		if err := dec.Decode(&createEvent); err != nil {
-			return
+			return err
 		}
 		memeCreateEvent := types.MemeCreateEvent{
 			Name:         createEvent.Name,
@@ -95,39 +93,35 @@ func ParseCreate(inst *pumpfun.Instruction, in *types.Instruction, meta *types.M
 		}
 		in.Receipt = []interface{}{&memeCreateEvent}
 	}
+	return nil
 }
 
 // Buy
-func ParseBuy(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseBuy(inst *pumpfun.Instruction, transaction *types.Transaction, index int) error {
 	//log.Logger.Info("ignore parse buy", "program", pumpfun.ProgramName)
 	inst1 := inst.Impl.(*pumpfun.Buy)
+	in := transaction.Instructions[index]
 	memeBuy := &types.MemeBuy{
-		Dex:                    in.Instruction.ProgramId,
+		Dex:                    in.Raw.ProgID,
 		Mint:                   inst1.GetMintAccount().PublicKey,
 		User:                   inst1.GetUserAccount().PublicKey,
 		BondingCurve:           inst1.GetBondingCurveAccount().PublicKey,
 		AssociatedBondingCurve: inst1.GetAssociatedBondingCurveAccount().PublicKey,
 	}
-	transfers := in.FindChildrenTransfers()
-	if len(transfers) >= 2 {
-		memeBuy.MintTransfer = transfers[0]
-		memeBuy.SolTransfer = transfers[1]
-	}
-	if len(transfers) >= 3 {
-		memeBuy.FeeTransfer = transfers[2]
-	}
+	memeBuy.SolTransfer = transaction.FindNextTransferByTo(index, inst1.GetBondingCurveAccount().PublicKey)
+	memeBuy.FeeTransfer = transaction.FindNextTransferByTo(index, inst1.GetFeeRecipientAccount().PublicKey)
+	memeBuy.MintTransfer = transaction.FindNextTransferByFrom(index, inst1.GetAssociatedBondingCurveAccount().PublicKey)
 	in.Event = []interface{}{memeBuy}
 
-	children := in.FindChildrenPrograms(pumpfun.ProgramID)
-	if len(children) > 0 {
-		myLog := children[0]
-		data := []byte(myLog.Instruction.Data)
+	myLog := transaction.FindNextInstructionByProgram(index, pumpfun.ProgramID)
+	if myLog != nil {
+		data := myLog.Raw.DataBytes
 		dec := ag_binary.NewBorshDecoder(data)
 		dec.ReadBytes(8)
 		dec.ReadBytes(8)
 		var tradeEvent pumpfun.TradeEvent
 		if err := dec.Decode(&tradeEvent); err != nil {
-			return
+			return err
 		}
 		memeBuyEvent := types.MemeBuyEvent{
 			Mint:                 tradeEvent.Mint,
@@ -141,36 +135,34 @@ func ParseBuy(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta
 		}
 		in.Receipt = []interface{}{&memeBuyEvent}
 	}
+	return nil
 }
 
 // Sell
-func ParseSell(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseSell(inst *pumpfun.Instruction, transaction *types.Transaction, index int) error {
 	//log.Logger.Info("ignore parse sell", "program", pumpfun.ProgramName)
 	inst1 := inst.Impl.(*pumpfun.Sell)
+	in := transaction.Instructions[index]
 	memeSell := &types.MemeSell{
-		Dex:                    in.Instruction.ProgramId,
+		Dex:                    in.Raw.ProgID,
 		Mint:                   inst1.GetMintAccount().PublicKey,
 		User:                   inst1.GetUserAccount().PublicKey,
 		BondingCurve:           inst1.GetBondingCurveAccount().PublicKey,
 		AssociatedBondingCurve: inst1.GetAssociatedBondingCurveAccount().PublicKey,
 	}
-	transfers := in.FindChildrenTransfers()
-	if len(transfers) >= 1 {
-		memeSell.MintTransfer = transfers[0]
-	}
+	memeSell.MintTransfer = transaction.FindNextTransferByTo(index, inst1.GetAssociatedBondingCurveAccount().PublicKey)
 	in.Event = []interface{}{memeSell}
 
-	children := in.FindChildrenPrograms(pumpfun.ProgramID)
-	if len(children) > 0 {
-		myLog := children[0]
-		data := []byte(myLog.Instruction.Data)
+	myLog := transaction.FindNextInstructionByProgram(index, pumpfun.ProgramID)
+	if myLog != nil {
+		data := myLog.Raw.DataBytes
 		dec := ag_binary.NewBorshDecoder(data)
 		dec.ReadBytes(8)
 		dec.ReadBytes(8)
 
 		var tradeEvent pumpfun.TradeEvent
 		if err := dec.Decode(&tradeEvent); err != nil {
-			return
+			return err
 		}
 		memeSellEvent := types.MemeSellEvent{
 			Mint:                 tradeEvent.Mint,
@@ -184,19 +176,21 @@ func ParseSell(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Met
 		}
 		in.Receipt = []interface{}{&memeSellEvent}
 	}
+	return nil
 }
 
 // Sell
-func ParseWithdraw(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseWithdraw(inst *pumpfun.Instruction, transaction *types.Transaction, index int) error {
 	log.Logger.Info("ignore parse withdraw", "program", pumpfun.ProgramName)
+	return nil
 }
 
 // Default
-func ParseDefault(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
-	return
+func ParseDefault(inst *pumpfun.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
 
 // Fault
-func ParseFault(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseFault(inst *pumpfun.Instruction, transaction *types.Transaction, index int) {
 	panic("not supported")
 }

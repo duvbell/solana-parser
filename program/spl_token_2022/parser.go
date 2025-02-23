@@ -1,10 +1,12 @@
 package spl_token_2022
 
 import (
-	"encoding/json"
+	"errors"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
+	ag_binary "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/programs/token"
 )
 
 var (
@@ -12,163 +14,131 @@ var (
 	Parsers   = make(map[uint64]Parser, 0)
 )
 
-type Parser func(in *types.Instruction, raw []byte, meta *types.Meta)
+type Parser func(in *token.Instruction, transaction *types.Transaction, index int) error
 
 func RegisterParser(id uint64, p Parser) {
 	Parsers[id] = p
 }
 
 func init() {
-	program.RegisterParser(programId, "token2022", program.Token, ProgramParser)
-	RegisterParser(types.CreateId([]byte("transfer")), ParseTransfer)
-	RegisterParser(types.CreateId([]byte("transferChecked")), ParseTransfer)
-	RegisterParser(types.CreateId([]byte("mintTo")), ParseMint)
-	RegisterParser(types.CreateId([]byte("burn")), ParseBurn)
-	RegisterParser(types.CreateId([]byte("initializeAccount")), ParseInitialize)
-	RegisterParser(types.CreateId([]byte("initializeAccount3")), ParseInitialize)
+	program.RegisterParser(programId, "token2022", program.Token, 0, ProgramParser)
+	RegisterParser(uint64(token.Instruction_Transfer), ParseTransfer)
+	RegisterParser(uint64(token.Instruction_TransferChecked), ParseTransferChecked)
+	RegisterParser(uint64(token.Instruction_MintTo), ParseMint)
+	RegisterParser(uint64(token.Instruction_Burn), ParseBurn)
+	RegisterParser(uint64(token.Instruction_InitializeAccount), ParseInitializeAccount)
+	RegisterParser(uint64(token.Instruction_InitializeAccount3), ParseInitializeAccount3)
 }
 
-type Instruction struct {
-	T   string          `json:"type"`
-	Raw json.RawMessage `json:"info"`
-}
-
-func ProgramParser(in *types.Instruction, meta *types.Meta) error {
-	inJson, _ := in.Instruction.Parsed.MarshalJSON()
-	var instruction Instruction
-	err := json.Unmarshal(inJson, &instruction)
+func ProgramParser(transaction *types.Transaction, index int) error {
+	in := transaction.Instructions[index]
+	dec := ag_binary.NewBorshDecoder(in.Raw.DataBytes)
+	typeID, err := dec.ReadUint8()
+	if _, ok := Parsers[uint64(typeID)]; !ok {
+		return nil
+	}
+	inst, err := token.DecodeInstruction(in.Raw.AccountValues, in.Raw.DataBytes)
 	if err != nil {
 		return err
 	}
-	id := types.CreateId([]byte(instruction.T))
+	id := uint64(inst.TypeID.Uint32())
 	parser, ok := Parsers[id]
 	if !ok {
-		return nil
+		return errors.New("parser not found")
 	}
-	parser(in, instruction.Raw, meta)
+	return parser(inst, transaction, index)
+}
+
+func ParseTransfer(inst *token.Instruction, transaction *types.Transaction, index int) error {
+	inst1 := inst.Impl.(*token.Transfer)
+	in := transaction.Instructions[index]
+	transfer := &types.Transfer{
+		From: inst1.GetSourceAccount().PublicKey,
+		To:   inst1.GetDestinationAccount().PublicKey,
+	}
+	if inst1.Amount != nil {
+		transfer.Amount = *inst1.Amount
+	}
+	in.Event = []interface{}{transfer}
 	return nil
 }
 
-// transfer instruction
-type Transfer struct {
-	Destination solana.PublicKey `json:"destination"`
-	Amount      uint64           `json:"amount,string"`
-	Source      solana.PublicKey `json:"source"`
-	Authority   solana.PublicKey `json:"authority"`
-	Mint        solana.PublicKey `json:"mint"`
-	TokenAmount struct {
-		Amount   uint64 `json:"amount,string"`
-		Decimals uint64 `json:"decimals"`
-	} `json:"tokenAmount"`
-}
-
-func ParseTransfer(in *types.Instruction, raw []byte, meta *types.Meta) {
-	instruction := &Transfer{}
-	if err := json.Unmarshal(raw, instruction); err != nil {
-		return
-	}
-	from := instruction.Source
-	/*
-		if k, ok := meta.TokenOwner[instruction.Source]; ok {
-			from = k
-		}
-	*/
-	to := instruction.Destination
-	/*
-		if k, ok := meta.TokenOwner[instruction.Destination]; ok {
-			to = k
-		}
-	*/
-	amount := instruction.Amount
-	if amount == 0 {
-		amount = instruction.TokenAmount.Amount
-	}
-	tokenAccount := meta.TokenAccounts[from]
+func ParseTransferChecked(inst *token.Instruction, transaction *types.Transaction, index int) error {
+	inst1 := inst.Impl.(*token.TransferChecked)
+	in := transaction.Instructions[index]
 	transfer := &types.Transfer{
-		Mint:   tokenAccount.Mint,
-		Amount: amount,
-		From:   from,
-		To:     to,
+		From: inst1.GetSourceAccount().PublicKey,
+		To:   inst1.GetDestinationAccount().PublicKey,
+	}
+	if inst1.Amount != nil {
+		transfer.Amount = *inst1.Amount
 	}
 	in.Event = []interface{}{transfer}
+	return nil
 }
 
-// mint instruction
-type Mint struct {
-	Account   solana.PublicKey `json:"account"`
-	Amount    uint64           `json:"amount,string"`
-	Authority solana.PublicKey `json:"mintAuthority"`
-	Mint      solana.PublicKey `json:"mint"`
-}
-
-func ParseMint(in *types.Instruction, raw []byte, meta *types.Meta) {
-	instruction := &Mint{}
-	if err := json.Unmarshal(raw, instruction); err != nil {
-		return
-	}
-	account := instruction.Account
-	/*
-		if k, ok := meta.TokenOwner[instruction.Account]; ok {
-			account = k
-		}
-	*/
+func ParseMint(inst *token.Instruction, transaction *types.Transaction, index int) error {
+	inst1 := inst.Impl.(*token.MintTo)
+	in := transaction.Instructions[index]
 	mintTo := &types.MintTo{
-		Mint:    instruction.Mint,
-		Amount:  instruction.Amount,
-		Account: account,
+		Mint:    inst1.GetMintAccount().PublicKey,
+		Account: inst1.GetDestinationAccount().PublicKey,
+	}
+	if inst1.Amount != nil {
+		mintTo.Amount = *inst1.Amount
 	}
 	in.Event = []interface{}{mintTo}
+	return nil
 }
 
-// burn instruction
-type Burn struct {
-	Account   solana.PublicKey `json:"account"`
-	Amount    uint64           `json:"amount,string"`
-	Authority solana.PublicKey `json:"authority"`
-	Mint      solana.PublicKey `json:"mint"`
-}
-
-func ParseBurn(in *types.Instruction, raw []byte, meta *types.Meta) {
-	instruction := &Burn{}
-	if err := json.Unmarshal(raw, instruction); err != nil {
-		return
-	}
-	account := instruction.Account
-	/*
-		if k, ok := meta.TokenOwner[instruction.Account]; ok {
-			account = k
-		}
-	*/
+func ParseBurn(inst *token.Instruction, transaction *types.Transaction, index int) error {
+	inst1 := inst.Impl.(*token.Burn)
+	in := transaction.Instructions[index]
 	burn := &types.Burn{
-		Mint:    instruction.Mint,
-		Amount:  instruction.Amount,
-		Account: account,
+		Mint:    inst1.GetMintAccount().PublicKey,
+		Account: inst1.GetSourceAccount().PublicKey,
+	}
+	if inst1.Amount != nil {
+		burn.Amount = *inst1.Amount
 	}
 	in.Event = []interface{}{burn}
+	return nil
 }
 
-// Initialize instruction
-type Initialize struct {
-	Account solana.PublicKey `json:"account"`
-	Owner   solana.PublicKey `json:"owner"`
-	Mint    solana.PublicKey `json:"mint"`
-}
-
-func ParseInitialize(in *types.Instruction, raw []byte, meta *types.Meta) {
-	instruction := &Initialize{}
-	if err := json.Unmarshal(raw, instruction); err != nil {
-		return
-	}
+func ParseInitializeAccount(inst *token.Instruction, transaction *types.Transaction, index int) error {
+	inst1 := inst.Impl.(*token.InitializeAccount)
+	in := transaction.Instructions[index]
 	init := &types.Initialize{
-		Mint:    instruction.Mint,
-		Account: instruction.Account,
-		Owner:   instruction.Owner,
+		Mint:    inst1.GetMintAccount().PublicKey,
+		Account: inst1.GetAccount().PublicKey,
+		Owner:   inst1.GetOwnerAccount().PublicKey,
 	}
 	// update token owner & mint by spl token instructions
-	meta.TokenAccounts[init.Account] = &types.TokenAccount{
-		Owner:     &instruction.Owner,
-		ProgramId: &in.Instruction.ProgramId,
-		Mint:      instruction.Mint,
+	transaction.Meta.TokenAccounts[init.Account] = &types.TokenAccount{
+		Owner:     &init.Owner,
+		ProgramId: &in.Raw.ProgID,
+		Mint:      init.Mint,
 	}
 	in.Event = []interface{}{init}
+	return nil
+}
+
+func ParseInitializeAccount3(inst *token.Instruction, transaction *types.Transaction, index int) error {
+	inst1 := inst.Impl.(*token.InitializeAccount3)
+	in := transaction.Instructions[index]
+	init := &types.Initialize{
+		Mint:    inst1.GetMintAccount().PublicKey,
+		Account: inst1.GetAccount().PublicKey,
+	}
+	if inst1.Owner != nil {
+		init.Owner = *inst1.Owner
+	}
+	// update token owner & mint by spl token instructions
+	transaction.Meta.TokenAccounts[init.Account] = &types.TokenAccount{
+		Owner:     &init.Owner,
+		ProgramId: &in.Raw.ProgID,
+		Mint:      init.Mint,
+	}
+	in.Event = []interface{}{init}
+	return nil
 }

@@ -13,7 +13,7 @@ var (
 	Parsers = make(map[uint64]Parser, 0)
 )
 
-type Parser func(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta)
+type Parser func(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error
 
 func RegisterParser(id uint64, p Parser) {
 	Parsers[id] = p
@@ -24,7 +24,7 @@ var (
 )
 
 func init() {
-	program.RegisterParser(meteora_dlmm.ProgramID, meteora_dlmm.ProgramName, program.Swap, ProgramParser)
+	program.RegisterParser(meteora_dlmm.ProgramID, meteora_dlmm.ProgramName, program.Swap, 1, ProgramParser)
 	RegisterParser(uint64(meteora_dlmm.Instruction_InitializeLbPair.Uint32()), ParseInitializeLbPair)
 	RegisterParser(uint64(meteora_dlmm.Instruction_InitializePermissionLbPair.Uint32()), ParseInitializePermissionLbPair)
 	RegisterParser(uint64(meteora_dlmm.Instruction_InitializeCustomizablePermissionlessLbPair.Uint32()), ParseInitializeCustomizablePermissionlessLbPair)
@@ -69,13 +69,14 @@ func init() {
 	RegisterParser(uint64(meteora_dlmm.Instruction_SetPreActivationSwapAddress.Uint32()), ParseSetPreActivationSwapAddress)
 }
 
-func ProgramParser(in *types.Instruction, meta *types.Meta) error {
-	dec := ag_binary.NewBorshDecoder(in.Instruction.Data)
+func ProgramParser(transaction *types.Transaction, index int) error {
+	in := transaction.Instructions[index]
+	dec := ag_binary.NewBorshDecoder(in.Raw.DataBytes)
 	typeID, err := dec.ReadTypeID()
 	if typeID == Instruction_AnchorSelfCPILog {
 		return nil
 	}
-	inst, err := meteora_dlmm.DecodeInstruction(in.AccountMetas(meta.Accounts), in.Instruction.Data)
+	inst, err := meteora_dlmm.DecodeInstruction(in.Raw.AccountValues, in.Raw.DataBytes)
 	if err != nil {
 		return err
 	}
@@ -84,216 +85,221 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	if !ok {
 		return errors.New("parser not found")
 	}
-	parser(inst, in, meta)
+	return parser(inst, transaction, index)
+}
+
+func ParseInitializeLbPair(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	log.Logger.Info("ignore parse initialize lb pair", "program", meteora_dlmm.ProgramName)
+	return nil
+}
+func ParseInitializePermissionLbPair(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	log.Logger.Info("ignore parse initialize permission lb pair", "program", meteora_dlmm.ProgramName)
+	return nil
+}
+func ParseInitializeCustomizablePermissionlessLbPair(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	log.Logger.Info("ignore parse initialize customizable permissionless lb pair", "program", meteora_dlmm.ProgramName)
+	return nil
+}
+func ParseInitializeBinArrayBitmapExtension(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseInitializeBinArray(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseAddLiquidity(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	inst1 := inst.Impl.(*meteora_dlmm.AddLiquidity)
+	in := transaction.Instructions[index]
+	addLiquidity := &types.AddLiquidity{
+		Dex:  in.Raw.ProgID,
+		Pool: inst1.GetLbPairAccount().PublicKey,
+		User: inst1.GetSenderAccount().PublicKey,
+	}
+	addLiquidity.TokenATransfer = transaction.FindNextTransferByTo(index, inst1.GetReserveXAccount().PublicKey)
+	addLiquidity.TokenBTransfer = transaction.FindNextTransferByTo(index, inst1.GetReserveYAccount().PublicKey)
+	in.Event = []interface{}{addLiquidity}
+	return nil
+}
+func ParseAddLiquidityByWeight(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	inst1 := inst.Impl.(*meteora_dlmm.AddLiquidityByWeight)
+	in := transaction.Instructions[index]
+	addLiquidity := &types.AddLiquidity{
+		Dex:  in.Raw.ProgID,
+		Pool: inst1.GetLbPairAccount().PublicKey,
+		User: inst1.GetSenderAccount().PublicKey,
+	}
+	addLiquidity.TokenATransfer = transaction.FindNextTransferByTo(index, inst1.GetReserveXAccount().PublicKey)
+	addLiquidity.TokenBTransfer = transaction.FindNextTransferByTo(index, inst1.GetReserveYAccount().PublicKey)
+	in.Event = []interface{}{addLiquidity}
+	return nil
+}
+func ParseAddLiquidityByStrategy(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	inst1 := inst.Impl.(*meteora_dlmm.AddLiquidityByStrategy)
+	in := transaction.Instructions[index]
+	addLiquidity := &types.AddLiquidity{
+		Dex:  in.Raw.ProgID,
+		Pool: inst1.GetLbPairAccount().PublicKey,
+		User: inst1.GetSenderAccount().PublicKey,
+	}
+	addLiquidity.TokenATransfer = transaction.FindNextTransferByTo(index, inst1.GetReserveXAccount().PublicKey)
+	addLiquidity.TokenBTransfer = transaction.FindNextTransferByTo(index, inst1.GetReserveYAccount().PublicKey)
+	in.Event = []interface{}{addLiquidity}
+	return nil
+}
+func ParseAddLiquidityByStrategyOneSide(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	log.Logger.Info("ignore parse add liquidity by strategy one-side", "program", meteora_dlmm.ProgramName)
+	return nil
+}
+func ParseAddLiquidityOneSide(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	log.Logger.Info("ignore parse add liquidity one-side", "program", meteora_dlmm.ProgramName)
+	return nil
+}
+func ParseRemoveLiquidity(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	inst1 := inst.Impl.(*meteora_dlmm.RemoveLiquidity)
+	in := transaction.Instructions[index]
+	removeLiquidity := &types.RemoveLiquidity{
+		Dex:  in.Raw.ProgID,
+		Pool: inst1.GetLbPairAccount().PublicKey,
+		User: inst1.GetSenderAccount().PublicKey,
+	}
+	removeLiquidity.TokenATransfer = transaction.FindNextTransferByFrom(index, inst1.GetReserveXAccount().PublicKey)
+	removeLiquidity.TokenBTransfer = transaction.FindNextTransferByFrom(index, inst1.GetReserveYAccount().PublicKey)
+	in.Event = []interface{}{removeLiquidity}
+	return nil
+}
+func ParseInitializePosition(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	// only create accounts
+	return nil
+}
+func ParseInitializePositionPda(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseInitializePositionByOperator(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseUpdatePositionOperator(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseSwap(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	inst1 := inst.Impl.(*meteora_dlmm.Swap)
+	in := transaction.Instructions[index]
+	swap := &types.Swap{
+		Dex:  in.Raw.ProgID,
+		Pool: inst1.GetLbPairAccount().PublicKey,
+		User: inst1.GetUserAccount().PublicKey,
+	}
+	swap.InputTransfer = transaction.FindNextTransferByFrom(index, inst1.GetUserTokenInAccount().PublicKey)
+	swap.OutputTransfer = transaction.FindNextTransferByTo(index, inst1.GetUserTokenOutAccount().PublicKey)
+	in.Event = []interface{}{swap}
+	return nil
+}
+func ParseSwapExactOut(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	inst1 := inst.Impl.(*meteora_dlmm.SwapExactOut)
+	in := transaction.Instructions[index]
+	swap := &types.Swap{
+		Dex:  in.Raw.ProgID,
+		Pool: inst1.GetLbPairAccount().PublicKey,
+		User: inst1.GetUserAccount().PublicKey,
+	}
+	swap.InputTransfer = transaction.FindNextTransferByFrom(index, inst1.GetUserTokenInAccount().PublicKey)
+	swap.OutputTransfer = transaction.FindNextTransferByTo(index, inst1.GetUserTokenOutAccount().PublicKey)
+	in.Event = []interface{}{swap}
+	return nil
+}
+func ParseSwapWithPriceImpact(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	log.Logger.Info("ignore parse swap with price impact", "program", meteora_dlmm.ProgramName)
+	return nil
+}
+func ParseWithdrawProtocolFee(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseInitializeReward(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseFundReward(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseUpdateRewardFunder(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseUpdateRewardDuration(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseClaimReward(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseClaimFee(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseClosePosition(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseUpdateFeeParameters(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseIncreaseOracleLength(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseInitializePresetParameter(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseClosePresetParameter(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseRemoveAllLiquidity(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	log.Logger.Info("ignore parse remove all liquidity", "program", meteora_dlmm.ProgramName)
+	return nil
+}
+func ParseTogglePairStatus(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseMigratePosition(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseMigrateBinArray(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseUpdateFeesAndRewards(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseWithdrawIneligibleReward(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseSetActivationPoint(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseRemoveLiquidityByRange(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	inst1 := inst.Impl.(*meteora_dlmm.RemoveLiquidityByRange)
+	in := transaction.Instructions[index]
+	removeLiquidity := &types.RemoveLiquidity{
+		Dex:  in.Raw.ProgID,
+		Pool: inst1.GetLbPairAccount().PublicKey,
+		User: inst1.GetSenderAccount().PublicKey,
+	}
+	removeLiquidity.TokenATransfer = transaction.FindNextTransferByFrom(index, inst1.GetReserveXAccount().PublicKey)
+	removeLiquidity.TokenBTransfer = transaction.FindNextTransferByFrom(index, inst1.GetReserveYAccount().PublicKey)
+	in.Event = []interface{}{removeLiquidity}
+	return nil
+}
+func ParseAddLiquidityOneSidePrecise(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	log.Logger.Info("ignore parse add liquidity one-side precise", "program", meteora_dlmm.ProgramName)
+	return nil
+}
+func ParseGoToABin(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseSetPreActivationDuration(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
+}
+func ParseSetPreActivationSwapAddress(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
 	return nil
 }
 
-func ParseInitializeLbPair(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	log.Logger.Info("ignore parse initialize lb pair", "program", meteora_dlmm.ProgramName)
-}
-func ParseInitializePermissionLbPair(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	log.Logger.Info("ignore parse initialize permission lb pair", "program", meteora_dlmm.ProgramName)
-}
-func ParseInitializeCustomizablePermissionlessLbPair(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	log.Logger.Info("ignore parse initialize customizable permissionless lb pair", "program", meteora_dlmm.ProgramName)
-}
-func ParseInitializeBinArrayBitmapExtension(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseInitializeBinArray(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseAddLiquidity(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	inst1 := inst.Impl.(*meteora_dlmm.AddLiquidity)
-	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Instruction.ProgramId,
-		Pool: inst1.GetLbPairAccount().PublicKey,
-		User: inst1.GetSenderAccount().PublicKey,
-	}
-	transfers := in.FindChildrenTransfers()
-	for _, transfer := range transfers {
-		if transfer.To == inst1.GetReserveXAccount().PublicKey {
-			addLiquidity.TokenATransfer = transfer
-		}
-		if transfer.To == inst1.GetReserveYAccount().PublicKey {
-			addLiquidity.TokenBTransfer = transfer
-		}
-	}
-	in.Event = []interface{}{addLiquidity}
-}
-func ParseAddLiquidityByWeight(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	inst1 := inst.Impl.(*meteora_dlmm.AddLiquidityByWeight)
-	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Instruction.ProgramId,
-		Pool: inst1.GetLbPairAccount().PublicKey,
-		User: inst1.GetSenderAccount().PublicKey,
-	}
-	transfers := in.FindChildrenTransfers()
-	for _, transfer := range transfers {
-		if transfer.To == inst1.GetReserveXAccount().PublicKey {
-			addLiquidity.TokenATransfer = transfer
-		}
-		if transfer.To == inst1.GetReserveYAccount().PublicKey {
-			addLiquidity.TokenBTransfer = transfer
-		}
-	}
-	in.Event = []interface{}{addLiquidity}
-}
-func ParseAddLiquidityByStrategy(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	inst1 := inst.Impl.(*meteora_dlmm.AddLiquidityByStrategy)
-	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Instruction.ProgramId,
-		Pool: inst1.GetLbPairAccount().PublicKey,
-		User: inst1.GetSenderAccount().PublicKey,
-	}
-	transfers := in.FindChildrenTransfers()
-	for _, transfer := range transfers {
-		if transfer.To == inst1.GetReserveXAccount().PublicKey {
-			addLiquidity.TokenATransfer = transfer
-		}
-		if transfer.To == inst1.GetReserveYAccount().PublicKey {
-			addLiquidity.TokenBTransfer = transfer
-		}
-	}
-	in.Event = []interface{}{addLiquidity}
-}
-func ParseAddLiquidityByStrategyOneSide(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	log.Logger.Info("ignore parse add liquidity by strategy one-side", "program", meteora_dlmm.ProgramName)
-}
-func ParseAddLiquidityOneSide(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	log.Logger.Info("ignore parse add liquidity one-side", "program", meteora_dlmm.ProgramName)
-}
-func ParseRemoveLiquidity(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	inst1 := inst.Impl.(*meteora_dlmm.RemoveLiquidity)
-	removeLiquidity := &types.RemoveLiquidity{
-		Dex:  in.Instruction.ProgramId,
-		Pool: inst1.GetLbPairAccount().PublicKey,
-		User: inst1.GetSenderAccount().PublicKey,
-	}
-	transfers := in.FindChildrenTransfers()
-	for _, transfer := range transfers {
-		if transfer.From == inst1.GetReserveXAccount().PublicKey {
-			removeLiquidity.TokenATransfer = transfer
-		}
-		if transfer.From == inst1.GetReserveYAccount().PublicKey {
-			removeLiquidity.TokenBTransfer = transfer
-		}
-	}
-	in.Event = []interface{}{removeLiquidity}
-}
-func ParseInitializePosition(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	// only create accounts
-}
-func ParseInitializePositionPda(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseInitializePositionByOperator(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseUpdatePositionOperator(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseSwap(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	inst1 := inst.Impl.(*meteora_dlmm.Swap)
-	swap := &types.Swap{
-		Dex:  in.Instruction.ProgramId,
-		Pool: inst1.GetLbPairAccount().PublicKey,
-		User: inst1.GetUserAccount().PublicKey,
-	}
-	if *inst1.AmountIn > 0 {
-		// the first one is user deposit
-		// the second is vault withdraw
-		swap.InputTransfer = in.Children[0].Event[0].(*types.Transfer)
-		swap.OutputTransfer = in.Children[1].Event[0].(*types.Transfer)
-	}
-	in.Event = []interface{}{swap}
-}
-func ParseSwapExactOut(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	inst1 := inst.Impl.(*meteora_dlmm.SwapExactOut)
-	swap := &types.Swap{
-		Dex:  in.Instruction.ProgramId,
-		Pool: inst1.GetLbPairAccount().PublicKey,
-		User: inst1.GetUserAccount().PublicKey,
-	}
-	if *inst1.OutAmount > 0 {
-		// the first one is user deposit
-		// the second is vault withdraw
-		swap.InputTransfer = in.Children[0].Event[0].(*types.Transfer)
-		swap.OutputTransfer = in.Children[1].Event[0].(*types.Transfer)
-	}
-	in.Event = []interface{}{swap}
-}
-func ParseSwapWithPriceImpact(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	log.Logger.Info("ignore parse swap with price impact", "program", meteora_dlmm.ProgramName)
-}
-func ParseWithdrawProtocolFee(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseInitializeReward(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseFundReward(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseUpdateRewardFunder(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseUpdateRewardDuration(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseClaimReward(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseClaimFee(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseClosePosition(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseUpdateFeeParameters(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseIncreaseOracleLength(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseInitializePresetParameter(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseClosePresetParameter(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseRemoveAllLiquidity(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	log.Logger.Info("ignore parse remove all liquidity", "program", meteora_dlmm.ProgramName)
-}
-func ParseTogglePairStatus(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseMigratePosition(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseMigrateBinArray(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseUpdateFeesAndRewards(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseWithdrawIneligibleReward(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseSetActivationPoint(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseRemoveLiquidityByRange(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	inst1 := inst.Impl.(*meteora_dlmm.RemoveLiquidityByRange)
-	removeLiquidity := &types.RemoveLiquidity{
-		Dex:  in.Instruction.ProgramId,
-		Pool: inst1.GetLbPairAccount().PublicKey,
-		User: inst1.GetSenderAccount().PublicKey,
-	}
-	transfers := in.FindChildrenTransfers()
-	for _, transfer := range transfers {
-		if transfer.From == inst1.GetReserveXAccount().PublicKey {
-			removeLiquidity.TokenATransfer = transfer
-		}
-		if transfer.From == inst1.GetReserveYAccount().PublicKey {
-			removeLiquidity.TokenBTransfer = transfer
-		}
-	}
-	in.Event = []interface{}{removeLiquidity}
-}
-func ParseAddLiquidityOneSidePrecise(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	log.Logger.Info("ignore parse add liquidity one-side precise", "program", meteora_dlmm.ProgramName)
-}
-func ParseGoToABin(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseSetPreActivationDuration(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-func ParseSetPreActivationSwapAddress(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-}
-
 // Default
-func ParseDefault(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
-	return
+func ParseDefault(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
 
 // Fault
-func ParseFault(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseFault(inst *meteora_dlmm.Instruction, transaction *types.Transaction, index int) error {
 	panic("not supported")
 }

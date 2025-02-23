@@ -7,7 +7,6 @@ import (
 	_ "github.com/blockchain-develop/solana-parser/program/lifinity"
 	_ "github.com/blockchain-develop/solana-parser/program/meteora_dlmm"
 	_ "github.com/blockchain-develop/solana-parser/program/meteora_pools"
-	_ "github.com/blockchain-develop/solana-parser/program/meteora_vault"
 	_ "github.com/blockchain-develop/solana-parser/program/phoenix"
 	_ "github.com/blockchain-develop/solana-parser/program/pump"
 	_ "github.com/blockchain-develop/solana-parser/program/raydium_amm"
@@ -16,7 +15,6 @@ import (
 	_ "github.com/blockchain-develop/solana-parser/program/spl_token"
 	_ "github.com/blockchain-develop/solana-parser/program/spl_token_2022"
 	_ "github.com/blockchain-develop/solana-parser/program/stable_swap"
-	_ "github.com/blockchain-develop/solana-parser/program/stable_vault"
 	_ "github.com/blockchain-develop/solana-parser/program/system"
 	_ "github.com/blockchain-develop/solana-parser/program/whirlpool"
 	"github.com/blockchain-develop/solana-parser/types"
@@ -25,19 +23,21 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func ParseBlock(slot uint64, b *rpc.GetParsedBlockResult) *types.Block {
+func ParseBlock(slot uint64, b *rpc.GetBlockResult) *types.Block {
 	log.Logger.Info("parse block", "slot", slot)
 	block := &types.Block{}
 	block.Slot = slot
 	if b == nil {
-		log.Logger.Info("empty block")
+		log.Logger.Info("empty block", "slot", slot)
 		return block
 	}
 	block.Time = uint64(*b.BlockTime)
 	block.Hash = b.Blockhash
 	myTxs := make([]*types.Transaction, 0)
-	for i, tx := range b.Transactions {
-		myTx := ParseTransaction(i+1, &tx)
+	for i, _ := range b.Transactions {
+		tx := b.Transactions[i].MustGetTransaction()
+		meta := b.Transactions[i].Meta
+		myTx := ParseTransaction(i+1, tx, meta)
 		if myTx == nil {
 			continue
 		}
@@ -51,50 +51,62 @@ func ParseBlock(slot uint64, b *rpc.GetParsedBlockResult) *types.Block {
 	return block
 }
 
-func ParseTransaction(seq int, tx *rpc.ParsedTransactionWithMeta) *types.Transaction {
+func ParseTransaction(seq int, tx *solana.Transaction, meta *rpc.TransactionMeta) *types.Transaction {
 	//log.Logger.Info("parse transaction", "seq", seq, "tx", tx.Transaction.Signatures[0].String())
-	if tx.Meta == nil || tx.Transaction == nil {
+	if meta == nil || tx == nil {
 		log.Logger.Error("parse transaction: meta or transaction is missing")
 		return nil
 	}
 	t := &types.Transaction{
-		Meta: types.Meta{
-			Accounts:      make(map[solana.PublicKey]*solana.AccountMeta),
+		Meta: &types.Meta{
+			Accounts:      make([]*solana.AccountMeta, 0),
 			TokenAccounts: make(map[solana.PublicKey]*types.TokenAccount),
 			MintAccounts:  make(map[solana.PublicKey]*types.MintAccount),
 			PreBalance:    make(map[solana.PublicKey]decimal.Decimal),
 			PostBalance:   make(map[solana.PublicKey]decimal.Decimal),
 		},
-		Seq:  seq,
-		Hash: tx.Transaction.Signatures[0],
+		Seq: seq,
 	}
-	meta := tx.Meta
-	transaction := tx.Transaction
+	t.Hash = tx.Signatures[0]
 	if meta.Err != nil {
 		// if failed, ignore this transaction
 		errJson, _ := json.Marshal(meta.Err)
 		t.Meta.ErrorMessage = errJson
 		return t
 	}
-	message := transaction.Message
-	instructions := message.Instructions
-	if len(instructions) == 0 {
+	message := tx.Message
+	if len(message.Instructions) == 0 {
 		return t
 	}
-	if instructions[0].ProgramId == solana.VoteProgramID {
-		return t
-	}
-	log.Logger.Info("parse transaction", "seq", seq, "tx", tx.Transaction.Signatures[0].String())
 	// account infos
-	for _, item := range message.AccountKeys {
-		t.Meta.Accounts[item.PublicKey] = &solana.AccountMeta{
-			PublicKey:  item.PublicKey,
-			IsWritable: item.Writable,
-			IsSigner:   item.Signer,
-		}
+	readonlySignedAccountsCount := message.Header.NumReadonlySignedAccounts
+	readonlyUnsignedAccountsCount := message.Header.NumReadonlyUnsignedAccounts
+	requiredSignaturesAccountCount := message.Header.NumRequiredSignatures
+	total := len(message.AccountKeys)
+	for idx, item := range message.AccountKeys {
+		isWritable := (uint8(idx) < requiredSignaturesAccountCount-readonlySignedAccountsCount) || (uint8(idx) >= requiredSignaturesAccountCount && uint8(idx) < uint8(total)-readonlyUnsignedAccountsCount)
+		t.Meta.Accounts = append(t.Meta.Accounts, &solana.AccountMeta{
+			PublicKey:  item,
+			IsWritable: isWritable,
+			IsSigner:   uint8(idx) < requiredSignaturesAccountCount,
+		})
+	}
+	for _, item := range meta.LoadedAddresses.Writable {
+		t.Meta.Accounts = append(t.Meta.Accounts, &solana.AccountMeta{
+			PublicKey:  item,
+			IsWritable: true,
+			IsSigner:   false,
+		})
+	}
+	for _, item := range meta.LoadedAddresses.ReadOnly {
+		t.Meta.Accounts = append(t.Meta.Accounts, &solana.AccountMeta{
+			PublicKey:  item,
+			IsWritable: false,
+			IsSigner:   false,
+		})
 	}
 	for _, item := range meta.PostTokenBalances {
-		account := message.AccountKeys[item.AccountIndex]
+		account := t.Meta.Accounts[item.AccountIndex]
 		t.Meta.TokenAccounts[account.PublicKey] = &types.TokenAccount{
 			Owner:     item.Owner,
 			ProgramId: item.ProgramId,
@@ -107,7 +119,7 @@ func ParseTransaction(seq int, tx *rpc.ParsedTransactionWithMeta) *types.Transac
 		t.Meta.PostBalance[account.PublicKey], _ = decimal.NewFromString(item.UiTokenAmount.Amount)
 	}
 	for _, item := range meta.PreTokenBalances {
-		account := message.AccountKeys[item.AccountIndex]
+		account := t.Meta.Accounts[item.AccountIndex]
 		_, ok := t.Meta.TokenAccounts[account.PublicKey]
 		if !ok {
 			t.Meta.TokenAccounts[account.PublicKey] = &types.TokenAccount{
@@ -122,65 +134,42 @@ func ParseTransaction(seq int, tx *rpc.ParsedTransactionWithMeta) *types.Transac
 		}
 		t.Meta.PreBalance[account.PublicKey], _ = decimal.NewFromString(item.UiTokenAmount.Amount)
 	}
-	for index, instruction := range instructions {
-		instruction.StackHeight = 1
-		myInstruction := &types.Instruction{
-			Seq:         index + 1,
-			Instruction: instruction,
-			Event:       nil,
-			Receipt:     nil,
-			Children:    nil,
+	if t.Meta.Accounts[message.Instructions[0].ProgramIDIndex].PublicKey == solana.VoteProgramID {
+		return t
+	}
+	log.Logger.Info("parse transaction", "seq", seq, "tx", tx.Signatures[0].String())
+	//
+	instructions := make([]*types.Instruction, 0)
+	index := 0
+	for i, _ := range message.Instructions {
+		in := program.FilterInstruction(&message.Instructions[i], t.Meta)
+		if in != nil {
+			in.Seq = index
+			index += 1
+			instructions = append(instructions, in)
 		}
-		t.Instructions = append(t.Instructions, myInstruction)
+		find := func(index int) int {
+			for j := 0; j < len(meta.InnerInstructions); j++ {
+				if meta.InnerInstructions[j].Index == uint16(index) {
+					return j
+				}
+			}
+			return -1
+		}
+		inner := find(i)
+		if inner == -1 {
+			continue
+		}
+		for j, _ := range meta.InnerInstructions[inner].Instructions {
+			innerIn := program.FilterInstruction(&meta.InnerInstructions[inner].Instructions[j], t.Meta)
+			if innerIn != nil {
+				innerIn.Seq = index
+				index += 1
+				instructions = append(instructions, innerIn)
+			}
+		}
 	}
-	innerInstructions := meta.InnerInstructions
-	for _, innerInstruction := range innerInstructions {
-		parent := t.Instructions[innerInstruction.Index]
-		build(parent, innerInstruction.Instructions)
-	}
-	for _, instruction := range t.Instructions {
-		parse(instruction, &t.Meta)
-	}
+	t.Instructions = instructions
+	program.Parse(t)
 	return t
-}
-
-func split(subIns []*rpc.ParsedInstruction) []int {
-	currentHeight := subIns[0].StackHeight
-	indexes := make([]int, 0)
-	for index, item := range subIns {
-		if item.StackHeight == currentHeight {
-			indexes = append(indexes, index)
-		}
-	}
-	return indexes
-}
-
-func build(parent *types.Instruction, subIns []*rpc.ParsedInstruction) {
-	if len(subIns) == 0 {
-		return
-	}
-	// ins split by stack height
-	indexes := split(subIns)
-	indexes = append(indexes, len(subIns))
-	for i := 0; i < len(indexes)-1; i++ {
-		index1 := indexes[i]
-		index2 := indexes[i+1]
-		current := &types.Instruction{
-			Seq:         i + 1,
-			Instruction: subIns[index1],
-			Children:    nil,
-		}
-		parent.Children = append(parent.Children, current)
-		build(current, subIns[index1+1:index2])
-	}
-}
-
-func parse(in *types.Instruction, meta *types.Meta) {
-	for _, child := range in.Children {
-		parse(child, meta)
-	}
-	err := program.Parse(in, meta)
-	if err != nil {
-		log.Logger.Error("program parse error", "err", err, "program", in.Instruction.ProgramId.String())
-	}
 }

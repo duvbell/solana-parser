@@ -13,7 +13,7 @@ var (
 	Parsers = make(map[uint64]Parser, 0)
 )
 
-type Parser func(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types.Meta)
+type Parser func(inst *lifinity_v2.Instruction, transaction *types.Transaction, index int) error
 
 func RegisterParser(id uint64, p Parser) {
 	Parsers[id] = p
@@ -25,19 +25,20 @@ var (
 )
 
 func init() {
-	program.RegisterParser(lifinity_v2.ProgramID, lifinity_v2.ProgramName, program.Swap, ProgramParser)
+	program.RegisterParser(lifinity_v2.ProgramID, lifinity_v2.ProgramName, program.Swap, 1, ProgramParser)
 	RegisterParser(uint64(lifinity_v2.Instruction_Swap.Uint32()), ParseSwap)
 	RegisterParser(uint64(lifinity_v2.Instruction_DepositAllTokenTypes.Uint32()), ParseDepositAllTokenTypes)
 	RegisterParser(uint64(lifinity_v2.Instruction_WithdrawAllTokenTypes.Uint32()), ParseWithdrawAllTokenTypes)
 }
 
-func ProgramParser(in *types.Instruction, meta *types.Meta) error {
-	dec := ag_binary.NewBorshDecoder(in.Instruction.Data)
+func ProgramParser(transaction *types.Transaction, index int) error {
+	in := transaction.Instructions[index]
+	dec := ag_binary.NewBorshDecoder(in.Raw.DataBytes)
 	typeID, err := dec.ReadTypeID()
 	if typeID == Instruction_UpdateTargetPriceBufferParam || typeID == Instruction_UpdateConfigSpreadParam {
 		return nil
 	}
-	inst, err := lifinity_v2.DecodeInstruction(in.AccountMetas(meta.Accounts), in.Instruction.Data)
+	inst, err := lifinity_v2.DecodeInstruction(in.Raw.AccountValues, in.Raw.DataBytes)
 	if err != nil {
 		return err
 	}
@@ -46,44 +47,41 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	if !ok {
 		return errors.New("parser not found")
 	}
-	parser(inst, in, meta)
-	return nil
+	return parser(inst, transaction, index)
 }
 
 // Swap
-func ParseSwap(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseSwap(inst *lifinity_v2.Instruction, transaction *types.Transaction, index int) error {
 	inst1 := inst.Impl.(*lifinity_v2.Swap)
+	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Instruction.ProgramId,
+		Dex:  in.Raw.ProgID,
 		Pool: inst1.GetAmmAccount().PublicKey,
 		User: inst1.GetAuthorityAccount().PublicKey,
 	}
-	if *inst1.AmountIn > 0 {
-		// the first one is user deposit
-		// the second is vault withdraw
-		transfers := in.FindChildrenTransfers()
-		swap.InputTransfer = transfers[0]
-		swap.OutputTransfer = transfers[1]
-	}
 	in.Event = []interface{}{swap}
+	log.Logger.Info("ignore parse swap", "program", lifinity_v2.ProgramName)
+	return nil
 }
 
-func ParseDepositAllTokenTypes(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseDepositAllTokenTypes(inst *lifinity_v2.Instruction, transaction *types.Transaction, index int) error {
 	// add liquidity
 	log.Logger.Info("ignore parse deposit all token types", "program", lifinity_v2.ProgramName)
+	return nil
 }
 
-func ParseWithdrawAllTokenTypes(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseWithdrawAllTokenTypes(inst *lifinity_v2.Instruction, transaction *types.Transaction, index int) error {
 	// remove liquidity
 	log.Logger.Info("ignore parse withdraw all token types", "program", lifinity_v2.ProgramName)
+	return nil
 }
 
 // Default
-func ParseDefault(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types.Meta) {
-	return
+func ParseDefault(inst *lifinity_v2.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
 
 // Fault
-func ParseFault(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseFault(inst *lifinity_v2.Instruction, transaction *types.Transaction, index int) error {
 	panic("not supported")
 }

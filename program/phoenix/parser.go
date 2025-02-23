@@ -12,14 +12,14 @@ var (
 	Parsers = make(map[uint64]Parser, 0)
 )
 
-type Parser func(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta)
+type Parser func(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error
 
 func RegisterParser(id uint64, p Parser) {
 	Parsers[id] = p
 }
 
 func init() {
-	program.RegisterParser(phoenix_v1.ProgramID, phoenix_v1.ProgramName, program.OrderBook, ProgramParser)
+	program.RegisterParser(phoenix_v1.ProgramID, phoenix_v1.ProgramName, program.OrderBook, 1, ProgramParser)
 	RegisterParser(uint64(phoenix_v1.Instruction_Swap), ParseSwap)
 	RegisterParser(uint64(phoenix_v1.Instruction_SwapWithFreeFunds), ParseSwapWithFreeFunds)
 	RegisterParser(uint64(phoenix_v1.Instruction_PlaceLimitOrder), ParsePlaceLimitOrder)
@@ -50,8 +50,9 @@ func init() {
 	RegisterParser(uint64(phoenix_v1.Instruction_ChangeFeeRecipient), ParseChangeFeeRecipient)
 }
 
-func ProgramParser(in *types.Instruction, meta *types.Meta) error {
-	inst, err := phoenix_v1.DecodeInstruction(in.AccountMetas(meta.Accounts), in.Instruction.Data)
+func ProgramParser(transaction *types.Transaction, index int) error {
+	in := transaction.Instructions[index]
+	inst, err := phoenix_v1.DecodeInstruction(in.Raw.AccountValues, in.Raw.DataBytes)
 	if err != nil {
 		return err
 	}
@@ -60,88 +61,123 @@ func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	if !ok {
 		return errors.New("parser not found")
 	}
-	parser(inst, in, meta)
-	return nil
+	return parser(inst, transaction, index)
 }
 
-func ParseSwap(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseSwap(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
 	inst1 := inst.Impl.(*phoenix_v1.Swap)
+	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Instruction.ProgramId,
+		Dex:  in.Raw.ProgID,
 		Pool: inst1.GetMarketAccount().PublicKey,
 		User: inst1.GetTraderAccount().PublicKey,
 	}
-	transfers := in.FindChildrenTransfers()
-	if len(transfers) >= 2 {
-		swap.InputTransfer = transfers[1]
-		swap.OutputTransfer = transfers[0]
+	if transfer := transaction.FindNextTransferByTo(index, inst1.GetBaseVaultAccount().PublicKey); transfer != nil {
+		swap.InputTransfer = transfer
+	}
+	if transfer := transaction.FindNextTransferByTo(index, inst1.GetQuoteVaultAccount().PublicKey); transfer != nil {
+		swap.InputTransfer = transfer
+	}
+	if transfer := transaction.FindNextTransferByFrom(index, inst1.GetBaseVaultAccount().PublicKey); transfer != nil {
+		swap.OutputTransfer = transfer
+	}
+	if transfer := transaction.FindNextTransferByFrom(index, inst1.GetQuoteVaultAccount().PublicKey); transfer != nil {
+		swap.OutputTransfer = transfer
 	}
 	in.Event = []interface{}{swap}
+	return nil
 }
-func ParseSwapWithFreeFunds(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseSwapWithFreeFunds(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
 	log.Logger.Info("ignore parse swap", "program", phoenix_v1.ProgramName)
+	return nil
 }
-func ParsePlaceLimitOrder(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParsePlaceLimitOrder(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
 	log.Logger.Info("ignore parse place limit order", "program", phoenix_v1.ProgramName)
+	return nil
 }
-func ParsePlaceLimitOrderWithFreeFunds(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParsePlaceLimitOrderWithFreeFunds(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
 	log.Logger.Info("ignore parse place limit order with free funds", "program", phoenix_v1.ProgramName)
+	return nil
 }
-func ParseReduceOrder(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseReduceOrder(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseReduceOrderWithFreeFunds(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseReduceOrderWithFreeFunds(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseCancelAllOrders(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseCancelAllOrders(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseCancelAllOrdersWithFreeFunds(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseCancelAllOrdersWithFreeFunds(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseCancelUpTo(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseCancelUpTo(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseCancelUpToWithFreeFunds(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseCancelUpToWithFreeFunds(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseCancelMultipleOrdersById(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseCancelMultipleOrdersById(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseCancelMultipleOrdersByIdWithFreeFunds(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseCancelMultipleOrdersByIdWithFreeFunds(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseWithdrawFunds(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseWithdrawFunds(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseDepositFunds(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseDepositFunds(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseRequestSeat(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseRequestSeat(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseLog(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseLog(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParsePlaceMultiplePostOnlyOrders(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParsePlaceMultiplePostOnlyOrders(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParsePlaceMultiplePostOnlyOrdersWithFreeFunds(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParsePlaceMultiplePostOnlyOrdersWithFreeFunds(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseInitializeMarket(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseInitializeMarket(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseClaimAuthority(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseClaimAuthority(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseNameSuccessor(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseNameSuccessor(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseChangeMarketStatus(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseChangeMarketStatus(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseChangeSeatStatus(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseChangeSeatStatus(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseRequestSeatAuthorized(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseRequestSeatAuthorized(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseEvictSeat(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseEvictSeat(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseForceCancelOrders(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseForceCancelOrders(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseCollectFees(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseCollectFees(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
-func ParseChangeFeeRecipient(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseChangeFeeRecipient(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
 
 // Default
-func ParseDefault(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
-	return
+func ParseDefault(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
+	return nil
 }
 
 // Fault
-func ParseFault(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.Meta) {
+func ParseFault(inst *phoenix_v1.Instruction, transaction *types.Transaction, index int) error {
 	panic("not supported")
 }
