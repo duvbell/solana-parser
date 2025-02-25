@@ -3,6 +3,7 @@ module github.com/blockchain-develop/solana-parser
 go 1.22.1
 
 require (
+	github.com/gagliardetto/binary v0.8.0
 	github.com/gagliardetto/solana-go v1.12.0
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
@@ -15,7 +16,6 @@ require (
 	github.com/blendle/zapdriver v1.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.13.0 // indirect
-	github.com/gagliardetto/binary v0.8.0 // indirect
 	github.com/gagliardetto/treeout v0.1.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/jonboulle/clockwork v0.5.0 // indirect
@@ -44,5 +44,4 @@ require (
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 )
 
-//replace github.com/gagliardetto/solana-go v1.12.0 => github.com/blockchain-develop/solana-go v0.0.0-20250123114113-a676031ec487
-replace github.com/gagliardetto/solana-go => /Users/tangaoyuan/Documents/gopath/src/github.com/gagliardetto/solana-go
+replace github.com/gagliardetto/solana-go v1.12.0 => github.com/blockchain-develop/solana-go v0.0.0-20250219141812-4bdad1369538
