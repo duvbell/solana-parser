@@ -1,6 +1,7 @@
 package pump
 
 import (
+	"bytes"
 	"errors"
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
@@ -21,6 +22,8 @@ func RegisterParser(id uint64, p Parser) {
 
 var (
 	Instruction_AnchorSelfCPILog = ag_binary.TypeID([8]byte{228, 69, 165, 46, 81, 203, 154, 29})
+	Event_Create                 = [8]byte{0x1b, 0x72, 0xa9, 0x4d, 0xde, 0xeb, 0x63, 0x76}
+	Event_Swap                   = [8]byte{0xbd, 0xdb, 0x7f, 0xd3, 0x4e, 0xe6, 0x61, 0xee}
 )
 
 func init() {
@@ -73,12 +76,20 @@ func ParseCreate(inst *pumpfun.Instruction, transaction *types.Transaction, inde
 	memeMint.MintTo = transaction.FindNextMintTo(index, inst1.GetAssociatedBondingCurveAccount().PublicKey)
 	in.Event = []interface{}{memeMint}
 
-	myLog := transaction.FindNextInstructionByProgram(index, pumpfun.ProgramID)
-	if myLog != nil {
+	logIndex := index
+	var myLog *types.Instruction
+	for logIndex < len(transaction.Instructions) {
+		myLog, logIndex = transaction.FindNextInstructionByProgram(logIndex, pumpfun.ProgramID)
+		if myLog == nil {
+			break
+		}
 		data := myLog.Raw.DataBytes
 		dec := ag_binary.NewBorshDecoder(data)
-		dec.ReadBytes(8)
-		dec.ReadBytes(8)
+		instId, _ := dec.ReadBytes(8)
+		eventId, _ := dec.ReadBytes(8)
+		if bytes.Compare(instId, Instruction_AnchorSelfCPILog[:]) != 0 || bytes.Compare(eventId, Event_Create[:]) != 0 {
+			continue
+		}
 		var createEvent pumpfun.CreateEvent
 		if err := dec.Decode(&createEvent); err != nil {
 			return err
@@ -113,12 +124,20 @@ func ParseBuy(inst *pumpfun.Instruction, transaction *types.Transaction, index i
 	memeBuy.MintTransfer = transaction.FindNextTransferByFrom(index, inst1.GetAssociatedBondingCurveAccount().PublicKey)
 	in.Event = []interface{}{memeBuy}
 
-	myLog := transaction.FindNextInstructionByProgram(index, pumpfun.ProgramID)
-	if myLog != nil {
+	logIndex := index
+	var myLog *types.Instruction
+	for logIndex < len(transaction.Instructions) {
+		myLog, logIndex = transaction.FindNextInstructionByProgram(logIndex, pumpfun.ProgramID)
+		if myLog == nil {
+			break
+		}
 		data := myLog.Raw.DataBytes
 		dec := ag_binary.NewBorshDecoder(data)
-		dec.ReadBytes(8)
-		dec.ReadBytes(8)
+		instId, _ := dec.ReadBytes(8)
+		eventId, _ := dec.ReadBytes(8)
+		if bytes.Compare(instId, Instruction_AnchorSelfCPILog[:]) != 0 || bytes.Compare(eventId, Event_Swap[:]) != 0 {
+			continue
+		}
 		var tradeEvent pumpfun.TradeEvent
 		if err := dec.Decode(&tradeEvent); err != nil {
 			return err
@@ -134,6 +153,7 @@ func ParseBuy(inst *pumpfun.Instruction, transaction *types.Transaction, index i
 			VirtualTokenReserves: tradeEvent.VirtualTokenReserves,
 		}
 		in.Receipt = []interface{}{&memeBuyEvent}
+		break
 	}
 	return nil
 }
@@ -153,13 +173,20 @@ func ParseSell(inst *pumpfun.Instruction, transaction *types.Transaction, index 
 	memeSell.MintTransfer = transaction.FindNextTransferByTo(index, inst1.GetAssociatedBondingCurveAccount().PublicKey)
 	in.Event = []interface{}{memeSell}
 
-	myLog := transaction.FindNextInstructionByProgram(index, pumpfun.ProgramID)
-	if myLog != nil {
+	logIndex := index
+	var myLog *types.Instruction
+	for logIndex < len(transaction.Instructions) {
+		myLog, logIndex = transaction.FindNextInstructionByProgram(logIndex, pumpfun.ProgramID)
+		if myLog == nil {
+			break
+		}
 		data := myLog.Raw.DataBytes
 		dec := ag_binary.NewBorshDecoder(data)
-		dec.ReadBytes(8)
-		dec.ReadBytes(8)
-
+		instId, _ := dec.ReadBytes(8)
+		eventId, _ := dec.ReadBytes(8)
+		if bytes.Compare(instId, Instruction_AnchorSelfCPILog[:]) != 0 || bytes.Compare(eventId, Event_Swap[:]) != 0 {
+			continue
+		}
 		var tradeEvent pumpfun.TradeEvent
 		if err := dec.Decode(&tradeEvent); err != nil {
 			return err
@@ -175,6 +202,7 @@ func ParseSell(inst *pumpfun.Instruction, transaction *types.Transaction, index 
 			VirtualTokenReserves: tradeEvent.VirtualTokenReserves,
 		}
 		in.Receipt = []interface{}{&memeSellEvent}
+		break
 	}
 	return nil
 }

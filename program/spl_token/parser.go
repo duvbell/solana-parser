@@ -56,6 +56,8 @@ func ParseTransfer(inst *token.Instruction, transaction *types.Transaction, inde
 		From: inst1.GetSourceAccount().PublicKey,
 		To:   inst1.GetDestinationAccount().PublicKey,
 	}
+	mint := transaction.Meta.TokenAccounts[transfer.From]
+	transfer.Mint = mint.Mint
 	if inst1.Amount != nil {
 		transfer.Amount = *inst1.Amount
 	}
@@ -70,6 +72,8 @@ func ParseTransferChecked(inst *token.Instruction, transaction *types.Transactio
 		From: inst1.GetSourceAccount().PublicKey,
 		To:   inst1.GetDestinationAccount().PublicKey,
 	}
+	mint := transaction.Meta.TokenAccounts[transfer.From]
+	transfer.Mint = mint.Mint
 	if inst1.Amount != nil {
 		transfer.Amount = *inst1.Amount
 	}

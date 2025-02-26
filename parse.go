@@ -134,6 +134,12 @@ func ParseTransaction(seq int, tx *solana.Transaction, meta *rpc.TransactionMeta
 		}
 		t.Meta.PreBalance[account.PublicKey], _ = decimal.NewFromString(item.UiTokenAmount.Amount)
 	}
+	// add sol
+	t.Meta.MintAccounts[solana.PublicKey{}] = &types.MintAccount{
+		Mint:     solana.PublicKey{},
+		Decimals: 9,
+	}
+	// todo, get the sol balance
 	if t.Meta.Accounts[message.Instructions[0].ProgramIDIndex].PublicKey == solana.VoteProgramID {
 		return t
 	}

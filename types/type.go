@@ -90,14 +90,14 @@ func (tx *Transaction) FindNextMintTo(index int, to solana.PublicKey) *MintTo {
 	return nil
 }
 
-func (tx *Transaction) FindNextInstructionByProgram(index int, id solana.PublicKey) *Instruction {
+func (tx *Transaction) FindNextInstructionByProgram(index int, id solana.PublicKey) (*Instruction, int) {
 	for i := index + 1; i < len(tx.Instructions); i++ {
 		item := tx.Instructions[i]
 		if item.Raw.ProgID == id {
-			return item
+			return item, i
 		}
 	}
-	return nil
+	return nil, -1
 }
 
 type Instruction struct {
