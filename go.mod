@@ -44,4 +44,4 @@ require (
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 )
 
-replace github.com/gagliardetto/solana-go v1.12.0 => github.com/blockchain-develop/solana-go v0.0.0-20250219141812-4bdad1369538
+replace github.com/gagliardetto/solana-go v1.12.0 => github.com/blockchain-develop/solana-go v0.0.0-20250301074636-57c832606b5c
