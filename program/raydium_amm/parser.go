@@ -2,6 +2,7 @@ package raydium_amm
 
 import (
 	"errors"
+
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
@@ -46,7 +47,7 @@ func init() {
 
 func ProgramParser(transaction *types.Transaction, index int) error {
 	in := transaction.Instructions[index]
-	inst, err := raydium_amm.DecodeInstruction(in.Raw.AccountValues, in.Raw.DataBytes)
+	inst, err := raydium_amm.DecodeInstruction(in.RawInstruction.AccountValues, in.RawInstruction.DataBytes)
 	if err != nil {
 		return err
 	}
@@ -79,7 +80,7 @@ func ParseInitialize2(inst *raydium_amm.Instruction, transaction *types.Transact
 	in := transaction.Instructions[index]
 	// the latest three transfer
 	createPool := &types.CreatePool{
-		Dex:     in.Raw.ProgID,
+		Dex:     in.RawInstruction.ProgID,
 		Pool:    inst1.GetAmmAccount().PublicKey,
 		User:    inst1.GetUserWalletAccount().PublicKey,
 		TokenA:  inst1.GetCoinMintAccount().PublicKey,
@@ -90,7 +91,7 @@ func ParseInitialize2(inst *raydium_amm.Instruction, transaction *types.Transact
 		VaultLP: inst1.GetPoolTempLpAccount().PublicKey,
 	}
 	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetAmmAccount().PublicKey,
 		User: inst1.GetUserWalletAccount().PublicKey,
 	}
@@ -117,7 +118,7 @@ func ParseDeposit(inst *raydium_amm.Instruction, transaction *types.Transaction,
 	inst1 := inst.Impl.(*raydium_amm.Deposit)
 	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetAmmAccount().PublicKey,
 		User: inst1.GetUserOwnerAccount().PublicKey,
 	}
@@ -130,7 +131,7 @@ func ParseWithdraw(inst *raydium_amm.Instruction, transaction *types.Transaction
 	inst1 := inst.Impl.(*raydium_amm.Withdraw)
 	in := transaction.Instructions[index]
 	removeLiquidity := &types.RemoveLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetAmmAccount().PublicKey,
 		User: inst1.GetUserOwnerAccount().PublicKey,
 	}
@@ -158,7 +159,7 @@ func ParseSwapBaseIn(inst *raydium_amm.Instruction, transaction *types.Transacti
 	}
 	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetAmmAccount().PublicKey,
 		User: inst1.GetUserSourceOwnerAccount().PublicKey,
 	}
@@ -178,7 +179,7 @@ func ParseSwapBaseOut(inst *raydium_amm.Instruction, transaction *types.Transact
 	}
 	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetAmmAccount().PublicKey,
 		User: inst1.GetUserSourceOwnerAccount().PublicKey,
 	}

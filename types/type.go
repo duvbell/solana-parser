@@ -93,7 +93,7 @@ func (tx *Transaction) FindNextMintTo(index int, to solana.PublicKey) *MintTo {
 func (tx *Transaction) FindNextInstructionByProgram(index int, id solana.PublicKey) (*Instruction, int) {
 	for i := index + 1; i < len(tx.Instructions); i++ {
 		item := tx.Instructions[i]
-		if item.Raw.ProgID == id {
+		if item.RawInstruction.ProgID == id {
 			return item, i
 		}
 	}
@@ -101,8 +101,9 @@ func (tx *Transaction) FindNextInstructionByProgram(index int, id solana.PublicK
 }
 
 type Instruction struct {
-	Seq     int
-	Raw     *solana.GenericInstruction
-	Event   []interface{}
-	Receipt []interface{}
+	Seq               int
+	RawInstruction    *solana.GenericInstruction
+	ParsedInstruction interface{}
+	Event             []interface{}
+	Receipt           []interface{}
 }

@@ -3,6 +3,7 @@ package system
 import (
 	"encoding/binary"
 	"errors"
+
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	ag_binary "github.com/gagliardetto/binary"
@@ -28,12 +29,12 @@ func init() {
 
 func ProgramParser(transaction *types.Transaction, index int) error {
 	in := transaction.Instructions[index]
-	dec := ag_binary.NewBorshDecoder(in.Raw.DataBytes)
+	dec := ag_binary.NewBorshDecoder(in.RawInstruction.DataBytes)
 	typeID, err := dec.ReadUint32(binary.LittleEndian)
 	if _, ok := Parsers[uint64(typeID)]; !ok {
 		return nil
 	}
-	inst, err := system.DecodeInstruction(in.Raw.AccountValues, in.Raw.DataBytes)
+	inst, err := system.DecodeInstruction(in.RawInstruction.AccountValues, in.RawInstruction.DataBytes)
 	if err != nil {
 		return err
 	}

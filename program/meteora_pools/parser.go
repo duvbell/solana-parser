@@ -2,6 +2,7 @@ package meteora_pools
 
 import (
 	"errors"
+
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
@@ -50,7 +51,7 @@ func init() {
 
 func ProgramParser(transaction *types.Transaction, index int) error {
 	in := transaction.Instructions[index]
-	inst, err := meteora_pools.DecodeInstruction(in.Raw.AccountValues, in.Raw.DataBytes)
+	inst, err := meteora_pools.DecodeInstruction(in.RawInstruction.AccountValues, in.RawInstruction.DataBytes)
 	if err != nil {
 		return err
 	}
@@ -85,7 +86,7 @@ func ParseSwap(inst *meteora_pools.Instruction, transaction *types.Transaction, 
 	inst1 := inst.Impl.(*meteora_pools.Swap)
 	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
@@ -105,7 +106,7 @@ func ParseAddImbalanceLiquidity(inst *meteora_pools.Instruction, transaction *ty
 	inst1 := inst.Impl.(*meteora_pools.AddImbalanceLiquidity)
 	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
@@ -119,7 +120,7 @@ func ParseRemoveBalanceLiquidity(inst *meteora_pools.Instruction, transaction *t
 	inst1 := inst.Impl.(*meteora_pools.RemoveBalanceLiquidity)
 	in := transaction.Instructions[index]
 	removeLiquidity := &types.RemoveLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
@@ -133,7 +134,7 @@ func ParseAddBalanceLiquidity(inst *meteora_pools.Instruction, transaction *type
 	inst1 := inst.Impl.(*meteora_pools.AddBalanceLiquidity)
 	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
@@ -195,7 +196,7 @@ func ParseInitializePermissionlessConstantProductPoolWithConfig2(inst *meteora_p
 	inst1 := inst.Impl.(*meteora_pools.InitializePermissionlessConstantProductPoolWithConfig2)
 	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetPayerAccount().PublicKey,
 	}

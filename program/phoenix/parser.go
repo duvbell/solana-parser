@@ -2,6 +2,7 @@ package phoenix_v1
 
 import (
 	"errors"
+
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
@@ -52,7 +53,7 @@ func init() {
 
 func ProgramParser(transaction *types.Transaction, index int) error {
 	in := transaction.Instructions[index]
-	inst, err := phoenix_v1.DecodeInstruction(in.Raw.AccountValues, in.Raw.DataBytes)
+	inst, err := phoenix_v1.DecodeInstruction(in.RawInstruction.AccountValues, in.RawInstruction.DataBytes)
 	if err != nil {
 		return err
 	}
@@ -68,7 +69,7 @@ func ParseSwap(inst *phoenix_v1.Instruction, transaction *types.Transaction, ind
 	inst1 := inst.Impl.(*phoenix_v1.Swap)
 	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetMarketAccount().PublicKey,
 		User: inst1.GetTraderAccount().PublicKey,
 	}

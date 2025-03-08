@@ -3,6 +3,7 @@ package pump
 import (
 	"bytes"
 	"errors"
+
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
@@ -38,12 +39,12 @@ func init() {
 
 func ProgramParser(transaction *types.Transaction, index int) error {
 	in := transaction.Instructions[index]
-	dec := ag_binary.NewBorshDecoder(in.Raw.DataBytes)
+	dec := ag_binary.NewBorshDecoder(in.RawInstruction.DataBytes)
 	typeID, err := dec.ReadTypeID()
 	if typeID == Instruction_AnchorSelfCPILog {
 		return nil
 	}
-	inst, err := pumpfun.DecodeInstruction(in.Raw.AccountValues, in.Raw.DataBytes)
+	inst, err := pumpfun.DecodeInstruction(in.RawInstruction.AccountValues, in.RawInstruction.DataBytes)
 	if err != nil {
 		return err
 	}
@@ -66,8 +67,9 @@ func ParseCreate(inst *pumpfun.Instruction, transaction *types.Transaction, inde
 	//log.Logger.Info("ignore parse create", "program", pumpfun.ProgramName)
 	inst1 := inst.Impl.(*pumpfun.Create)
 	in := transaction.Instructions[index]
+	in.ParsedInstruction = inst1
 	memeMint := &types.MemeCreate{
-		Dex:                    in.Raw.ProgID,
+		Dex:                    in.RawInstruction.ProgID,
 		Mint:                   inst1.GetMintAccount().PublicKey,
 		User:                   inst1.GetUserAccount().PublicKey,
 		BondingCurve:           inst1.GetBondingCurveAccount().PublicKey,
@@ -83,7 +85,7 @@ func ParseCreate(inst *pumpfun.Instruction, transaction *types.Transaction, inde
 		if myLog == nil {
 			break
 		}
-		data := myLog.Raw.DataBytes
+		data := myLog.RawInstruction.DataBytes
 		dec := ag_binary.NewBorshDecoder(data)
 		instId, _ := dec.ReadBytes(8)
 		eventId, _ := dec.ReadBytes(8)
@@ -112,8 +114,9 @@ func ParseBuy(inst *pumpfun.Instruction, transaction *types.Transaction, index i
 	//log.Logger.Info("ignore parse buy", "program", pumpfun.ProgramName)
 	inst1 := inst.Impl.(*pumpfun.Buy)
 	in := transaction.Instructions[index]
+	in.ParsedInstruction = inst1
 	memeBuy := &types.MemeBuy{
-		Dex:                    in.Raw.ProgID,
+		Dex:                    in.RawInstruction.ProgID,
 		Mint:                   inst1.GetMintAccount().PublicKey,
 		User:                   inst1.GetUserAccount().PublicKey,
 		BondingCurve:           inst1.GetBondingCurveAccount().PublicKey,
@@ -131,7 +134,7 @@ func ParseBuy(inst *pumpfun.Instruction, transaction *types.Transaction, index i
 		if myLog == nil {
 			break
 		}
-		data := myLog.Raw.DataBytes
+		data := myLog.RawInstruction.DataBytes
 		dec := ag_binary.NewBorshDecoder(data)
 		instId, _ := dec.ReadBytes(8)
 		eventId, _ := dec.ReadBytes(8)
@@ -163,8 +166,9 @@ func ParseSell(inst *pumpfun.Instruction, transaction *types.Transaction, index 
 	//log.Logger.Info("ignore parse sell", "program", pumpfun.ProgramName)
 	inst1 := inst.Impl.(*pumpfun.Sell)
 	in := transaction.Instructions[index]
+	in.ParsedInstruction = inst1
 	memeSell := &types.MemeSell{
-		Dex:                    in.Raw.ProgID,
+		Dex:                    in.RawInstruction.ProgID,
 		Mint:                   inst1.GetMintAccount().PublicKey,
 		User:                   inst1.GetUserAccount().PublicKey,
 		BondingCurve:           inst1.GetBondingCurveAccount().PublicKey,
@@ -180,7 +184,7 @@ func ParseSell(inst *pumpfun.Instruction, transaction *types.Transaction, index 
 		if myLog == nil {
 			break
 		}
-		data := myLog.Raw.DataBytes
+		data := myLog.RawInstruction.DataBytes
 		dec := ag_binary.NewBorshDecoder(data)
 		instId, _ := dec.ReadBytes(8)
 		eventId, _ := dec.ReadBytes(8)

@@ -2,6 +2,7 @@ package meteora_dlmm
 
 import (
 	"errors"
+
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
@@ -71,12 +72,12 @@ func init() {
 
 func ProgramParser(transaction *types.Transaction, index int) error {
 	in := transaction.Instructions[index]
-	dec := ag_binary.NewBorshDecoder(in.Raw.DataBytes)
+	dec := ag_binary.NewBorshDecoder(in.RawInstruction.DataBytes)
 	typeID, err := dec.ReadTypeID()
 	if typeID == Instruction_AnchorSelfCPILog {
 		return nil
 	}
-	inst, err := meteora_dlmm.DecodeInstruction(in.Raw.AccountValues, in.Raw.DataBytes)
+	inst, err := meteora_dlmm.DecodeInstruction(in.RawInstruction.AccountValues, in.RawInstruction.DataBytes)
 	if err != nil {
 		return err
 	}
@@ -110,7 +111,7 @@ func ParseAddLiquidity(inst *meteora_dlmm.Instruction, transaction *types.Transa
 	inst1 := inst.Impl.(*meteora_dlmm.AddLiquidity)
 	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetLbPairAccount().PublicKey,
 		User: inst1.GetSenderAccount().PublicKey,
 	}
@@ -123,7 +124,7 @@ func ParseAddLiquidityByWeight(inst *meteora_dlmm.Instruction, transaction *type
 	inst1 := inst.Impl.(*meteora_dlmm.AddLiquidityByWeight)
 	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetLbPairAccount().PublicKey,
 		User: inst1.GetSenderAccount().PublicKey,
 	}
@@ -136,7 +137,7 @@ func ParseAddLiquidityByStrategy(inst *meteora_dlmm.Instruction, transaction *ty
 	inst1 := inst.Impl.(*meteora_dlmm.AddLiquidityByStrategy)
 	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetLbPairAccount().PublicKey,
 		User: inst1.GetSenderAccount().PublicKey,
 	}
@@ -157,7 +158,7 @@ func ParseRemoveLiquidity(inst *meteora_dlmm.Instruction, transaction *types.Tra
 	inst1 := inst.Impl.(*meteora_dlmm.RemoveLiquidity)
 	in := transaction.Instructions[index]
 	removeLiquidity := &types.RemoveLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetLbPairAccount().PublicKey,
 		User: inst1.GetSenderAccount().PublicKey,
 	}
@@ -183,7 +184,7 @@ func ParseSwap(inst *meteora_dlmm.Instruction, transaction *types.Transaction, i
 	inst1 := inst.Impl.(*meteora_dlmm.Swap)
 	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetLbPairAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
@@ -196,7 +197,7 @@ func ParseSwapExactOut(inst *meteora_dlmm.Instruction, transaction *types.Transa
 	inst1 := inst.Impl.(*meteora_dlmm.SwapExactOut)
 	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetLbPairAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
@@ -271,7 +272,7 @@ func ParseRemoveLiquidityByRange(inst *meteora_dlmm.Instruction, transaction *ty
 	inst1 := inst.Impl.(*meteora_dlmm.RemoveLiquidityByRange)
 	in := transaction.Instructions[index]
 	removeLiquidity := &types.RemoveLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetLbPairAccount().PublicKey,
 		User: inst1.GetSenderAccount().PublicKey,
 	}

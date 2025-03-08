@@ -2,6 +2,7 @@ package whirlpool
 
 import (
 	"errors"
+
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	ag_binary "github.com/gagliardetto/binary"
@@ -76,12 +77,12 @@ func init() {
 
 func ProgramParser(transaction *types.Transaction, index int) error {
 	in := transaction.Instructions[index]
-	dec := ag_binary.NewBorshDecoder(in.Raw.DataBytes)
+	dec := ag_binary.NewBorshDecoder(in.RawInstruction.DataBytes)
 	typeID, err := dec.ReadTypeID()
 	if typeID == Instruction_ClosePositionWithTokenExtensions || typeID == Instruction_OpenPositionWithTokenExtensions {
 		return nil
 	}
-	inst, err := whirlpool.DecodeInstruction(in.Raw.AccountValues, in.Raw.DataBytes)
+	inst, err := whirlpool.DecodeInstruction(in.RawInstruction.AccountValues, in.RawInstruction.DataBytes)
 	if err != nil {
 		return err
 	}
@@ -101,7 +102,7 @@ func ParseInitializePool(inst *whirlpool.Instruction, transaction *types.Transac
 	inst1 := inst.Impl.(*whirlpool.InitializePool)
 	in := transaction.Instructions[index]
 	createPool := &types.CreatePool{
-		Dex:     in.Raw.ProgID,
+		Dex:     in.RawInstruction.ProgID,
 		Pool:    inst1.GetWhirlpoolAccount().PublicKey,
 		User:    inst1.GetFunderAccount().PublicKey,
 		TokenA:  inst1.GetTokenMintAAccount().PublicKey,
@@ -139,7 +140,7 @@ func ParseIncreaseLiquidity(inst *whirlpool.Instruction, transaction *types.Tran
 	inst1 := inst.Impl.(*whirlpool.IncreaseLiquidity)
 	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetWhirlpoolAccount().PublicKey,
 		User: inst1.GetPositionAuthorityAccount().PublicKey,
 	}
@@ -152,7 +153,7 @@ func ParseDecreaseLiquidity(inst *whirlpool.Instruction, transaction *types.Tran
 	inst1 := inst.Impl.(*whirlpool.DecreaseLiquidity)
 	in := transaction.Instructions[index]
 	removeLiquidity := &types.RemoveLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetWhirlpoolAccount().PublicKey,
 		User: inst1.GetPositionAuthorityAccount().PublicKey,
 	}
@@ -177,7 +178,7 @@ func ParseSwap(inst *whirlpool.Instruction, transaction *types.Transaction, inde
 	inst1 := inst.Impl.(*whirlpool.Swap)
 	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetWhirlpoolAccount().PublicKey,
 		User: inst1.GetTokenAuthorityAccount().PublicKey,
 	}
@@ -226,7 +227,7 @@ func ParseTwoHopSwap(inst *whirlpool.Instruction, transaction *types.Transaction
 	inst1 := inst.Impl.(*whirlpool.TwoHopSwap)
 	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetWhirlpoolOneAccount().PublicKey,
 		User: inst1.GetTokenAuthorityAccount().PublicKey,
 	}
@@ -276,7 +277,7 @@ func ParseDecreaseLiquidityV2(inst *whirlpool.Instruction, transaction *types.Tr
 	inst1 := inst.Impl.(*whirlpool.DecreaseLiquidityV2)
 	in := transaction.Instructions[index]
 	removeLiquidity := &types.RemoveLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetWhirlpoolAccount().PublicKey,
 		User: inst1.GetPositionAuthorityAccount().PublicKey,
 	}
@@ -289,7 +290,7 @@ func ParseIncreaseLiquidityV2(inst *whirlpool.Instruction, transaction *types.Tr
 	inst1 := inst.Impl.(*whirlpool.IncreaseLiquidityV2)
 	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetWhirlpoolAccount().PublicKey,
 		User: inst1.GetPositionAuthorityAccount().PublicKey,
 	}
@@ -303,7 +304,7 @@ func ParseInitializePoolV2(inst *whirlpool.Instruction, transaction *types.Trans
 	inst1 := inst.Impl.(*whirlpool.InitializePoolV2)
 	in := transaction.Instructions[index]
 	createPool := &types.CreatePool{
-		Dex:     in.Raw.ProgID,
+		Dex:     in.RawInstruction.ProgID,
 		Pool:    inst1.GetWhirlpoolAccount().PublicKey,
 		User:    inst1.GetFunderAccount().PublicKey,
 		TokenA:  inst1.GetTokenMintAAccount().PublicKey,
@@ -328,7 +329,7 @@ func ParseSwapV2(inst *whirlpool.Instruction, transaction *types.Transaction, in
 	inst1 := inst.Impl.(*whirlpool.SwapV2)
 	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetWhirlpoolAccount().PublicKey,
 		User: inst1.GetTokenAuthorityAccount().PublicKey,
 	}
@@ -346,7 +347,7 @@ func ParseTwoHopSwapV2(inst *whirlpool.Instruction, transaction *types.Transacti
 	inst1 := inst.Impl.(*whirlpool.TwoHopSwapV2)
 	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetWhirlpoolOneAccount().PublicKey,
 		User: inst1.GetTokenAuthorityAccount().PublicKey,
 	}

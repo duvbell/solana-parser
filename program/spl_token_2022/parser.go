@@ -2,6 +2,7 @@ package spl_token_2022
 
 import (
 	"errors"
+
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	ag_binary "github.com/gagliardetto/binary"
@@ -32,12 +33,12 @@ func init() {
 
 func ProgramParser(transaction *types.Transaction, index int) error {
 	in := transaction.Instructions[index]
-	dec := ag_binary.NewBorshDecoder(in.Raw.DataBytes)
+	dec := ag_binary.NewBorshDecoder(in.RawInstruction.DataBytes)
 	typeID, err := dec.ReadUint8()
 	if _, ok := Parsers[uint64(typeID)]; !ok {
 		return nil
 	}
-	inst, err := token.DecodeInstruction(in.Raw.AccountValues, in.Raw.DataBytes)
+	inst, err := token.DecodeInstruction(in.RawInstruction.AccountValues, in.RawInstruction.DataBytes)
 	if err != nil {
 		return err
 	}
@@ -120,7 +121,7 @@ func ParseInitializeAccount(inst *token.Instruction, transaction *types.Transact
 	// update token owner & mint by spl token instructions
 	transaction.Meta.TokenAccounts[init.Account] = &types.TokenAccount{
 		Owner:     &init.Owner,
-		ProgramId: &in.Raw.ProgID,
+		ProgramId: &in.RawInstruction.ProgID,
 		Mint:      init.Mint,
 	}
 	in.Event = []interface{}{init}
@@ -140,7 +141,7 @@ func ParseInitializeAccount3(inst *token.Instruction, transaction *types.Transac
 	// update token owner & mint by spl token instructions
 	transaction.Meta.TokenAccounts[init.Account] = &types.TokenAccount{
 		Owner:     &init.Owner,
-		ProgramId: &in.Raw.ProgID,
+		ProgramId: &in.RawInstruction.ProgID,
 		Mint:      init.Mint,
 	}
 	in.Event = []interface{}{init}

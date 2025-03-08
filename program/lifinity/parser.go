@@ -2,6 +2,7 @@ package lifinity
 
 import (
 	"errors"
+
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
@@ -33,12 +34,12 @@ func init() {
 
 func ProgramParser(transaction *types.Transaction, index int) error {
 	in := transaction.Instructions[index]
-	dec := ag_binary.NewBorshDecoder(in.Raw.DataBytes)
+	dec := ag_binary.NewBorshDecoder(in.RawInstruction.DataBytes)
 	typeID, err := dec.ReadTypeID()
 	if typeID == Instruction_UpdateTargetPriceBufferParam || typeID == Instruction_UpdateConfigSpreadParam {
 		return nil
 	}
-	inst, err := lifinity_v2.DecodeInstruction(in.Raw.AccountValues, in.Raw.DataBytes)
+	inst, err := lifinity_v2.DecodeInstruction(in.RawInstruction.AccountValues, in.RawInstruction.DataBytes)
 	if err != nil {
 		return err
 	}
@@ -55,7 +56,7 @@ func ParseSwap(inst *lifinity_v2.Instruction, transaction *types.Transaction, in
 	inst1 := inst.Impl.(*lifinity_v2.Swap)
 	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetAmmAccount().PublicKey,
 		User: inst1.GetAuthorityAccount().PublicKey,
 	}

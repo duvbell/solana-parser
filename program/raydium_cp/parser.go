@@ -2,6 +2,7 @@ package raydium_cp
 
 import (
 	"errors"
+
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go"
@@ -34,7 +35,7 @@ func init() {
 
 func ProgramParser(transaction *types.Transaction, index int) error {
 	in := transaction.Instructions[index]
-	inst, err := raydium_cp.DecodeInstruction(in.Raw.AccountValues, in.Raw.DataBytes)
+	inst, err := raydium_cp.DecodeInstruction(in.RawInstruction.AccountValues, in.RawInstruction.DataBytes)
 	if err != nil {
 		return err
 	}
@@ -66,7 +67,7 @@ func ParseInitialize(inst *raydium_cp.Instruction, transaction *types.Transactio
 	inst1 := inst.Impl.(*raydium_cp.Initialize)
 	in := transaction.Instructions[index]
 	createPool := &types.CreatePool{
-		Dex:     in.Raw.ProgID,
+		Dex:     in.RawInstruction.ProgID,
 		Pool:    inst1.GetPoolStateAccount().PublicKey,
 		User:    inst1.GetCreatorAccount().PublicKey,
 		TokenA:  inst1.GetToken0MintAccount().PublicKey,
@@ -77,7 +78,7 @@ func ParseInitialize(inst *raydium_cp.Instruction, transaction *types.Transactio
 		VaultLP: solana.PublicKey{},
 	}
 	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetCreatorAccount().PublicKey,
 	}
@@ -90,7 +91,7 @@ func ParseDeposit(inst *raydium_cp.Instruction, transaction *types.Transaction, 
 	inst1 := inst.Impl.(*raydium_cp.Deposit)
 	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetOwnerAccount().PublicKey,
 	}
@@ -103,7 +104,7 @@ func ParseWithdraw(inst *raydium_cp.Instruction, transaction *types.Transaction,
 	inst1 := inst.Impl.(*raydium_cp.Withdraw)
 	in := transaction.Instructions[index]
 	removeLiquidity := &types.RemoveLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetOwnerAccount().PublicKey,
 	}
@@ -116,7 +117,7 @@ func ParseSwapBaseInput(inst *raydium_cp.Instruction, transaction *types.Transac
 	inst1 := inst.Impl.(*raydium_cp.SwapBaseInput)
 	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetPayerAccount().PublicKey,
 	}
@@ -129,7 +130,7 @@ func ParseSwapBaseOutput(inst *raydium_cp.Instruction, transaction *types.Transa
 	inst1 := inst.Impl.(*raydium_cp.SwapBaseOutput)
 	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetPayerAccount().PublicKey,
 	}

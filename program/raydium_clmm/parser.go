@@ -2,6 +2,7 @@ package raydium_clmm
 
 import (
 	"errors"
+
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
@@ -49,7 +50,7 @@ func init() {
 
 func ProgramParser(transaction *types.Transaction, index int) error {
 	in := transaction.Instructions[index]
-	inst, err := raydium_clmm.DecodeInstruction(in.Raw.AccountValues, in.Raw.DataBytes)
+	inst, err := raydium_clmm.DecodeInstruction(in.RawInstruction.AccountValues, in.RawInstruction.DataBytes)
 	if err != nil {
 		return err
 	}
@@ -71,7 +72,7 @@ func ParseCreatePool(inst *raydium_clmm.Instruction, transaction *types.Transact
 	inst1 := inst.Impl.(*raydium_clmm.CreatePool)
 	in := transaction.Instructions[index]
 	createPool := &types.CreatePool{
-		Dex:     in.Raw.ProgID,
+		Dex:     in.RawInstruction.ProgID,
 		Pool:    inst1.GetPoolStateAccount().PublicKey,
 		User:    inst1.GetPoolCreatorAccount().PublicKey,
 		TokenA:  inst1.GetTokenMint0Account().PublicKey,
@@ -126,7 +127,7 @@ func ParseOpenPositionWithToken22Nft(inst *raydium_clmm.Instruction, transaction
 	inst1 := inst.Impl.(*raydium_clmm.OpenPositionWithToken22Nft)
 	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetPayerAccount().PublicKey,
 	}
@@ -143,7 +144,7 @@ func ParseIncreaseLiquidity(inst *raydium_clmm.Instruction, transaction *types.T
 	inst1 := inst.Impl.(*raydium_clmm.IncreaseLiquidity)
 	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetNftOwnerAccount().PublicKey,
 	}
@@ -157,7 +158,7 @@ func ParseIncreaseLiquidityV2(inst *raydium_clmm.Instruction, transaction *types
 	inst1 := inst.Impl.(*raydium_clmm.IncreaseLiquidityV2)
 	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetNftOwnerAccount().PublicKey,
 	}
@@ -170,7 +171,7 @@ func ParseDecreaseLiquidity(inst *raydium_clmm.Instruction, transaction *types.T
 	inst1 := inst.Impl.(*raydium_clmm.DecreaseLiquidity)
 	in := transaction.Instructions[index]
 	removeLiquidity := &types.RemoveLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetNftOwnerAccount().PublicKey,
 	}
@@ -184,7 +185,7 @@ func ParseDecreaseLiquidityV2(inst *raydium_clmm.Instruction, transaction *types
 	inst1 := inst.Impl.(*raydium_clmm.DecreaseLiquidityV2)
 	in := transaction.Instructions[index]
 	removeLiquidity := &types.RemoveLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetNftOwnerAccount().PublicKey,
 	}
@@ -197,7 +198,7 @@ func ParseSwap(inst *raydium_clmm.Instruction, transaction *types.Transaction, i
 	inst1 := inst.Impl.(*raydium_clmm.Swap)
 	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetPayerAccount().PublicKey,
 	}
@@ -210,7 +211,7 @@ func ParseSwapV2(inst *raydium_clmm.Instruction, transaction *types.Transaction,
 	inst1 := inst.Impl.(*raydium_clmm.SwapV2)
 	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetPayerAccount().PublicKey,
 	}

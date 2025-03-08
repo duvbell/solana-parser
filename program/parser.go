@@ -46,7 +46,7 @@ func FilterInstruction(in *solana.CompiledInstruction, meta *types.Meta) *types.
 		accountMetas = append(accountMetas, meta.Accounts[accountIndex])
 	}
 	return &types.Instruction{
-		Raw: &solana.GenericInstruction{
+		RawInstruction: &solana.GenericInstruction{
 			AccountValues: accountMetas,
 			ProgID:        programId,
 			DataBytes:     in.Data,
@@ -57,14 +57,14 @@ func FilterInstruction(in *solana.CompiledInstruction, meta *types.Meta) *types.
 func Parse(transaction *types.Transaction) {
 	priority := 0
 	for i := 0; i < len(transaction.Instructions); i++ {
-		programId := transaction.Instructions[i].Raw.ProgID
+		programId := transaction.Instructions[i].RawInstruction.ProgID
 		if Id2Priority[programId] == priority {
 			parse(transaction, i)
 		}
 	}
 	priority += 1
 	for i := 0; i < len(transaction.Instructions); i++ {
-		programId := transaction.Instructions[i].Raw.ProgID
+		programId := transaction.Instructions[i].RawInstruction.ProgID
 		if Id2Priority[programId] == priority {
 			parse(transaction, i)
 		}
@@ -73,13 +73,13 @@ func Parse(transaction *types.Transaction) {
 
 func parse(transaction *types.Transaction, index int) {
 	in := transaction.Instructions[index]
-	parser, ok := Parsers[in.Raw.ProgID]
+	parser, ok := Parsers[in.RawInstruction.ProgID]
 	if !ok || parser == nil {
-		log.Logger.Error("no parser", "program id", in.Raw.ProgID)
+		log.Logger.Error("no parser", "program id", in.RawInstruction.ProgID)
 		return
 	}
 	err := parser(transaction, index)
 	if err != nil {
-		log.Logger.Error("parse error", "program", in.Raw.ProgID, "err", err)
+		log.Logger.Error("parse error", "program", in.RawInstruction.ProgID, "err", err)
 	}
 }

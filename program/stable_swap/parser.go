@@ -2,6 +2,7 @@ package stable_swap
 
 import (
 	"errors"
+
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	"github.com/blockchain-develop/solana-parser/types"
@@ -40,7 +41,7 @@ func init() {
 
 func ProgramParser(transaction *types.Transaction, index int) error {
 	in := transaction.Instructions[index]
-	inst, err := stable_swap.DecodeInstruction(in.Raw.AccountValues, in.Raw.DataBytes)
+	inst, err := stable_swap.DecodeInstruction(in.RawInstruction.AccountValues, in.RawInstruction.DataBytes)
 	if err != nil {
 		return err
 	}
@@ -71,7 +72,7 @@ func ParseDeposit(inst *stable_swap.Instruction, transaction *types.Transaction,
 	inst1 := inst.Impl.(*stable_swap.Deposit)
 	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
@@ -99,7 +100,7 @@ func ParseSwap(inst *stable_swap.Instruction, transaction *types.Transaction, in
 	inst1 := inst.Impl.(*stable_swap.Swap)
 	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
@@ -112,7 +113,7 @@ func ParseSwapV2(inst *stable_swap.Instruction, transaction *types.Transaction, 
 	inst1 := inst.Impl.(*stable_swap.SwapV2)
 	in := transaction.Instructions[index]
 	swap := &types.Swap{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
@@ -131,7 +132,7 @@ func ParseWithdraw(inst *stable_swap.Instruction, transaction *types.Transaction
 	inst1 := inst.Impl.(*stable_swap.Withdraw)
 	in := transaction.Instructions[index]
 	removeLiquidity := &types.RemoveLiquidity{
-		Dex:  in.Raw.ProgID,
+		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
