@@ -158,6 +158,7 @@ func ParseSwapBaseIn(inst *raydium_amm.Instruction, transaction *types.Transacti
 		inst1.SetAccounts(insertAccount(inst1.GetAccounts(), 4))
 	}
 	in := transaction.Instructions[index]
+	in.ParsedInstruction = inst1
 	swap := &types.Swap{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetAmmAccount().PublicKey,
@@ -178,6 +179,7 @@ func ParseSwapBaseOut(inst *raydium_amm.Instruction, transaction *types.Transact
 		inst1.SetAccounts(insertAccount(inst1.GetAccounts(), 4))
 	}
 	in := transaction.Instructions[index]
+	in.ParsedInstruction = inst1
 	swap := &types.Swap{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetAmmAccount().PublicKey,
