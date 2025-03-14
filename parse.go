@@ -2,6 +2,7 @@ package solanaparser
 
 import (
 	"encoding/json"
+
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
 	_ "github.com/blockchain-develop/solana-parser/program/lifinity"
@@ -143,7 +144,7 @@ func ParseTransaction(seq int, tx *solana.Transaction, meta *rpc.TransactionMeta
 	if t.Meta.Accounts[message.Instructions[0].ProgramIDIndex].PublicKey == solana.VoteProgramID {
 		return t
 	}
-	log.Logger.Info("parse transaction", "seq", seq, "tx", tx.Signatures[0].String())
+	log.Logger.Trace("parse transaction", "seq", seq, "tx", tx.Signatures[0].String())
 	//
 	instructions := make([]*types.Instruction, 0)
 	index := 0
