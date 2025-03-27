@@ -7,8 +7,8 @@ github.com/benbjohnson/clock v1.3.0 h1:ip6w0uFQkncKQ979AypyG0ER7mqUSBdKLOgAle/AT
 github.com/benbjohnson/clock v1.3.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
 github.com/blendle/zapdriver v1.3.1 h1:C3dydBOWYRiOk+B8X9IVZ5IOe+7cl+tGOexN4QqHfpE=
 github.com/blendle/zapdriver v1.3.1/go.mod h1:mdXfREi6u5MArG4j9fewC+FGnXaBR+T4Ox4J2u4eHCc=
-github.com/blockchain-develop/solana-go v0.0.0-20250327134245-3e077de44dd5 h1:FF7aK5ctUBqQTzyiVYQBN4y7wtdnnVCXHBfAX8HazSw=
-github.com/blockchain-develop/solana-go v0.0.0-20250327134245-3e077de44dd5/go.mod h1:Zbm1QH3kVPq/GEhKvi8024di8lQPirck3KQM3Zsk44w=
+github.com/blockchain-develop/solana-go v0.0.0-20250327134912-1ff7c0699112 h1:8c9uuj8Cb0eUqLUQT9jM30EkQW2tytng4aLgt1gcC2s=
+github.com/blockchain-develop/solana-go v0.0.0-20250327134912-1ff7c0699112/go.mod h1:Zbm1QH3kVPq/GEhKvi8024di8lQPirck3KQM3Zsk44w=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
