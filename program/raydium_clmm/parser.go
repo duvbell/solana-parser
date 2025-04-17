@@ -195,7 +195,7 @@ func ParseSwap(inst *raydium_clmm.Instruction, in *types.Instruction, meta *type
 		User: inst1.GetPayerAccount().PublicKey,
 	}
 	swap.InputTransfer = in.FindNextTransferByTo(inst1.GetInputVaultAccount().PublicKey)
-	swap.OutputTransfer = in.FindNextTransferByTo(inst1.GetOutputVaultAccount().PublicKey)
+	swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetOutputVaultAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }
@@ -207,7 +207,7 @@ func ParseSwapV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *ty
 		User: inst1.GetPayerAccount().PublicKey,
 	}
 	swap.InputTransfer = in.FindNextTransferByTo(inst1.GetInputVaultAccount().PublicKey)
-	swap.OutputTransfer = in.FindNextTransferByTo(inst1.GetOutputVaultAccount().PublicKey)
+	swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetOutputVaultAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }

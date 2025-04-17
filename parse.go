@@ -198,7 +198,7 @@ func build(parent *types.Instruction, subIns []solana.CompiledInstruction, meta 
 	for i := 0; i < len(indexes)-1; i++ {
 		index1 := indexes[i]
 		index2 := indexes[i+1]
-		current := program.FilterInstruction(&subIns[index2], meta)
+		current := program.FilterInstruction(&subIns[index1], meta)
 		current.Seq = i + 1
 		parent.Children = append(parent.Children, current)
 		build(current, subIns[index1+1:index2], meta)
