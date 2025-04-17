@@ -11,6 +11,7 @@ import (
 	_ "github.com/solana-parser/program/lifinity"
 	_ "github.com/solana-parser/program/meteora_dlmm"
 	_ "github.com/solana-parser/program/meteora_pools"
+	_ "github.com/solana-parser/program/obric_v2"
 	_ "github.com/solana-parser/program/phoenix"
 	_ "github.com/solana-parser/program/pump"
 	_ "github.com/solana-parser/program/raydium_amm"
