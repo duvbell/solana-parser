@@ -4,18 +4,18 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/blockchain-develop/solana-parser/log"
-	"github.com/blockchain-develop/solana-parser/program"
-	"github.com/blockchain-develop/solana-parser/types"
 	ag_binary "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go/programs/pumpfun"
+	"github.com/solana-parser/log"
+	"github.com/solana-parser/program"
+	"github.com/solana-parser/types"
 )
 
 var (
 	Parsers = make(map[uint64]Parser, 0)
 )
 
-type Parser func(inst *pumpfun.Instruction, transaction *types.Transaction, index int) error
+type Parser func(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) error
 
 func RegisterParser(id uint64, p Parser) {
 	Parsers[id] = p
@@ -37,8 +37,7 @@ func init() {
 	RegisterParser(uint64(pumpfun.Instruction_SetParams.Uint32()), ParseDefault)
 }
 
-func ProgramParser(transaction *types.Transaction, index int) error {
-	in := transaction.Instructions[index]
+func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	dec := ag_binary.NewBorshDecoder(in.RawInstruction.DataBytes)
 	typeID, err := dec.ReadTypeID()
 	if typeID == Instruction_AnchorSelfCPILog {
@@ -53,20 +52,19 @@ func ProgramParser(transaction *types.Transaction, index int) error {
 	if !ok {
 		return errors.New("parser not found")
 	}
-	return parser(inst, transaction, index)
+	return parser(inst, in, meta)
 }
 
 // Initialize
-func ParseInitialize(inst *pumpfun.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitialize(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) error {
 	//log.Logger.Info("ignore parse initialize", "program", pumpfun.ProgramName)
 	return nil
 }
 
 // Create
-func ParseCreate(inst *pumpfun.Instruction, transaction *types.Transaction, index int) error {
+func ParseCreate(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) error {
 	//log.Logger.Info("ignore parse create", "program", pumpfun.ProgramName)
 	inst1 := inst.Impl.(*pumpfun.Create)
-	in := transaction.Instructions[index]
 	in.ParsedInstruction = inst1
 	memeMint := &types.MemeCreate{
 		Dex:                    in.RawInstruction.ProgID,
@@ -75,45 +73,41 @@ func ParseCreate(inst *pumpfun.Instruction, transaction *types.Transaction, inde
 		BondingCurve:           inst1.GetBondingCurveAccount().PublicKey,
 		AssociatedBondingCurve: inst1.GetAssociatedBondingCurveAccount().PublicKey,
 	}
-	memeMint.MintTo = transaction.FindNextMintTo(index, inst1.GetAssociatedBondingCurveAccount().PublicKey)
+	memeMint.MintTo = in.FindNextMintTo(inst1.GetAssociatedBondingCurveAccount().PublicKey)
 	in.Event = []interface{}{memeMint}
 
-	logIndex := index
-	var myLog *types.Instruction
-	for logIndex < len(transaction.Instructions) {
-		myLog, logIndex = transaction.FindNextInstructionByProgram(logIndex, pumpfun.ProgramID)
-		if myLog == nil {
-			break
-		}
-		data := myLog.RawInstruction.DataBytes
-		dec := ag_binary.NewBorshDecoder(data)
-		instId, _ := dec.ReadBytes(8)
-		eventId, _ := dec.ReadBytes(8)
-		if bytes.Compare(instId, Instruction_AnchorSelfCPILog[:]) != 0 || bytes.Compare(eventId, Event_Create[:]) != 0 {
-			continue
-		}
-		var createEvent pumpfun.CreateEvent
-		if err := dec.Decode(&createEvent); err != nil {
-			return err
-		}
-		memeCreateEvent := types.MemeCreateEvent{
-			Name:         createEvent.Name,
-			Symbol:       createEvent.Symbol,
-			Uri:          createEvent.Uri,
-			Mint:         createEvent.Mint,
-			BondingCurve: createEvent.BondingCurve,
-			User:         createEvent.User,
-		}
-		in.Receipt = []interface{}{&memeCreateEvent}
+	myLog := in.FindNextProgram(pumpfun.ProgramID)
+	if myLog == nil {
+		return nil
 	}
+	data := myLog.RawInstruction.DataBytes
+	dec := ag_binary.NewBorshDecoder(data)
+	instId, _ := dec.ReadBytes(8)
+	eventId, _ := dec.ReadBytes(8)
+	if bytes.Compare(instId, Instruction_AnchorSelfCPILog[:]) != 0 || bytes.Compare(eventId, Event_Create[:]) != 0 {
+		return nil
+	}
+	var createEvent pumpfun.CreateEvent
+	if err := dec.Decode(&createEvent); err != nil {
+		return err
+	}
+	memeCreateEvent := types.MemeCreateEvent{
+		Name:         createEvent.Name,
+		Symbol:       createEvent.Symbol,
+		Uri:          createEvent.Uri,
+		Mint:         createEvent.Mint,
+		BondingCurve: createEvent.BondingCurve,
+		User:         createEvent.User,
+	}
+	in.Receipt = []interface{}{&memeCreateEvent}
+
 	return nil
 }
 
 // Buy
-func ParseBuy(inst *pumpfun.Instruction, transaction *types.Transaction, index int) error {
+func ParseBuy(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) error {
 	//log.Logger.Info("ignore parse buy", "program", pumpfun.ProgramName)
 	inst1 := inst.Impl.(*pumpfun.Buy)
-	in := transaction.Instructions[index]
 	in.ParsedInstruction = inst1
 	memeBuy := &types.MemeBuy{
 		Dex:                    in.RawInstruction.ProgID,
@@ -122,50 +116,44 @@ func ParseBuy(inst *pumpfun.Instruction, transaction *types.Transaction, index i
 		BondingCurve:           inst1.GetBondingCurveAccount().PublicKey,
 		AssociatedBondingCurve: inst1.GetAssociatedBondingCurveAccount().PublicKey,
 	}
-	memeBuy.SolTransfer = transaction.FindNextTransferByTo(index, inst1.GetBondingCurveAccount().PublicKey)
-	memeBuy.FeeTransfer = transaction.FindNextTransferByTo(index, inst1.GetFeeRecipientAccount().PublicKey)
-	memeBuy.MintTransfer = transaction.FindNextTransferByFrom(index, inst1.GetAssociatedBondingCurveAccount().PublicKey)
+	memeBuy.SolTransfer = in.FindNextTransferByTo(inst1.GetBondingCurveAccount().PublicKey)
+	memeBuy.FeeTransfer = in.FindNextTransferByTo(inst1.GetFeeRecipientAccount().PublicKey)
+	memeBuy.MintTransfer = in.FindNextTransferByFrom(inst1.GetAssociatedBondingCurveAccount().PublicKey)
 	in.Event = []interface{}{memeBuy}
 
-	logIndex := index
-	var myLog *types.Instruction
-	for logIndex < len(transaction.Instructions) {
-		myLog, logIndex = transaction.FindNextInstructionByProgram(logIndex, pumpfun.ProgramID)
-		if myLog == nil {
-			break
-		}
-		data := myLog.RawInstruction.DataBytes
-		dec := ag_binary.NewBorshDecoder(data)
-		instId, _ := dec.ReadBytes(8)
-		eventId, _ := dec.ReadBytes(8)
-		if bytes.Compare(instId, Instruction_AnchorSelfCPILog[:]) != 0 || bytes.Compare(eventId, Event_Swap[:]) != 0 {
-			continue
-		}
-		var tradeEvent pumpfun.TradeEvent
-		if err := dec.Decode(&tradeEvent); err != nil {
-			return err
-		}
-		memeBuyEvent := types.MemeBuyEvent{
-			Mint:                 tradeEvent.Mint,
-			SolAmount:            tradeEvent.SolAmount,
-			TokenAmount:          tradeEvent.TokenAmount,
-			IsBuy:                tradeEvent.IsBuy,
-			User:                 tradeEvent.User,
-			Timestamp:            tradeEvent.Timestamp,
-			VirtualSolReserves:   tradeEvent.VirtualSolReserves,
-			VirtualTokenReserves: tradeEvent.VirtualTokenReserves,
-		}
-		in.Receipt = []interface{}{&memeBuyEvent}
-		break
+	myLog := in.FindNextProgram(pumpfun.ProgramID)
+	if myLog == nil {
+		return nil
 	}
+	data := myLog.RawInstruction.DataBytes
+	dec := ag_binary.NewBorshDecoder(data)
+	instId, _ := dec.ReadBytes(8)
+	eventId, _ := dec.ReadBytes(8)
+	if bytes.Compare(instId, Instruction_AnchorSelfCPILog[:]) != 0 || bytes.Compare(eventId, Event_Swap[:]) != 0 {
+		return nil
+	}
+	var tradeEvent pumpfun.TradeEvent
+	if err := dec.Decode(&tradeEvent); err != nil {
+		return err
+	}
+	memeBuyEvent := types.MemeBuyEvent{
+		Mint:                 tradeEvent.Mint,
+		SolAmount:            tradeEvent.SolAmount,
+		TokenAmount:          tradeEvent.TokenAmount,
+		IsBuy:                tradeEvent.IsBuy,
+		User:                 tradeEvent.User,
+		Timestamp:            tradeEvent.Timestamp,
+		VirtualSolReserves:   tradeEvent.VirtualSolReserves,
+		VirtualTokenReserves: tradeEvent.VirtualTokenReserves,
+	}
+	in.Receipt = []interface{}{&memeBuyEvent}
 	return nil
 }
 
 // Sell
-func ParseSell(inst *pumpfun.Instruction, transaction *types.Transaction, index int) error {
+func ParseSell(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) error {
 	//log.Logger.Info("ignore parse sell", "program", pumpfun.ProgramName)
 	inst1 := inst.Impl.(*pumpfun.Sell)
-	in := transaction.Instructions[index]
 	in.ParsedInstruction = inst1
 	memeSell := &types.MemeSell{
 		Dex:                    in.RawInstruction.ProgID,
@@ -174,55 +162,50 @@ func ParseSell(inst *pumpfun.Instruction, transaction *types.Transaction, index 
 		BondingCurve:           inst1.GetBondingCurveAccount().PublicKey,
 		AssociatedBondingCurve: inst1.GetAssociatedBondingCurveAccount().PublicKey,
 	}
-	memeSell.MintTransfer = transaction.FindNextTransferByTo(index, inst1.GetAssociatedBondingCurveAccount().PublicKey)
+	memeSell.MintTransfer = in.FindNextTransferByTo(inst1.GetAssociatedBondingCurveAccount().PublicKey)
 	in.Event = []interface{}{memeSell}
 
-	logIndex := index
-	var myLog *types.Instruction
-	for logIndex < len(transaction.Instructions) {
-		myLog, logIndex = transaction.FindNextInstructionByProgram(logIndex, pumpfun.ProgramID)
-		if myLog == nil {
-			break
-		}
-		data := myLog.RawInstruction.DataBytes
-		dec := ag_binary.NewBorshDecoder(data)
-		instId, _ := dec.ReadBytes(8)
-		eventId, _ := dec.ReadBytes(8)
-		if bytes.Compare(instId, Instruction_AnchorSelfCPILog[:]) != 0 || bytes.Compare(eventId, Event_Swap[:]) != 0 {
-			continue
-		}
-		var tradeEvent pumpfun.TradeEvent
-		if err := dec.Decode(&tradeEvent); err != nil {
-			return err
-		}
-		memeSellEvent := types.MemeSellEvent{
-			Mint:                 tradeEvent.Mint,
-			SolAmount:            tradeEvent.SolAmount,
-			TokenAmount:          tradeEvent.TokenAmount,
-			IsBuy:                tradeEvent.IsBuy,
-			User:                 tradeEvent.User,
-			Timestamp:            tradeEvent.Timestamp,
-			VirtualSolReserves:   tradeEvent.VirtualSolReserves,
-			VirtualTokenReserves: tradeEvent.VirtualTokenReserves,
-		}
-		in.Receipt = []interface{}{&memeSellEvent}
-		break
+	myLog := in.FindNextProgram(pumpfun.ProgramID)
+	if myLog == nil {
+		return nil
 	}
+	data := myLog.RawInstruction.DataBytes
+	dec := ag_binary.NewBorshDecoder(data)
+	instId, _ := dec.ReadBytes(8)
+	eventId, _ := dec.ReadBytes(8)
+	if bytes.Compare(instId, Instruction_AnchorSelfCPILog[:]) != 0 || bytes.Compare(eventId, Event_Swap[:]) != 0 {
+		return nil
+	}
+	var tradeEvent pumpfun.TradeEvent
+	if err := dec.Decode(&tradeEvent); err != nil {
+		return err
+	}
+	memeSellEvent := types.MemeSellEvent{
+		Mint:                 tradeEvent.Mint,
+		SolAmount:            tradeEvent.SolAmount,
+		TokenAmount:          tradeEvent.TokenAmount,
+		IsBuy:                tradeEvent.IsBuy,
+		User:                 tradeEvent.User,
+		Timestamp:            tradeEvent.Timestamp,
+		VirtualSolReserves:   tradeEvent.VirtualSolReserves,
+		VirtualTokenReserves: tradeEvent.VirtualTokenReserves,
+	}
+	in.Receipt = []interface{}{&memeSellEvent}
 	return nil
 }
 
 // Sell
-func ParseWithdraw(inst *pumpfun.Instruction, transaction *types.Transaction, index int) error {
+func ParseWithdraw(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) error {
 	log.Logger.Info("ignore parse withdraw", "program", pumpfun.ProgramName)
 	return nil
 }
 
 // Default
-func ParseDefault(inst *pumpfun.Instruction, transaction *types.Transaction, index int) error {
+func ParseDefault(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
 // Fault
-func ParseFault(inst *pumpfun.Instruction, transaction *types.Transaction, index int) {
+func ParseFault(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta) {
 	panic("not supported")
 }

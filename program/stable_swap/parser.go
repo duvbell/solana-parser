@@ -3,17 +3,17 @@ package stable_swap
 import (
 	"errors"
 
-	"github.com/blockchain-develop/solana-parser/log"
-	"github.com/blockchain-develop/solana-parser/program"
-	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go/programs/stable_swap"
+	"github.com/solana-parser/log"
+	"github.com/solana-parser/program"
+	"github.com/solana-parser/types"
 )
 
 var (
 	Parsers = make(map[uint64]Parser, 0)
 )
 
-type Parser func(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error
+type Parser func(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error
 
 func RegisterParser(id uint64, p Parser) {
 	Parsers[id] = p
@@ -39,8 +39,7 @@ func init() {
 	RegisterParser(uint64(stable_swap.Instruction_Withdraw.Uint32()), ParseWithdraw)
 }
 
-func ProgramParser(transaction *types.Transaction, index int) error {
-	in := transaction.Instructions[index]
+func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	inst, err := stable_swap.DecodeInstruction(in.RawInstruction.AccountValues, in.RawInstruction.DataBytes)
 	if err != nil {
 		return err
@@ -50,104 +49,100 @@ func ProgramParser(transaction *types.Transaction, index int) error {
 	if !ok {
 		return errors.New("parser not found")
 	}
-	return parser(inst, transaction, index)
+	return parser(inst, in, meta)
 }
 
-func ParseAcceptOwner(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error {
+func ParseAcceptOwner(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseApproveStrategy(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error {
+func ParseApproveStrategy(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseChangeAmpFactor(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error {
+func ParseChangeAmpFactor(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseChangeSwapFee(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error {
+func ParseChangeSwapFee(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseCreateStrategy(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error {
+func ParseCreateStrategy(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseDeposit(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error {
+func ParseDeposit(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*stable_swap.Deposit)
-	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = transaction.FindNextTransferByTo(index, inst1.GetVaultTokenAAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetVaultTokenAAccount().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	return nil
 }
-func ParseExecStrategy(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error {
+func ParseExecStrategy(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseInitialize(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitialize(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error {
 	log.Logger.Info("ignore parse initialize", "program", stable_swap.ProgramName)
 	return nil
 }
-func ParsePause(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error {
+func ParsePause(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseRejectOwner(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error {
+func ParseRejectOwner(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseShutdown(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error {
+func ParseShutdown(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseSwap(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error {
+func ParseSwap(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*stable_swap.Swap)
-	in := transaction.Instructions[index]
 	swap := &types.Swap{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	swap.InputTransfer = transaction.FindNextTransferByTo(index, inst1.GetUserTokenInAccount().PublicKey)
-	swap.OutputTransfer = transaction.FindNextTransferByFrom(index, inst1.GetUserTokenOutAccount().PublicKey)
+	swap.InputTransfer = in.FindNextTransferByTo(inst1.GetUserTokenInAccount().PublicKey)
+	swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetUserTokenOutAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }
-func ParseSwapV2(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error {
+func ParseSwapV2(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*stable_swap.SwapV2)
-	in := transaction.Instructions[index]
 	swap := &types.Swap{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	swap.InputTransfer = transaction.FindNextTransferByTo(index, inst1.GetUserTokenInAccount().PublicKey)
-	swap.OutputTransfer = transaction.FindNextTransferByFrom(index, inst1.GetUserTokenOutAccount().PublicKey)
+	swap.InputTransfer = in.FindNextTransferByTo(inst1.GetUserTokenInAccount().PublicKey)
+	swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetUserTokenOutAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }
-func ParseTransferOwner(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error {
+func ParseTransferOwner(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseUnpause(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error {
+func ParseUnpause(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseWithdraw(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error {
+func ParseWithdraw(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*stable_swap.Withdraw)
-	in := transaction.Instructions[index]
 	removeLiquidity := &types.RemoveLiquidity{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	removeLiquidity.TokenATransfer = transaction.FindNextTransferByFrom(index, inst1.GetVaultTokenAAccount().PublicKey)
+	removeLiquidity.TokenATransfer = in.FindNextTransferByFrom(inst1.GetVaultTokenAAccount().PublicKey)
 	in.Event = []interface{}{removeLiquidity}
 	// log.Logger.Info("ignore parse withdraw", "program", stable_swap.ProgramName)
 	return nil
 }
 
 // Default
-func ParseDefault(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error {
+func ParseDefault(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
 // Fault
-func ParseFault(inst *stable_swap.Instruction, transaction *types.Transaction, index int) error {
+func ParseFault(inst *stable_swap.Instruction, in *types.Instruction, meta *types.Meta) error {
 	panic("not supported")
 }

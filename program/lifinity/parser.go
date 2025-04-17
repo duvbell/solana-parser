@@ -3,18 +3,18 @@ package lifinity
 import (
 	"errors"
 
-	"github.com/blockchain-develop/solana-parser/log"
-	"github.com/blockchain-develop/solana-parser/program"
-	"github.com/blockchain-develop/solana-parser/types"
 	ag_binary "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go/programs/lifinity_v2"
+	"github.com/solana-parser/log"
+	"github.com/solana-parser/program"
+	"github.com/solana-parser/types"
 )
 
 var (
 	Parsers = make(map[uint64]Parser, 0)
 )
 
-type Parser func(inst *lifinity_v2.Instruction, transaction *types.Transaction, index int) error
+type Parser func(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types.Meta) error
 
 func RegisterParser(id uint64, p Parser) {
 	Parsers[id] = p
@@ -32,8 +32,7 @@ func init() {
 	RegisterParser(uint64(lifinity_v2.Instruction_WithdrawAllTokenTypes.Uint32()), ParseWithdrawAllTokenTypes)
 }
 
-func ProgramParser(transaction *types.Transaction, index int) error {
-	in := transaction.Instructions[index]
+func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	dec := ag_binary.NewBorshDecoder(in.RawInstruction.DataBytes)
 	typeID, err := dec.ReadTypeID()
 	if typeID == Instruction_UpdateTargetPriceBufferParam || typeID == Instruction_UpdateConfigSpreadParam {
@@ -48,13 +47,12 @@ func ProgramParser(transaction *types.Transaction, index int) error {
 	if !ok {
 		return errors.New("parser not found")
 	}
-	return parser(inst, transaction, index)
+	return parser(inst, in, meta)
 }
 
 // Swap
-func ParseSwap(inst *lifinity_v2.Instruction, transaction *types.Transaction, index int) error {
+func ParseSwap(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*lifinity_v2.Swap)
-	in := transaction.Instructions[index]
 	swap := &types.Swap{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetAmmAccount().PublicKey,
@@ -65,24 +63,24 @@ func ParseSwap(inst *lifinity_v2.Instruction, transaction *types.Transaction, in
 	return nil
 }
 
-func ParseDepositAllTokenTypes(inst *lifinity_v2.Instruction, transaction *types.Transaction, index int) error {
+func ParseDepositAllTokenTypes(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types.Meta) error {
 	// add liquidity
 	log.Logger.Info("ignore parse deposit all token types", "program", lifinity_v2.ProgramName)
 	return nil
 }
 
-func ParseWithdrawAllTokenTypes(inst *lifinity_v2.Instruction, transaction *types.Transaction, index int) error {
+func ParseWithdrawAllTokenTypes(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types.Meta) error {
 	// remove liquidity
 	log.Logger.Info("ignore parse withdraw all token types", "program", lifinity_v2.ProgramName)
 	return nil
 }
 
 // Default
-func ParseDefault(inst *lifinity_v2.Instruction, transaction *types.Transaction, index int) error {
+func ParseDefault(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
 // Fault
-func ParseFault(inst *lifinity_v2.Instruction, transaction *types.Transaction, index int) error {
+func ParseFault(inst *lifinity_v2.Instruction, in *types.Instruction, meta *types.Meta) error {
 	panic("not supported")
 }

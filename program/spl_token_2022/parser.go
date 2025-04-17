@@ -3,11 +3,11 @@ package spl_token_2022
 import (
 	"errors"
 
-	"github.com/blockchain-develop/solana-parser/program"
-	"github.com/blockchain-develop/solana-parser/types"
 	ag_binary "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/token"
+	"github.com/solana-parser/program"
+	"github.com/solana-parser/types"
 )
 
 var (
@@ -15,7 +15,7 @@ var (
 	Parsers   = make(map[uint64]Parser, 0)
 )
 
-type Parser func(in *token.Instruction, transaction *types.Transaction, index int) error
+type Parser func(inst *token.Instruction, in *types.Instruction, meta *types.Meta) error
 
 func RegisterParser(id uint64, p Parser) {
 	Parsers[id] = p
@@ -31,8 +31,7 @@ func init() {
 	RegisterParser(uint64(token.Instruction_InitializeAccount3), ParseInitializeAccount3)
 }
 
-func ProgramParser(transaction *types.Transaction, index int) error {
-	in := transaction.Instructions[index]
+func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	dec := ag_binary.NewBorshDecoder(in.RawInstruction.DataBytes)
 	typeID, err := dec.ReadUint8()
 	if _, ok := Parsers[uint64(typeID)]; !ok {
@@ -47,17 +46,16 @@ func ProgramParser(transaction *types.Transaction, index int) error {
 	if !ok {
 		return errors.New("parser not found")
 	}
-	return parser(inst, transaction, index)
+	return parser(inst, in, meta)
 }
 
-func ParseTransfer(inst *token.Instruction, transaction *types.Transaction, index int) error {
+func ParseTransfer(inst *token.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*token.Transfer)
-	in := transaction.Instructions[index]
 	transfer := &types.Transfer{
 		From: inst1.GetSourceAccount().PublicKey,
 		To:   inst1.GetDestinationAccount().PublicKey,
 	}
-	mint := transaction.Meta.TokenAccounts[transfer.From]
+	mint := meta.TokenAccounts[transfer.From]
 	transfer.Mint = mint.Mint
 	if inst1.Amount != nil {
 		transfer.Amount = *inst1.Amount
@@ -66,14 +64,13 @@ func ParseTransfer(inst *token.Instruction, transaction *types.Transaction, inde
 	return nil
 }
 
-func ParseTransferChecked(inst *token.Instruction, transaction *types.Transaction, index int) error {
+func ParseTransferChecked(inst *token.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*token.TransferChecked)
-	in := transaction.Instructions[index]
 	transfer := &types.Transfer{
 		From: inst1.GetSourceAccount().PublicKey,
 		To:   inst1.GetDestinationAccount().PublicKey,
 	}
-	mint := transaction.Meta.TokenAccounts[transfer.From]
+	mint := meta.TokenAccounts[transfer.From]
 	transfer.Mint = mint.Mint
 	if inst1.Amount != nil {
 		transfer.Amount = *inst1.Amount
@@ -82,9 +79,8 @@ func ParseTransferChecked(inst *token.Instruction, transaction *types.Transactio
 	return nil
 }
 
-func ParseMint(inst *token.Instruction, transaction *types.Transaction, index int) error {
+func ParseMint(inst *token.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*token.MintTo)
-	in := transaction.Instructions[index]
 	mintTo := &types.MintTo{
 		Mint:    inst1.GetMintAccount().PublicKey,
 		Account: inst1.GetDestinationAccount().PublicKey,
@@ -96,9 +92,8 @@ func ParseMint(inst *token.Instruction, transaction *types.Transaction, index in
 	return nil
 }
 
-func ParseBurn(inst *token.Instruction, transaction *types.Transaction, index int) error {
+func ParseBurn(inst *token.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*token.Burn)
-	in := transaction.Instructions[index]
 	burn := &types.Burn{
 		Mint:    inst1.GetMintAccount().PublicKey,
 		Account: inst1.GetSourceAccount().PublicKey,
@@ -110,16 +105,15 @@ func ParseBurn(inst *token.Instruction, transaction *types.Transaction, index in
 	return nil
 }
 
-func ParseInitializeAccount(inst *token.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializeAccount(inst *token.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*token.InitializeAccount)
-	in := transaction.Instructions[index]
 	init := &types.Initialize{
 		Mint:    inst1.GetMintAccount().PublicKey,
 		Account: inst1.GetAccount().PublicKey,
 		Owner:   inst1.GetOwnerAccount().PublicKey,
 	}
 	// update token owner & mint by spl token instructions
-	transaction.Meta.TokenAccounts[init.Account] = &types.TokenAccount{
+	meta.TokenAccounts[init.Account] = &types.TokenAccount{
 		Owner:     &init.Owner,
 		ProgramId: &in.RawInstruction.ProgID,
 		Mint:      init.Mint,
@@ -128,9 +122,8 @@ func ParseInitializeAccount(inst *token.Instruction, transaction *types.Transact
 	return nil
 }
 
-func ParseInitializeAccount3(inst *token.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializeAccount3(inst *token.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*token.InitializeAccount3)
-	in := transaction.Instructions[index]
 	init := &types.Initialize{
 		Mint:    inst1.GetMintAccount().PublicKey,
 		Account: inst1.GetAccount().PublicKey,
@@ -139,7 +132,7 @@ func ParseInitializeAccount3(inst *token.Instruction, transaction *types.Transac
 		init.Owner = *inst1.Owner
 	}
 	// update token owner & mint by spl token instructions
-	transaction.Meta.TokenAccounts[init.Account] = &types.TokenAccount{
+	meta.TokenAccounts[init.Account] = &types.TokenAccount{
 		Owner:     &init.Owner,
 		ProgramId: &in.RawInstruction.ProgID,
 		Mint:      init.Mint,

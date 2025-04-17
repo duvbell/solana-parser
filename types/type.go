@@ -17,12 +17,14 @@ type MintAccount struct {
 }
 
 type Meta struct {
-	Accounts      []*solana.AccountMeta
-	TokenAccounts map[solana.PublicKey]*TokenAccount
-	MintAccounts  map[solana.PublicKey]*MintAccount
-	PreBalance    map[solana.PublicKey]decimal.Decimal
-	PostBalance   map[solana.PublicKey]decimal.Decimal
-	ErrorMessage  []byte
+	Accounts         []*solana.AccountMeta
+	TokenAccounts    map[solana.PublicKey]*TokenAccount
+	MintAccounts     map[solana.PublicKey]*MintAccount
+	TokenPreBalance  map[solana.PublicKey]decimal.Decimal
+	TokenPostBalance map[solana.PublicKey]decimal.Decimal
+	SolPreBalance    map[solana.PublicKey]decimal.Decimal
+	SolPostBalance   map[solana.PublicKey]decimal.Decimal
+	ErrorMessage     []byte
 }
 
 type Block struct {
@@ -106,4 +108,86 @@ type Instruction struct {
 	ParsedInstruction interface{}
 	Event             []interface{}
 	Receipt           []interface{}
+	Children          []*Instruction
+}
+
+func (in *Instruction) FindNextTransferByTo(to solana.PublicKey) *Transfer {
+	for _, item := range in.Children {
+		if len(item.Event) != 1 {
+			continue
+		}
+		switch item.Event[0].(type) {
+		case *Transfer:
+			transfer := item.Event[0].(*Transfer)
+			if transfer.To == to {
+				return transfer
+			}
+		}
+	}
+	return nil
+}
+
+func (in *Instruction) FindNextTransferByFrom(from solana.PublicKey) *Transfer {
+	for _, item := range in.Children {
+		if len(item.Event) != 1 {
+			continue
+		}
+		switch item.Event[0].(type) {
+		case *Transfer:
+			transfer := item.Event[0].(*Transfer)
+			if transfer.From == from {
+				return transfer
+			}
+		}
+	}
+	return nil
+}
+
+func (in *Instruction) FindChildrenMintTos() []*MintTo {
+	mintTos := make([]*MintTo, 0)
+	for _, item := range in.Children {
+		if len(item.Event) != 1 {
+			continue
+		}
+		switch item.Event[0].(type) {
+		case *MintTo:
+			mintTos = append(mintTos, item.Event[0].(*MintTo))
+		}
+	}
+	return mintTos
+}
+
+func (in *Instruction) FindNextMintTo(to solana.PublicKey) *MintTo {
+	for _, item := range in.Children {
+		if len(item.Event) != 1 {
+			continue
+		}
+		switch item.Event[0].(type) {
+		case *MintTo:
+			mintTo := item.Event[0].(*MintTo)
+			if mintTo.Account == to {
+				return mintTo
+			}
+		}
+	}
+	return nil
+}
+
+func (in *Instruction) FindChildrenPrograms(id solana.PublicKey) []*Instruction {
+	instructions := make([]*Instruction, 0)
+	for _, item := range in.Children {
+		if item.RawInstruction.ProgID == id {
+			instructions = append(instructions, item)
+		}
+	}
+	return instructions
+}
+
+func (in *Instruction) FindNextProgram(id solana.PublicKey) *Instruction {
+	for _, item := range in.Children {
+		if item.RawInstruction.ProgID == id {
+			return item
+		}
+	}
+	return nil
 }

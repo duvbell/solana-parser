@@ -3,17 +3,17 @@ package meteora_pools
 import (
 	"errors"
 
-	"github.com/blockchain-develop/solana-parser/log"
-	"github.com/blockchain-develop/solana-parser/program"
-	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go/programs/meteora_pools"
+	"github.com/solana-parser/log"
+	"github.com/solana-parser/program"
+	"github.com/solana-parser/types"
 )
 
 var (
 	Parsers = make(map[uint64]Parser, 0)
 )
 
-type Parser func(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error
+type Parser func(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error
 
 func RegisterParser(id uint64, p Parser) {
 	Parsers[id] = p
@@ -49,8 +49,7 @@ func init() {
 	RegisterParser(uint64(meteora_pools.Instruction_PartnerClaimFee.Uint32()), ParsePartnerClaimFee)
 }
 
-func ProgramParser(transaction *types.Transaction, index int) error {
-	in := transaction.Instructions[index]
+func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	inst, err := meteora_pools.DecodeInstruction(in.RawInstruction.AccountValues, in.RawInstruction.DataBytes)
 	if err != nil {
 		return err
@@ -60,179 +59,174 @@ func ProgramParser(transaction *types.Transaction, index int) error {
 	if !ok {
 		return errors.New("parser not found")
 	}
-	return parser(inst, transaction, index)
+	return parser(inst, in, meta)
 }
 
-func ParseInitializePermissionedPool(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializePermissionedPool(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	log.Logger.Info("ignore parse initialize permissioned pool", "program", meteora_pools.ProgramName)
 	return nil
 }
 
-func ParseInitializePermissionlessPool(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializePermissionlessPool(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	log.Logger.Info("ignore parse initialize permissionless pool", "program", meteora_pools.ProgramName)
 	return nil
 }
 
-func ParseInitializePermissionlessPoolWithFeeTier(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializePermissionlessPoolWithFeeTier(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	log.Logger.Info("ignore parse initialize permissionless pool with feeTier", "program", meteora_pools.ProgramName)
 	return nil
 }
 
-func ParseEnableOrDisablePool(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseEnableOrDisablePool(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
-func ParseSwap(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseSwap(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*meteora_pools.Swap)
-	in := transaction.Instructions[index]
 	swap := &types.Swap{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	swap.InputTransfer = transaction.FindNextTransferByFrom(index, inst1.GetUserSourceTokenAccount().PublicKey)
-	swap.OutputTransfer = transaction.FindNextTransferByTo(index, inst1.GetUserDestinationTokenAccount().PublicKey)
+	swap.InputTransfer = in.FindNextTransferByFrom(inst1.GetUserSourceTokenAccount().PublicKey)
+	swap.OutputTransfer = in.FindNextTransferByTo(inst1.GetUserDestinationTokenAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }
 
-func ParseRemoveLiquiditySingleSide(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseRemoveLiquiditySingleSide(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	log.Logger.Info("ignore parse remove liquidity single side", "program", meteora_pools.ProgramName)
 	return nil
 }
 
-func ParseAddImbalanceLiquidity(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseAddImbalanceLiquidity(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	// log.Logger.Info("ignore parse add imbalance liquidity", "program", meteora_pools.ProgramName)
 	inst1 := inst.Impl.(*meteora_pools.AddImbalanceLiquidity)
-	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = transaction.FindNextTransferByTo(index, inst1.GetATokenVaultAccount().PublicKey)
-	addLiquidity.TokenBTransfer = transaction.FindNextTransferByTo(index, inst1.GetBTokenVaultAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetATokenVaultAccount().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetBTokenVaultAccount().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	return nil
 }
 
-func ParseRemoveBalanceLiquidity(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseRemoveBalanceLiquidity(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*meteora_pools.RemoveBalanceLiquidity)
-	in := transaction.Instructions[index]
 	removeLiquidity := &types.RemoveLiquidity{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	removeLiquidity.TokenATransfer = transaction.FindNextTransferByFrom(index, inst1.GetATokenVaultAccount().PublicKey)
-	removeLiquidity.TokenBTransfer = transaction.FindNextTransferByFrom(index, inst1.GetBTokenVaultAccount().PublicKey)
+	removeLiquidity.TokenATransfer = in.FindNextTransferByFrom(inst1.GetATokenVaultAccount().PublicKey)
+	removeLiquidity.TokenBTransfer = in.FindNextTransferByFrom(inst1.GetBTokenVaultAccount().PublicKey)
 	in.Event = []interface{}{removeLiquidity}
 	return nil
 }
 
-func ParseAddBalanceLiquidity(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseAddBalanceLiquidity(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*meteora_pools.AddBalanceLiquidity)
-	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = transaction.FindNextTransferByTo(index, inst1.GetATokenVaultAccount().PublicKey)
-	addLiquidity.TokenBTransfer = transaction.FindNextTransferByTo(index, inst1.GetBTokenVaultAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetATokenVaultAccount().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetBTokenVaultAccount().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	return nil
 }
 
-func ParseSetPoolFees(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseSetPoolFees(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
-func ParseOverrideCurveParam(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseOverrideCurveParam(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
-func ParseGetPoolInfo(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseGetPoolInfo(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
-func ParseBootstrapLiquidity(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseBootstrapLiquidity(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	log.Logger.Info("ignore parse bootstrap liquidity", "program", meteora_pools.ProgramName)
 	return nil
 }
 
-func ParseCreateMintMetadata(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseCreateMintMetadata(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
-func ParseCreateLockEscrow(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseCreateLockEscrow(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
-func ParseLock(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseLock(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
-func ParseClaimFee(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseClaimFee(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
-func ParseCreateConfig(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseCreateConfig(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
-func ParseCloseConfig(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseCloseConfig(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
-func ParseInitializePermissionlessConstantProductPoolWithConfig(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializePermissionlessConstantProductPoolWithConfig(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	log.Logger.Info("ignore parse initialize permissionless constant_product pool with config", "program", meteora_pools.ProgramName)
 	return nil
 }
 
-func ParseInitializePermissionlessConstantProductPoolWithConfig2(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializePermissionlessConstantProductPoolWithConfig2(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	// todo, add liquidity
 	// find two deposit
 	inst1 := inst.Impl.(*meteora_pools.InitializePermissionlessConstantProductPoolWithConfig2)
-	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetPayerAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = transaction.FindNextTransferByTo(index, inst1.GetATokenVaultAccount().PublicKey)
-	addLiquidity.TokenBTransfer = transaction.FindNextTransferByTo(index, inst1.GetBTokenVaultAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetATokenVaultAccount().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetBTokenVaultAccount().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	return nil
 }
 
-func ParseInitializeCustomizablePermissionlessConstantProductPool(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializeCustomizablePermissionlessConstantProductPool(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	log.Logger.Info("ignore parse initialize customizable permissionless constant_product pool", "program", meteora_pools.ProgramName)
 	return nil
 }
 
-func ParseUpdateActivationPoint(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseUpdateActivationPoint(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
-func ParseWithdrawProtocolFees(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseWithdrawProtocolFees(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
-func ParseSetWhitelistedVault(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseSetWhitelistedVault(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
-func ParsePartnerClaimFee(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParsePartnerClaimFee(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
 // Default
-func ParseDefault(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseDefault(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
 // Fault
-func ParseFault(inst *meteora_pools.Instruction, transaction *types.Transaction, index int) error {
+func ParseFault(inst *meteora_pools.Instruction, in *types.Instruction, meta *types.Meta) error {
 	panic("not supported")
 }

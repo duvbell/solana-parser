@@ -3,17 +3,17 @@ package raydium_cp
 import (
 	"errors"
 
-	"github.com/blockchain-develop/solana-parser/program"
-	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/raydium_cp"
+	"github.com/solana-parser/program"
+	"github.com/solana-parser/types"
 )
 
 var (
 	Parsers = make(map[uint64]Parser, 0)
 )
 
-type Parser func(inst *raydium_cp.Instruction, transaction *types.Transaction, index int) error
+type Parser func(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) error
 
 func RegisterParser(id uint64, p Parser) {
 	Parsers[id] = p
@@ -33,8 +33,7 @@ func init() {
 	RegisterParser(uint64(raydium_cp.Instruction_SwapBaseOutput.Uint32()), ParseSwapBaseOutput)
 }
 
-func ProgramParser(transaction *types.Transaction, index int) error {
-	in := transaction.Instructions[index]
+func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	inst, err := raydium_cp.DecodeInstruction(in.RawInstruction.AccountValues, in.RawInstruction.DataBytes)
 	if err != nil {
 		return err
@@ -44,28 +43,27 @@ func ProgramParser(transaction *types.Transaction, index int) error {
 	if !ok {
 		return errors.New("parser not found")
 	}
-	return parser(inst, transaction, index)
+	return parser(inst, in, meta)
 }
 
-func ParseCreateAmmConfig(inst *raydium_cp.Instruction, transaction *types.Transaction, index int) error {
+func ParseCreateAmmConfig(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseUpdateAmmConfig(inst *raydium_cp.Instruction, transaction *types.Transaction, index int) error {
+func ParseUpdateAmmConfig(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseUpdatePoolStatus(inst *raydium_cp.Instruction, transaction *types.Transaction, index int) error {
+func ParseUpdatePoolStatus(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseCollectProtocolFee(inst *raydium_cp.Instruction, transaction *types.Transaction, index int) error {
+func ParseCollectProtocolFee(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseCollectFundFee(inst *raydium_cp.Instruction, transaction *types.Transaction, index int) error {
+func ParseCollectFundFee(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseInitialize(inst *raydium_cp.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitialize(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) error {
 	// log.Logger.Info("ignore parse initialize", "program", raydium_cp.ProgramName)
 	inst1 := inst.Impl.(*raydium_cp.Initialize)
-	in := transaction.Instructions[index]
 	createPool := &types.CreatePool{
 		Dex:     in.RawInstruction.ProgID,
 		Pool:    inst1.GetPoolStateAccount().PublicKey,
@@ -82,70 +80,66 @@ func ParseInitialize(inst *raydium_cp.Instruction, transaction *types.Transactio
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetCreatorAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = transaction.FindNextTransferByTo(index, inst1.GetToken0VaultAccount().PublicKey)
-	addLiquidity.TokenBTransfer = transaction.FindNextTransferByTo(index, inst1.GetToken1VaultAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetToken0VaultAccount().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetToken1VaultAccount().PublicKey)
 	in.Event = []interface{}{createPool, addLiquidity}
 	return nil
 }
-func ParseDeposit(inst *raydium_cp.Instruction, transaction *types.Transaction, index int) error {
+func ParseDeposit(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*raydium_cp.Deposit)
-	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetOwnerAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = transaction.FindNextTransferByTo(index, inst1.GetToken0VaultAccount().PublicKey)
-	addLiquidity.TokenBTransfer = transaction.FindNextTransferByTo(index, inst1.GetToken1VaultAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetToken0VaultAccount().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetToken1VaultAccount().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	return nil
 }
-func ParseWithdraw(inst *raydium_cp.Instruction, transaction *types.Transaction, index int) error {
+func ParseWithdraw(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*raydium_cp.Withdraw)
-	in := transaction.Instructions[index]
 	removeLiquidity := &types.RemoveLiquidity{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetOwnerAccount().PublicKey,
 	}
-	removeLiquidity.TokenATransfer = transaction.FindNextTransferByFrom(index, inst1.GetToken0VaultAccount().PublicKey)
-	removeLiquidity.TokenBTransfer = transaction.FindNextTransferByFrom(index, inst1.GetToken1VaultAccount().PublicKey)
+	removeLiquidity.TokenATransfer = in.FindNextTransferByFrom(inst1.GetToken0VaultAccount().PublicKey)
+	removeLiquidity.TokenBTransfer = in.FindNextTransferByFrom(inst1.GetToken1VaultAccount().PublicKey)
 	in.Event = []interface{}{removeLiquidity}
 	return nil
 }
-func ParseSwapBaseInput(inst *raydium_cp.Instruction, transaction *types.Transaction, index int) error {
+func ParseSwapBaseInput(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*raydium_cp.SwapBaseInput)
-	in := transaction.Instructions[index]
 	swap := &types.Swap{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetPayerAccount().PublicKey,
 	}
-	swap.InputTransfer = transaction.FindNextTransferByTo(index, inst1.GetInputVaultAccount().PublicKey)
-	swap.OutputTransfer = transaction.FindNextTransferByTo(index, inst1.GetOutputVaultAccount().PublicKey)
+	swap.InputTransfer = in.FindNextTransferByTo(inst1.GetInputVaultAccount().PublicKey)
+	swap.OutputTransfer = in.FindNextTransferByTo(inst1.GetOutputVaultAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }
-func ParseSwapBaseOutput(inst *raydium_cp.Instruction, transaction *types.Transaction, index int) error {
+func ParseSwapBaseOutput(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*raydium_cp.SwapBaseOutput)
-	in := transaction.Instructions[index]
 	swap := &types.Swap{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetPayerAccount().PublicKey,
 	}
-	swap.InputTransfer = transaction.FindNextTransferByTo(index, inst1.GetInputVaultAccount().PublicKey)
-	swap.OutputTransfer = transaction.FindNextTransferByTo(index, inst1.GetOutputVaultAccount().PublicKey)
+	swap.InputTransfer = in.FindNextTransferByTo(inst1.GetInputVaultAccount().PublicKey)
+	swap.OutputTransfer = in.FindNextTransferByTo(inst1.GetOutputVaultAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }
 
 // Default
-func ParseDefault(inst *raydium_cp.Instruction, transaction *types.Transaction, index int) error {
+func ParseDefault(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
 // Fault
-func ParseFault(inst *raydium_cp.Instruction, transaction *types.Transaction, index int) error {
+func ParseFault(inst *raydium_cp.Instruction, in *types.Instruction, meta *types.Meta) error {
 	panic("not supported")
 }

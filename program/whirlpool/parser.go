@@ -2,19 +2,18 @@ package whirlpool
 
 import (
 	"errors"
-
-	"github.com/blockchain-develop/solana-parser/program"
-	"github.com/blockchain-develop/solana-parser/types"
 	ag_binary "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/whirlpool"
+	"github.com/solana-parser/program"
+	"github.com/solana-parser/types"
 )
 
 var (
 	Parsers = make(map[uint64]Parser, 0)
 )
 
-type Parser func(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error
+type Parser func(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error
 
 func RegisterParser(id uint64, p Parser) {
 	Parsers[id] = p
@@ -75,8 +74,7 @@ func init() {
 	RegisterParser(uint64(whirlpool.Instruction_DeleteTokenBadge.Uint32()), ParseDeleteTokenBadge)
 }
 
-func ProgramParser(transaction *types.Transaction, index int) error {
-	in := transaction.Instructions[index]
+func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	dec := ag_binary.NewBorshDecoder(in.RawInstruction.DataBytes)
 	typeID, err := dec.ReadTypeID()
 	if typeID == Instruction_ClosePositionWithTokenExtensions || typeID == Instruction_OpenPositionWithTokenExtensions {
@@ -91,16 +89,15 @@ func ProgramParser(transaction *types.Transaction, index int) error {
 	if !ok {
 		return errors.New("parser not found")
 	}
-	return parser(inst, transaction, index)
+	return parser(inst, in, meta)
 }
 
-func ParseInitializeConfig(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializeConfig(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseInitializePool(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializePool(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	// log.Logger.Info("ignore parse initialize pool", "program", whirlpool.ProgramName)
 	inst1 := inst.Impl.(*whirlpool.InitializePool)
-	in := transaction.Instructions[index]
 	createPool := &types.CreatePool{
 		Dex:     in.RawInstruction.ProgID,
 		Pool:    inst1.GetWhirlpoolAccount().PublicKey,
@@ -115,194 +112,187 @@ func ParseInitializePool(inst *whirlpool.Instruction, transaction *types.Transac
 	in.Event = []interface{}{createPool}
 	return nil
 }
-func ParseInitializeTickArray(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializeTickArray(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseInitializeFeeTier(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializeFeeTier(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseInitializeReward(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializeReward(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseSetRewardEmissions(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseSetRewardEmissions(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseOpenPosition(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseOpenPosition(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	// only create all accounts
 	// log.Logger.Info("ignore parse open position", "program", whirlpool.ProgramName)
 	return nil
 }
-func ParseOpenPositionWithMetadata(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseOpenPositionWithMetadata(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	// log.Logger.Info("ignore parse open position with metadata", "program", whirlpool.ProgramName)
 	return nil
 }
-func ParseIncreaseLiquidity(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseIncreaseLiquidity(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*whirlpool.IncreaseLiquidity)
-	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetWhirlpoolAccount().PublicKey,
 		User: inst1.GetPositionAuthorityAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = transaction.FindNextTransferByTo(index, inst1.GetTokenVaultAAccount().PublicKey)
-	addLiquidity.TokenBTransfer = transaction.FindNextTransferByTo(index, inst1.GetTokenVaultBAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetTokenVaultAAccount().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultBAccount().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	return nil
 }
-func ParseDecreaseLiquidity(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseDecreaseLiquidity(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*whirlpool.DecreaseLiquidity)
-	in := transaction.Instructions[index]
 	removeLiquidity := &types.RemoveLiquidity{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetWhirlpoolAccount().PublicKey,
 		User: inst1.GetPositionAuthorityAccount().PublicKey,
 	}
-	removeLiquidity.TokenATransfer = transaction.FindNextTransferByFrom(index, inst1.GetTokenVaultAAccount().PublicKey)
-	removeLiquidity.TokenBTransfer = transaction.FindNextTransferByFrom(index, inst1.GetTokenVaultBAccount().PublicKey)
+	removeLiquidity.TokenATransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultAAccount().PublicKey)
+	removeLiquidity.TokenBTransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultBAccount().PublicKey)
 	in.Event = []interface{}{removeLiquidity}
 	return nil
 }
-func ParseUpdateFeesAndRewards(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseUpdateFeesAndRewards(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseCollectFees(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseCollectFees(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseCollectReward(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseCollectReward(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseCollectProtocolFees(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseCollectProtocolFees(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseSwap(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseSwap(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*whirlpool.Swap)
-	in := transaction.Instructions[index]
 	swap := &types.Swap{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetWhirlpoolAccount().PublicKey,
 		User: inst1.GetTokenAuthorityAccount().PublicKey,
 	}
 	if *inst1.AToB {
-		swap.InputTransfer = transaction.FindNextTransferByTo(index, inst1.GetTokenVaultAAccount().PublicKey)
-		swap.OutputTransfer = transaction.FindNextTransferByFrom(index, inst1.GetTokenVaultBAccount().PublicKey)
+		swap.InputTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultAAccount().PublicKey)
+		swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultBAccount().PublicKey)
 	} else {
-		swap.InputTransfer = transaction.FindNextTransferByTo(index, inst1.GetTokenVaultBAccount().PublicKey)
-		swap.OutputTransfer = transaction.FindNextTransferByFrom(index, inst1.GetTokenVaultAAccount().PublicKey)
+		swap.InputTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultBAccount().PublicKey)
+		swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultAAccount().PublicKey)
 	}
 	in.Event = []interface{}{swap}
 	return nil
 }
-func ParseClosePosition(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseClosePosition(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	// close all accounts
 	return nil
 }
-func ParseSetDefaultFeeRate(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseSetDefaultFeeRate(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseSetDefaultProtocolFeeRate(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseSetDefaultProtocolFeeRate(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseSetFeeRate(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseSetFeeRate(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseSetProtocolFeeRate(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseSetProtocolFeeRate(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseSetFeeAuthority(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseSetFeeAuthority(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseSetCollectProtocolFeesAuthority(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseSetCollectProtocolFeesAuthority(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseSetRewardAuthority(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseSetRewardAuthority(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseSetRewardAuthorityBySuperAuthority(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseSetRewardAuthorityBySuperAuthority(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseSetRewardEmissionsSuperAuthority(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseSetRewardEmissionsSuperAuthority(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseTwoHopSwap(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseTwoHopSwap(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*whirlpool.TwoHopSwap)
-	in := transaction.Instructions[index]
 	swap := &types.Swap{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetWhirlpoolOneAccount().PublicKey,
 		User: inst1.GetTokenAuthorityAccount().PublicKey,
 	}
 	if *inst1.AToBOne {
-		swap.InputTransfer = transaction.FindNextTransferByTo(index, inst1.GetTokenVaultOneAAccount().PublicKey)
+		swap.InputTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultOneAAccount().PublicKey)
 	} else {
-		swap.InputTransfer = transaction.FindNextTransferByTo(index, inst1.GetTokenVaultOneBAccount().PublicKey)
+		swap.InputTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultOneBAccount().PublicKey)
 	}
 	if *inst1.AToBTwo {
-		swap.OutputTransfer = transaction.FindNextTransferByFrom(index, inst1.GetTokenVaultTwoBAccount().PublicKey)
+		swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultTwoBAccount().PublicKey)
 	} else {
-		swap.OutputTransfer = transaction.FindNextTransferByFrom(index, inst1.GetTokenVaultTwoAAccount().PublicKey)
+		swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultTwoAAccount().PublicKey)
 	}
 	in.Event = []interface{}{swap}
 	return nil
 }
-func ParseInitializePositionBundle(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializePositionBundle(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 	//log.Logger.Info("ignore parse initialize position bundle", "program", whirlpool.ProgramName)
 }
-func ParseInitializePositionBundleWithMetadata(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializePositionBundleWithMetadata(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 	//log.Logger.Info("ignore parse initialize position bundle", "program", whirlpool.ProgramName)
 }
-func ParseDeletePositionBundle(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseDeletePositionBundle(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 	//log.Logger.Info("ignore parse delete position bundle", "program", whirlpool.ProgramName)
 }
-func ParseOpenBundledPosition(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseOpenBundledPosition(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 	//log.Logger.Info("ignore parse open bundled position", "program", whirlpool.ProgramName)
 }
-func ParseCloseBundledPosition(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseCloseBundledPosition(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 	//log.Logger.Info("ignore parse close bundle position", "program", whirlpool.ProgramName)
 }
-func ParseCollectFeesV2(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseCollectFeesV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseCollectProtocolFeesV2(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseCollectProtocolFeesV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseCollectRewardV2(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseCollectRewardV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseDecreaseLiquidityV2(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseDecreaseLiquidityV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*whirlpool.DecreaseLiquidityV2)
-	in := transaction.Instructions[index]
 	removeLiquidity := &types.RemoveLiquidity{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetWhirlpoolAccount().PublicKey,
 		User: inst1.GetPositionAuthorityAccount().PublicKey,
 	}
-	removeLiquidity.TokenATransfer = transaction.FindNextTransferByFrom(index, inst1.GetTokenVaultAAccount().PublicKey)
-	removeLiquidity.TokenBTransfer = transaction.FindNextTransferByFrom(index, inst1.GetTokenVaultBAccount().PublicKey)
+	removeLiquidity.TokenATransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultAAccount().PublicKey)
+	removeLiquidity.TokenBTransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultBAccount().PublicKey)
 	in.Event = []interface{}{removeLiquidity}
 	return nil
 }
-func ParseIncreaseLiquidityV2(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseIncreaseLiquidityV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*whirlpool.IncreaseLiquidityV2)
-	in := transaction.Instructions[index]
 	addLiquidity := &types.AddLiquidity{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetWhirlpoolAccount().PublicKey,
 		User: inst1.GetPositionAuthorityAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = transaction.FindNextTransferByTo(index, inst1.GetTokenVaultAAccount().PublicKey)
-	addLiquidity.TokenBTransfer = transaction.FindNextTransferByTo(index, inst1.GetTokenVaultBAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetTokenVaultAAccount().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultBAccount().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	return nil
 }
-func ParseInitializePoolV2(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializePoolV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	// log.Logger.Info("ignore parse initialize pool v2", "program", whirlpool.ProgramName)
 	inst1 := inst.Impl.(*whirlpool.InitializePoolV2)
-	in := transaction.Instructions[index]
 	createPool := &types.CreatePool{
 		Dex:     in.RawInstruction.ProgID,
 		Pool:    inst1.GetWhirlpoolAccount().PublicKey,
@@ -317,68 +307,66 @@ func ParseInitializePoolV2(inst *whirlpool.Instruction, transaction *types.Trans
 	in.Event = []interface{}{createPool}
 	return nil
 }
-func ParseInitializeRewardV2(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializeRewardV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 	//log.Logger.Info("ignore parse initialize reward v2", "program", whirlpool.ProgramName)
 }
-func ParseSetRewardEmissionsV2(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseSetRewardEmissionsV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 	//log.Logger.Info("ignore parse set reward emissions v2", "program", whirlpool.ProgramName)
 }
-func ParseSwapV2(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseSwapV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*whirlpool.SwapV2)
-	in := transaction.Instructions[index]
 	swap := &types.Swap{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetWhirlpoolAccount().PublicKey,
 		User: inst1.GetTokenAuthorityAccount().PublicKey,
 	}
 	if *inst1.AToB {
-		swap.InputTransfer = transaction.FindNextTransferByTo(index, inst1.GetTokenVaultAAccount().PublicKey)
-		swap.OutputTransfer = transaction.FindNextTransferByFrom(index, inst1.GetTokenVaultBAccount().PublicKey)
+		swap.InputTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultAAccount().PublicKey)
+		swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultBAccount().PublicKey)
 	} else {
-		swap.InputTransfer = transaction.FindNextTransferByTo(index, inst1.GetTokenVaultBAccount().PublicKey)
-		swap.OutputTransfer = transaction.FindNextTransferByFrom(index, inst1.GetTokenVaultAAccount().PublicKey)
+		swap.InputTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultBAccount().PublicKey)
+		swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultAAccount().PublicKey)
 	}
 	in.Event = []interface{}{swap}
 	return nil
 }
-func ParseTwoHopSwapV2(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseTwoHopSwapV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*whirlpool.TwoHopSwapV2)
-	in := transaction.Instructions[index]
 	swap := &types.Swap{
 		Dex:  in.RawInstruction.ProgID,
 		Pool: inst1.GetWhirlpoolOneAccount().PublicKey,
 		User: inst1.GetTokenAuthorityAccount().PublicKey,
 	}
-	swap.InputTransfer = transaction.FindNextTransferByTo(index, inst1.GetTokenVaultOneInputAccount().PublicKey)
-	swap.InputTransfer = transaction.FindNextTransferByTo(index, inst1.GetTokenVaultTwoOutputAccount().PublicKey)
+	swap.InputTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultOneInputAccount().PublicKey)
+	swap.InputTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultTwoOutputAccount().PublicKey)
 
 	in.Event = []interface{}{swap}
 	return nil
 }
-func ParseInitializeConfigExtension(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializeConfigExtension(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseSetConfigExtensionAuthority(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseSetConfigExtensionAuthority(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseSetTokenBadgeAuthority(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseSetTokenBadgeAuthority(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseInitializeTokenBadge(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseInitializeTokenBadge(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
-func ParseDeleteTokenBadge(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseDeleteTokenBadge(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
 // Default
-func ParseDefault(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseDefault(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	return nil
 }
 
 // Fault
-func ParseFault(inst *whirlpool.Instruction, transaction *types.Transaction, index int) error {
+func ParseFault(inst *whirlpool.Instruction, in *types.Instruction, meta *types.Meta) error {
 	panic("not supported")
 }

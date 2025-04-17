@@ -4,11 +4,11 @@ import (
 	"encoding/binary"
 	"errors"
 
-	"github.com/blockchain-develop/solana-parser/program"
-	"github.com/blockchain-develop/solana-parser/types"
 	ag_binary "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/system"
+	"github.com/solana-parser/program"
+	"github.com/solana-parser/types"
 )
 
 var (
@@ -20,15 +20,14 @@ func RegisterParser(id uint64, p Parser) {
 	Parsers[id] = p
 }
 
-type Parser func(in *system.Instruction, transaction *types.Transaction, index int) error
+type Parser func(inst *system.Instruction, in *types.Instruction, meta *types.Meta) error
 
 func init() {
 	program.RegisterParser(programId, "system", program.Token, 0, ProgramParser)
 	RegisterParser(uint64(system.Instruction_Transfer), ParseTransfer)
 }
 
-func ProgramParser(transaction *types.Transaction, index int) error {
-	in := transaction.Instructions[index]
+func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	dec := ag_binary.NewBorshDecoder(in.RawInstruction.DataBytes)
 	typeID, err := dec.ReadUint32(binary.LittleEndian)
 	if _, ok := Parsers[uint64(typeID)]; !ok {
@@ -43,12 +42,11 @@ func ProgramParser(transaction *types.Transaction, index int) error {
 	if !ok {
 		return errors.New("parser not found")
 	}
-	return parser(inst, transaction, index)
+	return parser(inst, in, meta)
 }
 
-func ParseTransfer(inst *system.Instruction, transaction *types.Transaction, index int) error {
+func ParseTransfer(inst *system.Instruction, in *types.Instruction, meta *types.Meta) error {
 	inst1 := inst.Impl.(*system.Transfer)
-	in := transaction.Instructions[index]
 	transfer := &types.Transfer{
 		Mint: solana.MustPublicKeyFromBase58("11111111111111111111111111111111"),
 		From: inst1.GetFundingAccount().PublicKey,
