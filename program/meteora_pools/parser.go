@@ -3,10 +3,10 @@ package meteora_pools
 import (
 	"errors"
 
+	"github.com/blockchain-develop/solana-parser/log"
+	"github.com/blockchain-develop/solana-parser/program"
+	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go/programs/meteora_pools"
-	"github.com/solana-parser/log"
-	"github.com/solana-parser/program"
-	"github.com/solana-parser/types"
 )
 
 var (

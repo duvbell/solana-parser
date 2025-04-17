@@ -3,10 +3,10 @@ package raydium_cp
 import (
 	"errors"
 
+	"github.com/blockchain-develop/solana-parser/program"
+	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/raydium_cp"
-	"github.com/solana-parser/program"
-	"github.com/solana-parser/types"
 )
 
 var (

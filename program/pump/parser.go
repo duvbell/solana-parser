@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"errors"
 
+	"github.com/blockchain-develop/solana-parser/log"
+	"github.com/blockchain-develop/solana-parser/program"
+	"github.com/blockchain-develop/solana-parser/types"
 	ag_binary "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go/programs/pumpfun"
-	"github.com/solana-parser/log"
-	"github.com/solana-parser/program"
-	"github.com/solana-parser/types"
 )
 
 var (

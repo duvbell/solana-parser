@@ -3,11 +3,11 @@ package spl_token_2022
 import (
 	"errors"
 
+	"github.com/blockchain-develop/solana-parser/program"
+	"github.com/blockchain-develop/solana-parser/types"
 	ag_binary "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/token"
-	"github.com/solana-parser/program"
-	"github.com/solana-parser/types"
 )
 
 var (

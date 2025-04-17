@@ -1,8 +1,8 @@
 package program
 
 import (
+	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go"
-	"github.com/solana-parser/types"
 )
 
 var (

@@ -3,10 +3,10 @@ package phoenix_v1
 import (
 	"errors"
 
+	"github.com/blockchain-develop/solana-parser/log"
+	"github.com/blockchain-develop/solana-parser/program"
+	"github.com/blockchain-develop/solana-parser/types"
 	"github.com/gagliardetto/solana-go/programs/phoenix_v1"
-	"github.com/solana-parser/log"
-	"github.com/solana-parser/program"
-	"github.com/solana-parser/types"
 )
 
 var (

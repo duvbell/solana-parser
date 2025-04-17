@@ -4,11 +4,11 @@ import (
 	"encoding/binary"
 	"errors"
 
+	"github.com/blockchain-develop/solana-parser/program"
+	"github.com/blockchain-develop/solana-parser/types"
 	ag_binary "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/programs/system"
-	"github.com/solana-parser/program"
-	"github.com/solana-parser/types"
 )
 
 var (

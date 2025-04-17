@@ -3,9 +3,9 @@ package obricv2
 import (
 	"errors"
 
+	"github.com/blockchain-develop/solana-parser/types"
 	ag_binary "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go/programs/obric_v2"
-	"github.com/solana-parser/types"
 )
 
 var (
