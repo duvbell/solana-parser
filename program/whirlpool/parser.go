@@ -140,8 +140,8 @@ func ParseIncreaseLiquidity(inst *whirlpool.Instruction, in *types.Instruction, 
 		Pool: inst1.GetWhirlpoolAccount().PublicKey,
 		User: inst1.GetPositionAuthorityAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetTokenVaultAAccount().PublicKey)
-	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultBAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindChildTransferByTo(inst1.GetTokenVaultAAccount().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindChildTransferByTo(inst1.GetTokenVaultBAccount().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	return nil
 }
@@ -152,8 +152,8 @@ func ParseDecreaseLiquidity(inst *whirlpool.Instruction, in *types.Instruction, 
 		Pool: inst1.GetWhirlpoolAccount().PublicKey,
 		User: inst1.GetPositionAuthorityAccount().PublicKey,
 	}
-	removeLiquidity.TokenATransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultAAccount().PublicKey)
-	removeLiquidity.TokenBTransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultBAccount().PublicKey)
+	removeLiquidity.TokenATransfer = in.FindChildTransferByFrom(inst1.GetTokenVaultAAccount().PublicKey)
+	removeLiquidity.TokenBTransfer = in.FindChildTransferByFrom(inst1.GetTokenVaultBAccount().PublicKey)
 	in.Event = []interface{}{removeLiquidity}
 	return nil
 }
@@ -177,11 +177,11 @@ func ParseSwap(inst *whirlpool.Instruction, in *types.Instruction, meta *types.M
 		User: inst1.GetTokenAuthorityAccount().PublicKey,
 	}
 	if *inst1.AToB {
-		swap.InputTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultAAccount().PublicKey)
-		swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultBAccount().PublicKey)
+		swap.InputTransfer = in.FindChildTransferByTo(inst1.GetTokenVaultAAccount().PublicKey)
+		swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetTokenVaultBAccount().PublicKey)
 	} else {
-		swap.InputTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultBAccount().PublicKey)
-		swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultAAccount().PublicKey)
+		swap.InputTransfer = in.FindChildTransferByTo(inst1.GetTokenVaultBAccount().PublicKey)
+		swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetTokenVaultAAccount().PublicKey)
 	}
 	in.Event = []interface{}{swap}
 	return nil
@@ -225,14 +225,14 @@ func ParseTwoHopSwap(inst *whirlpool.Instruction, in *types.Instruction, meta *t
 		User: inst1.GetTokenAuthorityAccount().PublicKey,
 	}
 	if *inst1.AToBOne {
-		swap.InputTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultOneAAccount().PublicKey)
+		swap.InputTransfer = in.FindChildTransferByTo(inst1.GetTokenVaultOneAAccount().PublicKey)
 	} else {
-		swap.InputTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultOneBAccount().PublicKey)
+		swap.InputTransfer = in.FindChildTransferByTo(inst1.GetTokenVaultOneBAccount().PublicKey)
 	}
 	if *inst1.AToBTwo {
-		swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultTwoBAccount().PublicKey)
+		swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetTokenVaultTwoBAccount().PublicKey)
 	} else {
-		swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultTwoAAccount().PublicKey)
+		swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetTokenVaultTwoAAccount().PublicKey)
 	}
 	in.Event = []interface{}{swap}
 	return nil
@@ -273,8 +273,8 @@ func ParseDecreaseLiquidityV2(inst *whirlpool.Instruction, in *types.Instruction
 		Pool: inst1.GetWhirlpoolAccount().PublicKey,
 		User: inst1.GetPositionAuthorityAccount().PublicKey,
 	}
-	removeLiquidity.TokenATransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultAAccount().PublicKey)
-	removeLiquidity.TokenBTransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultBAccount().PublicKey)
+	removeLiquidity.TokenATransfer = in.FindChildTransferByFrom(inst1.GetTokenVaultAAccount().PublicKey)
+	removeLiquidity.TokenBTransfer = in.FindChildTransferByFrom(inst1.GetTokenVaultBAccount().PublicKey)
 	in.Event = []interface{}{removeLiquidity}
 	return nil
 }
@@ -285,8 +285,8 @@ func ParseIncreaseLiquidityV2(inst *whirlpool.Instruction, in *types.Instruction
 		Pool: inst1.GetWhirlpoolAccount().PublicKey,
 		User: inst1.GetPositionAuthorityAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetTokenVaultAAccount().PublicKey)
-	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultBAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindChildTransferByTo(inst1.GetTokenVaultAAccount().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindChildTransferByTo(inst1.GetTokenVaultBAccount().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	return nil
 }
@@ -323,11 +323,11 @@ func ParseSwapV2(inst *whirlpool.Instruction, in *types.Instruction, meta *types
 		User: inst1.GetTokenAuthorityAccount().PublicKey,
 	}
 	if *inst1.AToB {
-		swap.InputTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultAAccount().PublicKey)
-		swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultBAccount().PublicKey)
+		swap.InputTransfer = in.FindChildTransferByTo(inst1.GetTokenVaultAAccount().PublicKey)
+		swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetTokenVaultBAccount().PublicKey)
 	} else {
-		swap.InputTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultBAccount().PublicKey)
-		swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetTokenVaultAAccount().PublicKey)
+		swap.InputTransfer = in.FindChildTransferByTo(inst1.GetTokenVaultBAccount().PublicKey)
+		swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetTokenVaultAAccount().PublicKey)
 	}
 	in.Event = []interface{}{swap}
 	return nil
@@ -339,8 +339,8 @@ func ParseTwoHopSwapV2(inst *whirlpool.Instruction, in *types.Instruction, meta 
 		Pool: inst1.GetWhirlpoolOneAccount().PublicKey,
 		User: inst1.GetTokenAuthorityAccount().PublicKey,
 	}
-	swap.InputTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultOneInputAccount().PublicKey)
-	swap.InputTransfer = in.FindNextTransferByTo(inst1.GetTokenVaultTwoOutputAccount().PublicKey)
+	swap.InputTransfer = in.FindChildTransferByTo(inst1.GetTokenVaultOneInputAccount().PublicKey)
+	swap.InputTransfer = in.FindChildTransferByTo(inst1.GetTokenVaultTwoOutputAccount().PublicKey)
 
 	in.Event = []interface{}{swap}
 	return nil

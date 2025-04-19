@@ -71,16 +71,16 @@ func ParseSwap(inst *phoenix_v1.Instruction, in *types.Instruction, meta *types.
 		Pool: inst1.GetMarketAccount().PublicKey,
 		User: inst1.GetTraderAccount().PublicKey,
 	}
-	if transfer := in.FindNextTransferByTo(inst1.GetBaseVaultAccount().PublicKey); transfer != nil {
+	if transfer := in.FindChildTransferByTo(inst1.GetBaseVaultAccount().PublicKey); transfer != nil {
 		swap.InputTransfer = transfer
 	}
-	if transfer := in.FindNextTransferByTo(inst1.GetQuoteVaultAccount().PublicKey); transfer != nil {
+	if transfer := in.FindChildTransferByTo(inst1.GetQuoteVaultAccount().PublicKey); transfer != nil {
 		swap.InputTransfer = transfer
 	}
-	if transfer := in.FindNextTransferByFrom(inst1.GetBaseVaultAccount().PublicKey); transfer != nil {
+	if transfer := in.FindChildTransferByFrom(inst1.GetBaseVaultAccount().PublicKey); transfer != nil {
 		swap.OutputTransfer = transfer
 	}
-	if transfer := in.FindNextTransferByFrom(inst1.GetQuoteVaultAccount().PublicKey); transfer != nil {
+	if transfer := in.FindChildTransferByFrom(inst1.GetQuoteVaultAccount().PublicKey); transfer != nil {
 		swap.OutputTransfer = transfer
 	}
 	in.Event = []interface{}{swap}

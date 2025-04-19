@@ -74,7 +74,7 @@ func ParseDeposit(inst *stable_swap.Instruction, in *types.Instruction, meta *ty
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetVaultTokenAAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindChildTransferByTo(inst1.GetVaultTokenAAccount().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	return nil
 }
@@ -101,8 +101,8 @@ func ParseSwap(inst *stable_swap.Instruction, in *types.Instruction, meta *types
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	swap.InputTransfer = in.FindNextTransferByTo(inst1.GetUserTokenInAccount().PublicKey)
-	swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetUserTokenOutAccount().PublicKey)
+	swap.InputTransfer = in.FindChildTransferByTo(inst1.GetUserTokenInAccount().PublicKey)
+	swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetUserTokenOutAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }
@@ -113,8 +113,8 @@ func ParseSwapV2(inst *stable_swap.Instruction, in *types.Instruction, meta *typ
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	swap.InputTransfer = in.FindNextTransferByTo(inst1.GetUserTokenInAccount().PublicKey)
-	swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetUserTokenOutAccount().PublicKey)
+	swap.InputTransfer = in.FindChildTransferByTo(inst1.GetUserTokenInAccount().PublicKey)
+	swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetUserTokenOutAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }
@@ -131,7 +131,7 @@ func ParseWithdraw(inst *stable_swap.Instruction, in *types.Instruction, meta *t
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	removeLiquidity.TokenATransfer = in.FindNextTransferByFrom(inst1.GetVaultTokenAAccount().PublicKey)
+	removeLiquidity.TokenATransfer = in.FindChildTransferByFrom(inst1.GetVaultTokenAAccount().PublicKey)
 	in.Event = []interface{}{removeLiquidity}
 	// log.Logger.Info("ignore parse withdraw", "program", stable_swap.ProgramName)
 	return nil

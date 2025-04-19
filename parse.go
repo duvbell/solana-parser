@@ -47,6 +47,8 @@ func ParseBlock(slot uint64, b *rpc.GetBlockResult) *types.Block {
 			// no instruction
 			continue
 		}
+		myTx.Slot = block.Slot
+		myTx.Time = block.Time
 		myTxs = append(myTxs, myTx)
 	}
 	block.Transaction = myTxs

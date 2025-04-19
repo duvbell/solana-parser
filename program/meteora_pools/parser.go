@@ -88,8 +88,8 @@ func ParseSwap(inst *meteora_pools.Instruction, in *types.Instruction, meta *typ
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	swap.InputTransfer = in.FindNextTransferByFrom(inst1.GetUserSourceTokenAccount().PublicKey)
-	swap.OutputTransfer = in.FindNextTransferByTo(inst1.GetUserDestinationTokenAccount().PublicKey)
+	swap.InputTransfer = in.FindChildTransferByFrom(inst1.GetUserSourceTokenAccount().PublicKey)
+	swap.OutputTransfer = in.FindChildTransferByTo(inst1.GetUserDestinationTokenAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }
@@ -107,8 +107,8 @@ func ParseAddImbalanceLiquidity(inst *meteora_pools.Instruction, in *types.Instr
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetATokenVaultAccount().PublicKey)
-	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetBTokenVaultAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindChildTransferByTo(inst1.GetATokenVaultAccount().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindChildTransferByTo(inst1.GetBTokenVaultAccount().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	return nil
 }
@@ -120,8 +120,8 @@ func ParseRemoveBalanceLiquidity(inst *meteora_pools.Instruction, in *types.Inst
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	removeLiquidity.TokenATransfer = in.FindNextTransferByFrom(inst1.GetATokenVaultAccount().PublicKey)
-	removeLiquidity.TokenBTransfer = in.FindNextTransferByFrom(inst1.GetBTokenVaultAccount().PublicKey)
+	removeLiquidity.TokenATransfer = in.FindChildTransferByFrom(inst1.GetATokenVaultAccount().PublicKey)
+	removeLiquidity.TokenBTransfer = in.FindChildTransferByFrom(inst1.GetBTokenVaultAccount().PublicKey)
 	in.Event = []interface{}{removeLiquidity}
 	return nil
 }
@@ -133,8 +133,8 @@ func ParseAddBalanceLiquidity(inst *meteora_pools.Instruction, in *types.Instruc
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetATokenVaultAccount().PublicKey)
-	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetBTokenVaultAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindChildTransferByTo(inst1.GetATokenVaultAccount().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindChildTransferByTo(inst1.GetBTokenVaultAccount().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	return nil
 }
@@ -194,8 +194,8 @@ func ParseInitializePermissionlessConstantProductPoolWithConfig2(inst *meteora_p
 		Pool: inst1.GetPoolAccount().PublicKey,
 		User: inst1.GetPayerAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetATokenVaultAccount().PublicKey)
-	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetBTokenVaultAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindChildTransferByTo(inst1.GetATokenVaultAccount().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindChildTransferByTo(inst1.GetBTokenVaultAccount().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	return nil
 }

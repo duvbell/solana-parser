@@ -73,10 +73,10 @@ func ParseCreate(inst *pumpfun.Instruction, in *types.Instruction, meta *types.M
 		BondingCurve:           inst1.GetBondingCurveAccount().PublicKey,
 		AssociatedBondingCurve: inst1.GetAssociatedBondingCurveAccount().PublicKey,
 	}
-	memeMint.MintTo = in.FindNextMintTo(inst1.GetAssociatedBondingCurveAccount().PublicKey)
+	memeMint.MintTo = in.FindChildMintToByTo(inst1.GetAssociatedBondingCurveAccount().PublicKey)
 	in.Event = []interface{}{memeMint}
 
-	myLog := in.FindNextProgram(pumpfun.ProgramID)
+	myLog := in.FindChildByProgram(pumpfun.ProgramID)
 	if myLog == nil {
 		return nil
 	}
@@ -116,12 +116,12 @@ func ParseBuy(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta
 		BondingCurve:           inst1.GetBondingCurveAccount().PublicKey,
 		AssociatedBondingCurve: inst1.GetAssociatedBondingCurveAccount().PublicKey,
 	}
-	memeBuy.SolTransfer = in.FindNextTransferByTo(inst1.GetBondingCurveAccount().PublicKey)
-	memeBuy.FeeTransfer = in.FindNextTransferByTo(inst1.GetFeeRecipientAccount().PublicKey)
-	memeBuy.MintTransfer = in.FindNextTransferByFrom(inst1.GetAssociatedBondingCurveAccount().PublicKey)
+	memeBuy.SolTransfer = in.FindChildTransferByTo(inst1.GetBondingCurveAccount().PublicKey)
+	memeBuy.FeeTransfer = in.FindChildTransferByTo(inst1.GetFeeRecipientAccount().PublicKey)
+	memeBuy.MintTransfer = in.FindChildTransferByFrom(inst1.GetAssociatedBondingCurveAccount().PublicKey)
 	in.Event = []interface{}{memeBuy}
 
-	myLog := in.FindNextProgram(pumpfun.ProgramID)
+	myLog := in.FindChildByProgram(pumpfun.ProgramID)
 	if myLog == nil {
 		return nil
 	}
@@ -162,10 +162,10 @@ func ParseSell(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Met
 		BondingCurve:           inst1.GetBondingCurveAccount().PublicKey,
 		AssociatedBondingCurve: inst1.GetAssociatedBondingCurveAccount().PublicKey,
 	}
-	memeSell.MintTransfer = in.FindNextTransferByTo(inst1.GetAssociatedBondingCurveAccount().PublicKey)
+	memeSell.MintTransfer = in.FindChildTransferByTo(inst1.GetAssociatedBondingCurveAccount().PublicKey)
 	in.Event = []interface{}{memeSell}
 
-	myLog := in.FindNextProgram(pumpfun.ProgramID)
+	myLog := in.FindChildByProgram(pumpfun.ProgramID)
 	if myLog == nil {
 		return nil
 	}

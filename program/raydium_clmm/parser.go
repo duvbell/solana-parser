@@ -128,8 +128,8 @@ func ParseOpenPositionWithToken22Nft(inst *raydium_clmm.Instruction, in *types.I
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetPayerAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetTokenVault0Account().PublicKey)
-	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetTokenVault1Account().PublicKey)
+	addLiquidity.TokenATransfer = in.FindChildTransferByTo(inst1.GetTokenVault0Account().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindChildTransferByTo(inst1.GetTokenVault1Account().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	return nil
 }
@@ -144,8 +144,8 @@ func ParseIncreaseLiquidity(inst *raydium_clmm.Instruction, in *types.Instructio
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetNftOwnerAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetTokenVault0Account().PublicKey)
-	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetTokenVault1Account().PublicKey)
+	addLiquidity.TokenATransfer = in.FindChildTransferByTo(inst1.GetTokenVault0Account().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindChildTransferByTo(inst1.GetTokenVault1Account().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	log.Logger.Info("ignore parse increase liquidity", "program", raydium_clmm.ProgramName)
 	return nil
@@ -157,8 +157,8 @@ func ParseIncreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruct
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetNftOwnerAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetTokenVault0Account().PublicKey)
-	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetTokenVault1Account().PublicKey)
+	addLiquidity.TokenATransfer = in.FindChildTransferByTo(inst1.GetTokenVault0Account().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindChildTransferByTo(inst1.GetTokenVault1Account().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	return nil
 }
@@ -169,8 +169,8 @@ func ParseDecreaseLiquidity(inst *raydium_clmm.Instruction, in *types.Instructio
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetNftOwnerAccount().PublicKey,
 	}
-	removeLiquidity.TokenATransfer = in.FindNextTransferByFrom(inst1.GetTokenVault0Account().PublicKey)
-	removeLiquidity.TokenBTransfer = in.FindNextTransferByFrom(inst1.GetTokenVault1Account().PublicKey)
+	removeLiquidity.TokenATransfer = in.FindChildTransferByFrom(inst1.GetTokenVault0Account().PublicKey)
+	removeLiquidity.TokenBTransfer = in.FindChildTransferByFrom(inst1.GetTokenVault1Account().PublicKey)
 	in.Event = []interface{}{removeLiquidity}
 	log.Logger.Info("ignore parse decrease liquidity", "program", raydium_clmm.ProgramName)
 	return nil
@@ -182,8 +182,8 @@ func ParseDecreaseLiquidityV2(inst *raydium_clmm.Instruction, in *types.Instruct
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetNftOwnerAccount().PublicKey,
 	}
-	removeLiquidity.TokenATransfer = in.FindNextTransferByFrom(inst1.GetTokenVault0Account().PublicKey)
-	removeLiquidity.TokenBTransfer = in.FindNextTransferByFrom(inst1.GetTokenVault1Account().PublicKey)
+	removeLiquidity.TokenATransfer = in.FindChildTransferByFrom(inst1.GetTokenVault0Account().PublicKey)
+	removeLiquidity.TokenBTransfer = in.FindChildTransferByFrom(inst1.GetTokenVault1Account().PublicKey)
 	in.Event = []interface{}{removeLiquidity}
 	return nil
 }
@@ -194,8 +194,8 @@ func ParseSwap(inst *raydium_clmm.Instruction, in *types.Instruction, meta *type
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetPayerAccount().PublicKey,
 	}
-	swap.InputTransfer = in.FindNextTransferByTo(inst1.GetInputVaultAccount().PublicKey)
-	swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetOutputVaultAccount().PublicKey)
+	swap.InputTransfer = in.FindChildTransferByTo(inst1.GetInputVaultAccount().PublicKey)
+	swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetOutputVaultAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }
@@ -206,8 +206,8 @@ func ParseSwapV2(inst *raydium_clmm.Instruction, in *types.Instruction, meta *ty
 		Pool: inst1.GetPoolStateAccount().PublicKey,
 		User: inst1.GetPayerAccount().PublicKey,
 	}
-	swap.InputTransfer = in.FindNextTransferByTo(inst1.GetInputVaultAccount().PublicKey)
-	swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetOutputVaultAccount().PublicKey)
+	swap.InputTransfer = in.FindChildTransferByTo(inst1.GetInputVaultAccount().PublicKey)
+	swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetOutputVaultAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }

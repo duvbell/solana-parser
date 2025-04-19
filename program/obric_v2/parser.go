@@ -66,11 +66,11 @@ func ParseSwap(inst *obric_v2.Instruction, in *types.Instruction, meta *types.Me
 		User: inst1.GetUserAccount().PublicKey,
 	}
 	if *inst1.IsXToY {
-		swap.InputTransfer = in.FindNextTransferByTo(inst1.GetReserveXAccount().PublicKey)
-		swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetMintYAccount().PublicKey)
+		swap.InputTransfer = in.FindChildTransferByTo(inst1.GetReserveXAccount().PublicKey)
+		swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetMintYAccount().PublicKey)
 	} else {
-		swap.InputTransfer = in.FindNextTransferByTo(inst1.GetReserveYAccount().PublicKey)
-		swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetMintXAccount().PublicKey)
+		swap.InputTransfer = in.FindChildTransferByTo(inst1.GetReserveYAccount().PublicKey)
+		swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetMintXAccount().PublicKey)
 	}
 	in.Event = []interface{}{swap}
 	return nil
@@ -83,8 +83,8 @@ func ParseSwapXToY(inst *obric_v2.Instruction, in *types.Instruction, meta *type
 		Pool: inst1.GetTradingPairAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	swap.InputTransfer = in.FindNextTransferByTo(inst1.GetReserveXAccount().PublicKey)
-	swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetMintYAccount().PublicKey)
+	swap.InputTransfer = in.FindChildTransferByTo(inst1.GetReserveXAccount().PublicKey)
+	swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetMintYAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }
@@ -96,8 +96,8 @@ func ParseSwapYToX(inst *obric_v2.Instruction, in *types.Instruction, meta *type
 		Pool: inst1.GetTradingPairAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	swap.InputTransfer = in.FindNextTransferByTo(inst1.GetReserveYAccount().PublicKey)
-	swap.OutputTransfer = in.FindNextTransferByFrom(inst1.GetMintXAccount().PublicKey)
+	swap.InputTransfer = in.FindChildTransferByTo(inst1.GetReserveYAccount().PublicKey)
+	swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetMintXAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }

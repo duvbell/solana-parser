@@ -93,8 +93,8 @@ func ParseInitialize2(inst *raydium_amm.Instruction, in *types.Instruction, meta
 		Pool: inst1.GetAmmAccount().PublicKey,
 		User: inst1.GetUserWalletAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetPoolCoinTokenAccountAccount().PublicKey)
-	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetPoolPcTokenAccountAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindChildTransferByTo(inst1.GetPoolCoinTokenAccountAccount().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindChildTransferByTo(inst1.GetPoolPcTokenAccountAccount().PublicKey)
 	pool := &types.Pool{
 		Hash:     inst1.GetAmmAccount().PublicKey,
 		MintA:    inst1.GetCoinMintAccount().PublicKey,
@@ -119,8 +119,8 @@ func ParseDeposit(inst *raydium_amm.Instruction, in *types.Instruction, meta *ty
 		Pool: inst1.GetAmmAccount().PublicKey,
 		User: inst1.GetUserOwnerAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetPoolCoinTokenAccountAccount().PublicKey)
-	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetPoolPcTokenAccountAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindChildTransferByTo(inst1.GetPoolCoinTokenAccountAccount().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindChildTransferByTo(inst1.GetPoolPcTokenAccountAccount().PublicKey)
 	in.Event = []interface{}{addLiquidity, addLiquidity}
 	return nil
 }
@@ -131,8 +131,8 @@ func ParseWithdraw(inst *raydium_amm.Instruction, in *types.Instruction, meta *t
 		Pool: inst1.GetAmmAccount().PublicKey,
 		User: inst1.GetUserOwnerAccount().PublicKey,
 	}
-	removeLiquidity.TokenATransfer = in.FindNextTransferByFrom(inst1.GetPoolCoinTokenAccountAccount().PublicKey)
-	removeLiquidity.TokenBTransfer = in.FindNextTransferByFrom(inst1.GetPoolPcTokenAccountAccount().PublicKey)
+	removeLiquidity.TokenATransfer = in.FindChildTransferByFrom(inst1.GetPoolCoinTokenAccountAccount().PublicKey)
+	removeLiquidity.TokenBTransfer = in.FindChildTransferByFrom(inst1.GetPoolPcTokenAccountAccount().PublicKey)
 	in.Event = []interface{}{removeLiquidity}
 	return nil
 }
@@ -159,8 +159,8 @@ func ParseSwapBaseIn(inst *raydium_amm.Instruction, in *types.Instruction, meta 
 		Pool: inst1.GetAmmAccount().PublicKey,
 		User: inst1.GetUserSourceOwnerAccount().PublicKey,
 	}
-	swap.InputTransfer = in.FindNextTransferByFrom(inst1.GetUserSourceTokenAccountAccount().PublicKey)
-	swap.OutputTransfer = in.FindNextTransferByTo(inst1.GetUserDestinationTokenAccountAccount().PublicKey)
+	swap.InputTransfer = in.FindChildTransferByFrom(inst1.GetUserSourceTokenAccountAccount().PublicKey)
+	swap.OutputTransfer = in.FindChildTransferByTo(inst1.GetUserDestinationTokenAccountAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }
@@ -179,8 +179,8 @@ func ParseSwapBaseOut(inst *raydium_amm.Instruction, in *types.Instruction, meta
 		Pool: inst1.GetAmmAccount().PublicKey,
 		User: inst1.GetUserSourceOwnerAccount().PublicKey,
 	}
-	swap.InputTransfer = in.FindNextTransferByFrom(inst1.GetUserSourceTokenAccountAccount().PublicKey)
-	swap.OutputTransfer = in.FindNextTransferByTo(inst1.GetUserDestinationTokenAccountAccount().PublicKey)
+	swap.InputTransfer = in.FindChildTransferByFrom(inst1.GetUserSourceTokenAccountAccount().PublicKey)
+	swap.OutputTransfer = in.FindChildTransferByTo(inst1.GetUserDestinationTokenAccountAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }

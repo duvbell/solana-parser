@@ -36,70 +36,11 @@ type Block struct {
 
 type Transaction struct {
 	Hash         solana.Signature
+	Time         uint64
+	Slot         uint64
 	Instructions []*Instruction
 	Meta         *Meta
 	Seq          int
-}
-
-func (tx *Transaction) FindNextTransferByTo(index int, to solana.PublicKey) *Transfer {
-	for i := index; i < len(tx.Instructions); i++ {
-		item := tx.Instructions[i]
-		if len(item.Event) != 1 {
-			continue
-		}
-		switch item.Event[0].(type) {
-		case *Transfer:
-			transfer := item.Event[0].(*Transfer)
-			if transfer.To == to {
-				return transfer
-			}
-		}
-	}
-	return nil
-}
-
-func (tx *Transaction) FindNextTransferByFrom(index int, from solana.PublicKey) *Transfer {
-	for i := index; i < len(tx.Instructions); i++ {
-		item := tx.Instructions[i]
-		if len(item.Event) != 1 {
-			continue
-		}
-		switch item.Event[0].(type) {
-		case *Transfer:
-			transfer := item.Event[0].(*Transfer)
-			if transfer.From == from {
-				return transfer
-			}
-		}
-	}
-	return nil
-}
-
-func (tx *Transaction) FindNextMintTo(index int, to solana.PublicKey) *MintTo {
-	for i := index; i < len(tx.Instructions); i++ {
-		item := tx.Instructions[i]
-		if len(item.Event) != 1 {
-			continue
-		}
-		switch item.Event[0].(type) {
-		case *MintTo:
-			mintTo := item.Event[0].(*MintTo)
-			if mintTo.Account == to {
-				return mintTo
-			}
-		}
-	}
-	return nil
-}
-
-func (tx *Transaction) FindNextInstructionByProgram(index int, id solana.PublicKey) (*Instruction, int) {
-	for i := index + 1; i < len(tx.Instructions); i++ {
-		item := tx.Instructions[i]
-		if item.RawInstruction.ProgID == id {
-			return item, i
-		}
-	}
-	return nil, -1
 }
 
 type Instruction struct {
@@ -111,7 +52,7 @@ type Instruction struct {
 	Children          []*Instruction
 }
 
-func (in *Instruction) FindNextTransferByTo(to solana.PublicKey) *Transfer {
+func (in *Instruction) FindChildTransferByTo(to solana.PublicKey) *Transfer {
 	for _, item := range in.Children {
 		if len(item.Event) != 1 {
 			continue
@@ -127,7 +68,7 @@ func (in *Instruction) FindNextTransferByTo(to solana.PublicKey) *Transfer {
 	return nil
 }
 
-func (in *Instruction) FindNextTransferByFrom(from solana.PublicKey) *Transfer {
+func (in *Instruction) FindChildTransferByFrom(from solana.PublicKey) *Transfer {
 	for _, item := range in.Children {
 		if len(item.Event) != 1 {
 			continue
@@ -143,7 +84,7 @@ func (in *Instruction) FindNextTransferByFrom(from solana.PublicKey) *Transfer {
 	return nil
 }
 
-func (in *Instruction) FindChildrenMintTos() []*MintTo {
+func (in *Instruction) FindChildMintTos() []*MintTo {
 	mintTos := make([]*MintTo, 0)
 	for _, item := range in.Children {
 		if len(item.Event) != 1 {
@@ -157,7 +98,7 @@ func (in *Instruction) FindChildrenMintTos() []*MintTo {
 	return mintTos
 }
 
-func (in *Instruction) FindNextMintTo(to solana.PublicKey) *MintTo {
+func (in *Instruction) FindChildMintToByTo(to solana.PublicKey) *MintTo {
 	for _, item := range in.Children {
 		if len(item.Event) != 1 {
 			continue
@@ -173,7 +114,7 @@ func (in *Instruction) FindNextMintTo(to solana.PublicKey) *MintTo {
 	return nil
 }
 
-func (in *Instruction) FindChildrenPrograms(id solana.PublicKey) []*Instruction {
+func (in *Instruction) FindChildrenByProgram(id solana.PublicKey) []*Instruction {
 	instructions := make([]*Instruction, 0)
 	for _, item := range in.Children {
 		if item.RawInstruction.ProgID == id {
@@ -183,7 +124,7 @@ func (in *Instruction) FindChildrenPrograms(id solana.PublicKey) []*Instruction 
 	return instructions
 }
 
-func (in *Instruction) FindNextProgram(id solana.PublicKey) *Instruction {
+func (in *Instruction) FindChildByProgram(id solana.PublicKey) *Instruction {
 	for _, item := range in.Children {
 		if item.RawInstruction.ProgID == id {
 			return item

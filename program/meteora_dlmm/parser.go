@@ -113,8 +113,8 @@ func ParseAddLiquidity(inst *meteora_dlmm.Instruction, in *types.Instruction, me
 		Pool: inst1.GetLbPairAccount().PublicKey,
 		User: inst1.GetSenderAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetReserveXAccount().PublicKey)
-	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetReserveYAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindChildTransferByTo(inst1.GetReserveXAccount().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindChildTransferByTo(inst1.GetReserveYAccount().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	return nil
 }
@@ -125,8 +125,8 @@ func ParseAddLiquidityByWeight(inst *meteora_dlmm.Instruction, in *types.Instruc
 		Pool: inst1.GetLbPairAccount().PublicKey,
 		User: inst1.GetSenderAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetReserveXAccount().PublicKey)
-	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetReserveYAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindChildTransferByTo(inst1.GetReserveXAccount().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindChildTransferByTo(inst1.GetReserveYAccount().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	return nil
 }
@@ -137,8 +137,8 @@ func ParseAddLiquidityByStrategy(inst *meteora_dlmm.Instruction, in *types.Instr
 		Pool: inst1.GetLbPairAccount().PublicKey,
 		User: inst1.GetSenderAccount().PublicKey,
 	}
-	addLiquidity.TokenATransfer = in.FindNextTransferByTo(inst1.GetReserveXAccount().PublicKey)
-	addLiquidity.TokenBTransfer = in.FindNextTransferByTo(inst1.GetReserveYAccount().PublicKey)
+	addLiquidity.TokenATransfer = in.FindChildTransferByTo(inst1.GetReserveXAccount().PublicKey)
+	addLiquidity.TokenBTransfer = in.FindChildTransferByTo(inst1.GetReserveYAccount().PublicKey)
 	in.Event = []interface{}{addLiquidity}
 	return nil
 }
@@ -157,8 +157,8 @@ func ParseRemoveLiquidity(inst *meteora_dlmm.Instruction, in *types.Instruction,
 		Pool: inst1.GetLbPairAccount().PublicKey,
 		User: inst1.GetSenderAccount().PublicKey,
 	}
-	removeLiquidity.TokenATransfer = in.FindNextTransferByFrom(inst1.GetReserveXAccount().PublicKey)
-	removeLiquidity.TokenBTransfer = in.FindNextTransferByFrom(inst1.GetReserveYAccount().PublicKey)
+	removeLiquidity.TokenATransfer = in.FindChildTransferByFrom(inst1.GetReserveXAccount().PublicKey)
+	removeLiquidity.TokenBTransfer = in.FindChildTransferByFrom(inst1.GetReserveYAccount().PublicKey)
 	in.Event = []interface{}{removeLiquidity}
 	return nil
 }
@@ -182,8 +182,8 @@ func ParseSwap(inst *meteora_dlmm.Instruction, in *types.Instruction, meta *type
 		Pool: inst1.GetLbPairAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	swap.InputTransfer = in.FindNextTransferByFrom(inst1.GetUserTokenInAccount().PublicKey)
-	swap.OutputTransfer = in.FindNextTransferByTo(inst1.GetUserTokenOutAccount().PublicKey)
+	swap.InputTransfer = in.FindChildTransferByFrom(inst1.GetUserTokenInAccount().PublicKey)
+	swap.OutputTransfer = in.FindChildTransferByTo(inst1.GetUserTokenOutAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }
@@ -194,8 +194,8 @@ func ParseSwapExactOut(inst *meteora_dlmm.Instruction, in *types.Instruction, me
 		Pool: inst1.GetLbPairAccount().PublicKey,
 		User: inst1.GetUserAccount().PublicKey,
 	}
-	swap.InputTransfer = in.FindNextTransferByFrom(inst1.GetUserTokenInAccount().PublicKey)
-	swap.OutputTransfer = in.FindNextTransferByTo(inst1.GetUserTokenOutAccount().PublicKey)
+	swap.InputTransfer = in.FindChildTransferByFrom(inst1.GetUserTokenInAccount().PublicKey)
+	swap.OutputTransfer = in.FindChildTransferByTo(inst1.GetUserTokenOutAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }
@@ -268,8 +268,8 @@ func ParseRemoveLiquidityByRange(inst *meteora_dlmm.Instruction, in *types.Instr
 		Pool: inst1.GetLbPairAccount().PublicKey,
 		User: inst1.GetSenderAccount().PublicKey,
 	}
-	removeLiquidity.TokenATransfer = in.FindNextTransferByFrom(inst1.GetReserveXAccount().PublicKey)
-	removeLiquidity.TokenBTransfer = in.FindNextTransferByFrom(inst1.GetReserveYAccount().PublicKey)
+	removeLiquidity.TokenATransfer = in.FindChildTransferByFrom(inst1.GetReserveXAccount().PublicKey)
+	removeLiquidity.TokenBTransfer = in.FindChildTransferByFrom(inst1.GetReserveYAccount().PublicKey)
 	in.Event = []interface{}{removeLiquidity}
 	return nil
 }
