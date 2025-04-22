@@ -3,7 +3,6 @@ package jupiter
 import (
 	"bytes"
 	"errors"
-
 	"github.com/blockchain-develop/solana-parser/program"
 
 	"github.com/blockchain-develop/solana-parser/log"
@@ -74,13 +73,18 @@ func ParseSwap(inst *jupiter.Instruction, in *types.Instruction, meta *types.Met
 		var swap *types.Swap
 		if len(swapIn.Event) == 1 {
 			swap = swapIn.Event[0].(*types.Swap)
+		} else {
+			log.Logger.Error("jupiter swap instruction is unknown")
 		}
 		routePlan := &types.RoutePlan{}
 		var swapEvent *types.SwapEvent
 		if len(eventIn.Event) == 1 {
 			swapEvent = eventIn.Event[0].(*types.SwapEvent)
+		} else {
+			log.Logger.Error("jupiter swap event is unknown")
 		}
 		route.RouteSteps = append(route.RouteSteps, &types.RouteStep{
+			Dex:       swapIn.RawInstruction.ProgID,
 			Swap:      swap,
 			RoutePlan: routePlan,
 			SwapEvent: swapEvent,

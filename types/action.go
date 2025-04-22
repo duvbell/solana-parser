@@ -45,6 +45,7 @@ type RoutePlan struct {
 }
 
 type RouteStep struct {
+	Dex       solana.PublicKey
 	Swap      *Swap
 	RoutePlan *RoutePlan
 	SwapEvent *SwapEvent
