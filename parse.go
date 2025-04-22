@@ -14,6 +14,7 @@ import (
 	_ "github.com/blockchain-develop/solana-parser/program/raydium_amm"
 	_ "github.com/blockchain-develop/solana-parser/program/raydium_clmm"
 	_ "github.com/blockchain-develop/solana-parser/program/raydium_cp"
+	_ "github.com/blockchain-develop/solana-parser/program/solfi"
 	_ "github.com/blockchain-develop/solana-parser/program/spl_token"
 	_ "github.com/blockchain-develop/solana-parser/program/spl_token_2022"
 	_ "github.com/blockchain-develop/solana-parser/program/stable_swap"

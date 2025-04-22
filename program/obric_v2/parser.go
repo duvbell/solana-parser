@@ -2,6 +2,7 @@ package obricv2
 
 import (
 	"errors"
+	"github.com/blockchain-develop/solana-parser/program"
 
 	"github.com/blockchain-develop/solana-parser/types"
 	ag_binary "github.com/gagliardetto/binary"
@@ -24,7 +25,7 @@ var (
 )
 
 func init() {
-	//program.RegisterParser(obric_v2.ProgramID, obric_v2.ProgramName, program.Swap, 1, ProgramParser)
+	program.RegisterParser(obric_v2.ProgramID, obric_v2.ProgramName, program.Swap, 1, ProgramParser)
 	RegisterParser(uint64(obric_v2.Instruction_CreatePair.Uint32()), ParseDefault)
 	RegisterParser(uint64(obric_v2.Instruction_CreatePairV2.Uint32()), ParseDefault)
 	RegisterParser(uint64(obric_v2.Instruction_UpdateConcentration.Uint32()), ParseDefault)
@@ -67,10 +68,10 @@ func ParseSwap(inst *obric_v2.Instruction, in *types.Instruction, meta *types.Me
 	}
 	if *inst1.IsXToY {
 		swap.InputTransfer = in.FindChildTransferByTo(inst1.GetReserveXAccount().PublicKey)
-		swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetMintYAccount().PublicKey)
+		swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetReserveYAccount().PublicKey)
 	} else {
 		swap.InputTransfer = in.FindChildTransferByTo(inst1.GetReserveYAccount().PublicKey)
-		swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetMintXAccount().PublicKey)
+		swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetReserveXAccount().PublicKey)
 	}
 	in.Event = []interface{}{swap}
 	return nil
@@ -84,7 +85,7 @@ func ParseSwapXToY(inst *obric_v2.Instruction, in *types.Instruction, meta *type
 		User: inst1.GetUserAccount().PublicKey,
 	}
 	swap.InputTransfer = in.FindChildTransferByTo(inst1.GetReserveXAccount().PublicKey)
-	swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetMintYAccount().PublicKey)
+	swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetReserveYAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }
@@ -97,7 +98,7 @@ func ParseSwapYToX(inst *obric_v2.Instruction, in *types.Instruction, meta *type
 		User: inst1.GetUserAccount().PublicKey,
 	}
 	swap.InputTransfer = in.FindChildTransferByTo(inst1.GetReserveYAccount().PublicKey)
-	swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetMintXAccount().PublicKey)
+	swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetReserveXAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }
