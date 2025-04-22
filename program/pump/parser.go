@@ -39,7 +39,7 @@ func init() {
 
 func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	dec := ag_binary.NewBorshDecoder(in.RawInstruction.DataBytes)
-	typeID, err := dec.ReadTypeID()
+	typeID, _ := dec.ReadTypeID()
 	if typeID == Instruction_AnchorSelfCPILog {
 		return nil
 	}
@@ -84,7 +84,7 @@ func ParseCreate(inst *pumpfun.Instruction, in *types.Instruction, meta *types.M
 	dec := ag_binary.NewBorshDecoder(data)
 	instId, _ := dec.ReadBytes(8)
 	eventId, _ := dec.ReadBytes(8)
-	if bytes.Compare(instId, Instruction_AnchorSelfCPILog[:]) != 0 || bytes.Compare(eventId, Event_Create[:]) != 0 {
+	if !bytes.Equal(instId, Instruction_AnchorSelfCPILog[:]) || !bytes.Equal(eventId, Event_Create[:]) {
 		return nil
 	}
 	var createEvent pumpfun.CreateEvent
@@ -129,7 +129,7 @@ func ParseBuy(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Meta
 	dec := ag_binary.NewBorshDecoder(data)
 	instId, _ := dec.ReadBytes(8)
 	eventId, _ := dec.ReadBytes(8)
-	if bytes.Compare(instId, Instruction_AnchorSelfCPILog[:]) != 0 || bytes.Compare(eventId, Event_Swap[:]) != 0 {
+	if !bytes.Equal(instId, Instruction_AnchorSelfCPILog[:]) || !bytes.Equal(eventId, Event_Swap[:]) {
 		return nil
 	}
 	var tradeEvent pumpfun.TradeEvent
@@ -173,7 +173,7 @@ func ParseSell(inst *pumpfun.Instruction, in *types.Instruction, meta *types.Met
 	dec := ag_binary.NewBorshDecoder(data)
 	instId, _ := dec.ReadBytes(8)
 	eventId, _ := dec.ReadBytes(8)
-	if bytes.Compare(instId, Instruction_AnchorSelfCPILog[:]) != 0 || bytes.Compare(eventId, Event_Swap[:]) != 0 {
+	if !bytes.Equal(instId, Instruction_AnchorSelfCPILog[:]) || !bytes.Equal(eventId, Event_Swap[:]) {
 		return nil
 	}
 	var tradeEvent pumpfun.TradeEvent

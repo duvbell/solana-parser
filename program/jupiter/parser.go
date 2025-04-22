@@ -23,8 +23,6 @@ func RegisterParser(id uint64, p Parser) {
 
 var (
 	Instruction_AnchorSelfCPILog = ag_binary.TypeID([8]byte{228, 69, 165, 46, 81, 203, 154, 29})
-	Event_Create                 = [8]byte{0x1b, 0x72, 0xa9, 0x4d, 0xde, 0xeb, 0x63, 0x76}
-	Event_Swap                   = [8]byte{0xbd, 0xdb, 0x7f, 0xd3, 0x4e, 0xe6, 0x61, 0xee}
 )
 
 func init() {
@@ -34,7 +32,7 @@ func init() {
 
 func ProgramParser(in *types.Instruction, meta *types.Meta) error {
 	dec := ag_binary.NewBorshDecoder(in.RawInstruction.DataBytes)
-	typeID, err := dec.ReadTypeID()
+	typeID, _ := dec.ReadTypeID()
 	// 特殊的，处理log
 	if typeID == Instruction_AnchorSelfCPILog {
 		return ParseSwapLog(nil, in, meta)
@@ -99,7 +97,7 @@ func ParseSwapLog(inst *jupiter.Instruction, in *types.Instruction, meta *types.
 	dec := ag_binary.NewBorshDecoder(data)
 	instId, _ := dec.ReadBytes(8)
 	eventId, _ := dec.ReadBytes(8)
-	if bytes.Compare(instId, Instruction_AnchorSelfCPILog[:]) != 0 || bytes.Compare(eventId, jupiter.SwapEventEventDataDiscriminator[:]) != 0 {
+	if !bytes.Equal(instId, Instruction_AnchorSelfCPILog[:]) || !bytes.Equal(eventId, jupiter.SwapEventEventDataDiscriminator[:]) {
 		return nil
 	}
 	var swapEvent jupiter.SwapEvent
