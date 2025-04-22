@@ -41,6 +41,21 @@ type Swap struct {
 	OutputTransfer *Transfer
 }
 
+type RoutePlan struct {
+}
+
+type RouteStep struct {
+	Swap      *Swap
+	RoutePlan *RoutePlan
+	SwapEvent *SwapEvent
+}
+
+type Route struct {
+	Router     solana.PublicKey
+	User       solana.PublicKey
+	RouteSteps []*RouteStep
+}
+
 // spl token
 type Transfer struct {
 	Mint   solana.PublicKey

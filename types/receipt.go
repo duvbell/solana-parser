@@ -63,3 +63,11 @@ type MemeSellEvent struct {
 	VirtualSolReserves   uint64
 	VirtualTokenReserves uint64
 }
+
+type SwapEvent struct {
+	Amm          solana.PublicKey
+	InputMint    solana.PublicKey
+	InputAmount  uint64
+	OutputMint   solana.PublicKey
+	OutputAmount uint64
+}

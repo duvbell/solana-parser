@@ -5,6 +5,7 @@ import (
 
 	"github.com/blockchain-develop/solana-parser/log"
 	"github.com/blockchain-develop/solana-parser/program"
+	_ "github.com/blockchain-develop/solana-parser/program/jupiter"
 	_ "github.com/blockchain-develop/solana-parser/program/lifinity"
 	_ "github.com/blockchain-develop/solana-parser/program/meteora_dlmm"
 	_ "github.com/blockchain-develop/solana-parser/program/meteora_pools"
