@@ -117,7 +117,7 @@ func ParseSwapBaseInput(inst *raydium_cp.Instruction, in *types.Instruction, met
 		User: inst1.GetPayerAccount().PublicKey,
 	}
 	swap.InputTransfer = in.FindChildTransferByTo(inst1.GetInputVaultAccount().PublicKey)
-	swap.OutputTransfer = in.FindChildTransferByTo(inst1.GetOutputVaultAccount().PublicKey)
+	swap.OutputTransfer = in.FindChildTransferByFrom(inst1.GetOutputVaultAccount().PublicKey)
 	in.Event = []interface{}{swap}
 	return nil
 }

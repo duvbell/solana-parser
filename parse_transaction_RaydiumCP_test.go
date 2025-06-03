@@ -4,17 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gagliardetto/solana-go"
-	"github.com/gagliardetto/solana-go/rpc"
 	"os"
 	"testing"
+
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 )
 
 func TestTransaction_RaydiumCP_ParseSwapBaseInput(t *testing.T) {
 	solClient := rpc.New(rpc.MainNetBeta_RPC)
 	result, err := solClient.GetTransaction(
 		context.Background(),
-		solana.MustSignatureFromBase58("v8kG17FVQUYRRqaNtzg3wqCnv7wwFhzhqWxEmy1ohKLz6StntmVy8WRftsPvJuGZCarhaACgHGui44VPX11B2g5"),
+		solana.MustSignatureFromBase58("54cQ349MSi3UVtUhb5reLCUVCNoq39fJvVWHXAA2FKLZWXrExNqdYwaWsZL5FGcYYXkUW2ZLZZskULm9m1WkUt98"),
 		&rpc.GetTransactionOpts{
 			Commitment:                     rpc.CommitmentConfirmed,
 			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,
