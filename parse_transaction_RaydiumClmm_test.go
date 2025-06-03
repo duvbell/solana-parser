@@ -4,17 +4,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gagliardetto/solana-go"
-	"github.com/gagliardetto/solana-go/rpc"
 	"os"
 	"testing"
+
+	"github.com/blockchain-develop/solana-parser/types"
+	"github.com/gagliardetto/solana-go"
+	"github.com/gagliardetto/solana-go/rpc"
 )
 
 func TestTransaction_RaydiumClmm_ParseSwapV2(t *testing.T) {
 	solClient := rpc.New(rpc.MainNetBeta_RPC)
 	result, err := solClient.GetTransaction(
 		context.Background(),
-		solana.MustSignatureFromBase58("254kJ7VTZJ4tuU7YGrpD1quntbAxQuSR2kmUUgSmEKE7fNv3PgdT3jDZUkcUSe8vr4Fb5wum5RxQaUo1ZdVsW75T"),
+		solana.MustSignatureFromBase58("54cQ349MSi3UVtUhb5reLCUVCNoq39fJvVWHXAA2FKLZWXrExNqdYwaWsZL5FGcYYXkUW2ZLZZskULm9m1WkUt98"),
 		&rpc.GetTransactionOpts{
 			Commitment:                     rpc.CommitmentConfirmed,
 			MaxSupportedTransactionVersion: &rpc.MaxSupportedTransactionVersion1,
@@ -29,10 +31,32 @@ func TestTransaction_RaydiumClmm_ParseSwapV2(t *testing.T) {
 	}
 	txRawJson, _ := json.MarshalIndent(transactionParsed, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx_raw.json"), txRawJson, 0644)
+
 	tx := ParseTransaction(0, transaction, result.Meta)
 	if tx == nil {
 		panic("invalid transaction")
 	}
+
+	// Add debug information
+	fmt.Printf("Number of instructions: %d\n", len(tx.Instructions))
+
+	for i, instruction := range tx.Instructions {
+		fmt.Printf("Instruction %d:\n", i)
+		fmt.Printf("  Program ID: %s\n", instruction.RawInstruction.ProgID)
+		fmt.Printf("  Number of events: %d\n", len(instruction.Event))
+		fmt.Printf("  Event: %+v\n", instruction.Event)
+		if len(instruction.Event) > 0 {
+			if swap, ok := instruction.Event[0].(*types.Swap); ok {
+				if swap.InputTransfer != nil {
+					fmt.Printf("    Input Transfer: %+v\n", swap.InputTransfer)
+				}
+				if swap.OutputTransfer != nil {
+					fmt.Printf("    Output Transfer: %+v\n", swap.OutputTransfer)
+				}
+			}
+		}
+	}
+
 	txJson, _ := json.MarshalIndent(tx, "", "    ")
 	os.WriteFile(fmt.Sprintf("tx.json"), txJson, 0644)
 }
